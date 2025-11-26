@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Wrench, Key, Eye, EyeOff, Plus, Edit, Trash2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react'
+import { Wrench, Eye, EyeOff, Plus, Edit, Trash2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
@@ -16,8 +16,8 @@ export default function IntegrationsPage() {
   const canManageIntegrations = hasPermission('integrations:create') || hasPermission('integrations:update')
 
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [selectedIntegration, setSelectedIntegration] = useState<any>(null)
+  const [_showEditModal, setShowEditModal] = useState(false)
+  const [_selectedIntegration, setSelectedIntegration] = useState<any>(null)
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({})
 
   const [apiKeyForm, setApiKeyForm] = useState({

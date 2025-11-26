@@ -18,7 +18,8 @@ export const propertiesAPI = {
   getProperties: async (params?: { search?: string }) => {
     const query = params?.search ? `?search=${encodeURIComponent(params.search)}` : '';
     const response = await apiClient.get(`/properties${query}`);
-    return response.data;
+    // Backend returns { data: [...], total, page, limit }, extract the data array
+    return Array.isArray(response.data) ? response.data : (response.data?.data || []);
   },
 
   getPropertyById: async (id: string) => {

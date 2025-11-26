@@ -8,7 +8,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  MapPin,
   Settings,
   MoreHorizontal,
   Image as ImageIcon,
@@ -17,7 +16,6 @@ import {
   MessageSquare,
   Calculator,
   Receipt,
-  CreditCard,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -29,7 +27,6 @@ import {
 import { CEPInput } from '../../components/ui/cep-input';
 import { ImageUpload } from '../../components/ui/image-upload';
 import { isValidCEPFormat } from '../../lib/validation';
-import { formatCurrency } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -37,7 +34,6 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Card, CardContent } from '../../components/ui/card';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,7 +74,7 @@ export function Properties() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDocumentsModal, setShowDocumentsModal] = useState(false);
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [_showDiscountModal, setShowDiscountModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -127,8 +123,8 @@ export function Properties() {
   const [assignTenantModalOpen, setAssignTenantModalOpen] = useState(false);
   const [propertyToAssignTenant, setPropertyToAssignTenant] = useState<any>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('none');
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [discountInfo, setDiscountInfo] = useState<any>(null);
+  const [documents] = useState<any[]>([]);
+  const [_discountInfo, _setDiscountInfo] = useState<any>(null);
   const [settings, setSettings] = useState({
     lateFee: '',
     dailyFee: ''
@@ -144,7 +140,7 @@ export function Properties() {
     paymentDate: '',
     paymentMethod: 'PIX'
   });
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);

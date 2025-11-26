@@ -38,6 +38,15 @@ export default function Reports() {
   const [properties, setProperties] = useState<any[]>([])
   const [tenants, setTenants] = useState<any[]>([])
   const [payments, setPayments] = useState<any[]>([])
+
+  // Helper function to ensure data is always an array
+  const ensureArray = (data: any): any[] => {
+    if (!data) return []
+    if (Array.isArray(data)) return data
+    if (data.data && Array.isArray(data.data)) return data.data
+    if (data.items && Array.isArray(data.items)) return data.items
+    return []
+  }
   const [reportType, setReportType] = useState<'monthly' | 'property' | 'tenant'>('monthly')
 
   const years = useMemo(() => {
@@ -69,9 +78,9 @@ export default function Reports() {
         }
 
         const [propertiesData, tenantsData, paymentsData] = await Promise.all(promises)
-        setProperties(propertiesData)
-        setTenants(tenantsData)
-        setPayments(paymentsData)
+        setProperties(ensureArray(propertiesData))
+        setTenants(ensureArray(tenantsData))
+        setPayments(ensureArray(paymentsData))
       } catch (error) {
         console.error('Error loading data:', error)
       }
@@ -166,6 +175,7 @@ export default function Reports() {
 
   // Property performance data
   const propertyPerformance = useMemo(() => {
+    if (!Array.isArray(properties)) return []
     return properties.map(property => {
       const propertyPayments = payments.filter(p => p.propertyId === property.id)
       const totalRevenue = propertyPayments.reduce((sum, p) => sum + Number(p.amount || p.valorPago || 0), 0)
@@ -179,6 +189,7 @@ export default function Reports() {
 
   // Tenant performance data
   const tenantPerformance = useMemo(() => {
+    if (!Array.isArray(tenants)) return []
     return tenants.map(tenant => {
       const tenantPayments = payments.filter(p => p.tenantId === tenant.id)
       const totalPaid = tenantPayments.reduce((sum, p) => sum + Number(p.amount || p.valorPago || 0), 0)
@@ -192,6 +203,7 @@ export default function Reports() {
 
   // Payment type distribution
   const paymentTypeData = useMemo(() => {
+    if (!Array.isArray(payments)) return []
     const types = payments.reduce((acc, payment) => {
       const type = payment.paymentType || payment.tipo || 'Outros'
       acc[type] = (acc[type] || 0) + 1
@@ -276,7 +288,7 @@ export default function Reports() {
             </div>
           ) : (
             <>
-              <div className="h-64 sm:h-80 w-full">
+              <div className="h-64 sm:h-80 w-full" style={{ minWidth: 0, minHeight: '256px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   {reportType === 'monthly' ? (
                     <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -454,7 +466,7 @@ export default function Reports() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full" style={{ minWidth: 0, minHeight: '256px' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

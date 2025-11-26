@@ -14,7 +14,6 @@ import {
   Eye,
   MoreHorizontal,
   User,
-  CreditCard,
   Clock
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../lib/utils';
@@ -53,9 +52,6 @@ export function Payments() {
 
   // Check permissions
   const canViewPayments = hasPermission('payments:read');
-  const canCreatePayments = hasPermission('payments:create');
-  const canUpdatePayments = hasPermission('payments:update');
-  const canDeletePayments = hasPermission('payments:delete');
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -89,11 +85,11 @@ export function Payments() {
   const [paymentDetail, setPaymentDetail] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(false);
+  const [selectedYear] = useState(new Date().getFullYear());
+  const [_loading, _setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [deleting] = useState(false);
 
   // Don't render if no permission
   if (!canViewPayments) {

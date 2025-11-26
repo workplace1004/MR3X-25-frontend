@@ -15,7 +15,6 @@ import {
   Trash2,
   Eye,
   MoreHorizontal,
-  Building2,
   User,
   Clock,
   List,
@@ -29,7 +28,6 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Card, CardContent } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Textarea } from '../../components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,7 +104,7 @@ export function Contracts() {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [deleting] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
@@ -164,27 +162,6 @@ export function Contracts() {
     setPdfFile(null);
     setEditPdfFile(null);
   };
-
-  // Create contract
-  const createContractMutation = useMutation({
-    mutationFn: (data: any) => contractsAPI.createContract(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none']
-      });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      closeAllModals();
-      setNewContract({
-        propertyId: '', tenantId: '', startDate: '', endDate: '',
-        monthlyRent: '', deposit: '', dueDay: '', description: '',
-        templateId: '', templateType: 'CTR' as 'CTR' | 'ACD' | 'VST', creci: ''
-      });
-      toast.success('Contrato criado com sucesso');
-    },
-    onError: () => {
-      toast.error('Erro ao criar contrato');
-    },
-  });
 
   // Update contract
   const updateContractMutation = useMutation({
