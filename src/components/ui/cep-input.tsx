@@ -26,8 +26,9 @@ export function CEPInput({
   disabled = false,
 }: CEPInputProps) {
   const [localValue, setLocalValue] = useState(value || '');
-  const { cepData, isLoading, error, fetchCEP, clearError } = useCEP();
+  const { data: cepData, loading: isLoading, error, fetchCEP } = useCEP();
   const lastSearchedCEP = useRef<string>('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalValue(value || '');
@@ -43,12 +44,16 @@ export function CEPInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cepData]);
 
+  const clearError = () => {
+    setLocalError(null);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCEPInput(e.target.value);
     setLocalValue(formatted);
     onChange(formatted);
     clearError();
-    
+
     // Auto-trigger search when CEP is complete (8 digits) and different from last search
     const cleanCEP = formatted.replace(/\D/g, '');
     if (cleanCEP.length === 8 && cleanCEP !== lastSearchedCEP.current) {
@@ -68,6 +73,7 @@ export function CEPInput({
   };
 
   const isInvalidCEP = localValue && localValue.length > 0 && !isValidCEPFormat(localValue) && localValue.replace(/\D/g, '').length > 0;
+  const displayError = error || localError;
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -87,7 +93,7 @@ export function CEPInput({
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
           disabled={disabled}
-          className={error || isInvalidCEP ? 'border-red-500' : ''}
+          className={displayError || isInvalidCEP ? 'border-red-500' : ''}
         />
         <Button
           type="button"
@@ -104,19 +110,19 @@ export function CEPInput({
           )}
         </Button>
       </div>
-      {error && (
-        <p className="text-sm text-red-500 mt-1">{error}</p>
+      {displayError && (
+        <p className="text-sm text-red-500 mt-1">{displayError}</p>
       )}
-      {isInvalidCEP && !error && (
+      {isInvalidCEP && !displayError && (
         <p className="text-sm text-red-500 mt-1">CEP deve ter 8 dígitos</p>
       )}
       {cepData && (
         <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
           <p className="text-sm text-green-800">
-            <strong>{cepData.street}</strong> - {cepData.neighborhood}
+            <strong>{cepData.logradouro}</strong> - {cepData.bairro}
           </p>
           <p className="text-sm text-green-700">
-            {cepData.city} - {cepData.state}
+            {cepData.cidade} - {cepData.estado}
           </p>
         </div>
       )}

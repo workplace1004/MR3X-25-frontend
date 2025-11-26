@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { validateDocument, validateDocument2026, formatCPF, formatCNPJ } from '@/lib/validation';
+import { validateDocument } from '@/lib/validation';
 
 interface DocumentInputProps {
   value: string;
@@ -32,14 +32,10 @@ export function DocumentInput({
 
   useEffect(() => {
     const raw = localValue || '';
-    const allowAlpha = process.env.NEXT_PUBLIC_ENABLE_CNPJ_2026 === 'true' || process.env.NEXT_PUBLIC_ENABLE_CNPJ_2026 === '1';
-    const hasAnyChar = allowAlpha
-      ? /[0-9A-Za-z]/.test(raw)
-      : /\d/.test(raw);
+    const hasAnyChar = /\d/.test(raw);
 
     if (hasAnyChar) {
-      const use2026 = process.env.NEXT_PUBLIC_ENABLE_CNPJ_2026 === 'true' || process.env.NEXT_PUBLIC_ENABLE_CNPJ_2026 === '1';
-      const result = use2026 ? validateDocument2026(raw) : validateDocument(raw);
+      const result = validateDocument(raw);
       setValidation(result);
 
       // Auto-format if valid
@@ -56,26 +52,21 @@ export function DocumentInput({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    const allowAlpha = process.env.NEXT_PUBLIC_ENABLE_CNPJ_2026 === 'true' || process.env.NEXT_PUBLIC_ENABLE_CNPJ_2026 === '1';
-    const cleanValue = allowAlpha ? inputValue.replace(/[^0-9A-Za-z]/g, '') : inputValue.replace(/\D/g, '');
-    
+    const cleanValue = inputValue.replace(/\D/g, '');
+
     // Limit input length
     if (cleanValue.length > 14) return;
-    
+
     // Format based on length
     let formatted = inputValue;
     if (cleanValue.length <= 11) {
       // CPF formatting
       formatted = cleanValue.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     } else {
-      // CNPJ formatting (legacy or provisional 2026 alphanumeric without separators)
-      if (allowAlpha && /[A-Za-z]/.test(cleanValue)) {
-        formatted = cleanValue.toUpperCase();
-      } else {
-        formatted = cleanValue.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-      }
+      // CNPJ formatting
+      formatted = cleanValue.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
     }
-    
+
     setLocalValue(formatted);
     onChange(formatted);
   };
@@ -83,8 +74,6 @@ export function DocumentInput({
   const getInputClassName = () => {
     if (!showValidation) return '';
     if (validation) return validation.isValid ? 'border-green-500' : 'border-red-500';
-    // When user typed but not enough digits yet, show neutral; if you want red, uncomment:
-    // return localValue ? 'border-red-500' : '';
     return '';
   };
 
