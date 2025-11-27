@@ -289,7 +289,7 @@ export function Tenants() {
         email: fullTenantDetails.email || '',
         phone: fullTenantDetails.phone || '',
         document: fullTenantDetails.document || '',
-        password: '',
+        password: fullTenantDetails.plainPassword || '',
         birthDate: fullTenantDetails.birthDate ? fullTenantDetails.birthDate.split('T')[0] : '',
         address: fullTenantDetails.address || '',
         cep: fullTenantDetails.cep || '',
@@ -885,7 +885,7 @@ export function Tenants() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="edit-password">Nova Senha</Label>
+                    <Label htmlFor="edit-password">Senha</Label>
                     <div className="relative">
                       <Input
                         id="edit-password"
@@ -893,7 +893,7 @@ export function Tenants() {
                         type={showEditPassword ? 'text' : 'password'}
                         value={editForm.password}
                         onChange={handleEditInputChange}
-                        placeholder="Deixe em branco para manter"
+                        placeholder="Digite a senha"
                         className="pr-10"
                       />
                       <button

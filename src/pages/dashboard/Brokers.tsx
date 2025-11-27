@@ -285,7 +285,7 @@ export function Brokers() {
         email: fullBrokerDetails.email || '',
         phone: fullBrokerDetails.phone || '',
         document: fullBrokerDetails.document || '',
-        password: '',
+        password: fullBrokerDetails.plainPassword || '',
         birthDate: fullBrokerDetails.birthDate ? fullBrokerDetails.birthDate.split('T')[0] : '',
         address: fullBrokerDetails.address || '',
         cep: fullBrokerDetails.cep || '',
@@ -675,9 +675,9 @@ export function Brokers() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="edit-password">Nova Senha</Label>
+                    <Label htmlFor="edit-password">Senha</Label>
                     <div className="relative">
-                      <Input id="edit-password" name="password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={handleEditInputChange} placeholder="Deixe em branco para manter" className="pr-10" />
+                      <Input id="edit-password" name="password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={handleEditInputChange} placeholder="Digite a senha" className="pr-10" />
                       <button
                         type="button"
                         onClick={() => setShowEditPassword(!showEditPassword)}

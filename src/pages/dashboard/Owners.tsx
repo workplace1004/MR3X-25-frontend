@@ -284,7 +284,7 @@ export function Owners() {
         email: fullOwnerDetails.email || '',
         phone: fullOwnerDetails.phone || '',
         document: fullOwnerDetails.document || '',
-        password: '',
+        password: fullOwnerDetails.plainPassword || '',
         birthDate: fullOwnerDetails.birthDate ? fullOwnerDetails.birthDate.split('T')[0] : '',
         address: fullOwnerDetails.address || '',
         cep: fullOwnerDetails.cep || '',
@@ -682,9 +682,9 @@ export function Owners() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="edit-password">Nova Senha</Label>
+                    <Label htmlFor="edit-password">Senha</Label>
                     <div className="relative">
-                      <Input id="edit-password" name="password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={handleEditInputChange} placeholder="Deixe em branco para manter" className="pr-10" />
+                      <Input id="edit-password" name="password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={handleEditInputChange} placeholder="Digite a senha" className="pr-10" />
                       <button
                         type="button"
                         onClick={() => setShowEditPassword(!showEditPassword)}
