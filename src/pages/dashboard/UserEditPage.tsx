@@ -25,9 +25,9 @@ const ROLES = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INVITED', label: 'Invited' },
-  { value: 'SUSPENDED', label: 'Suspended' },
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'INVITED', label: 'Convidado' },
+  { value: 'SUSPENDED', label: 'Suspenso' },
 ];
 
 interface UserData {
@@ -74,7 +74,7 @@ export function UserEditPage() {
   // Redirect if no permission
   useEffect(() => {
     if (!canEditUsers) {
-      toast.error('You do not have permission to edit users');
+      toast.error('Você não tem permissão para editar usuários');
       navigate('/dashboard/users');
     }
   }, [canEditUsers, navigate]);
@@ -106,7 +106,7 @@ export function UserEditPage() {
         },
       });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to fetch user details');
+      toast.error(error.message || 'Falha ao carregar detalhes do usuário');
       navigate('/dashboard/users');
     } finally {
       setLoading(false);
@@ -117,18 +117,25 @@ export function UserEditPage() {
     e.preventDefault();
 
     if (!canEditUsers) {
-      toast.error('You do not have permission to edit users');
+      toast.error('Você não tem permissão para editar usuários');
       return;
     }
 
     setSaving(true);
 
     try {
-      await usersAPI.updateUser(formData.id, formData);
-      toast.success('User updated successfully');
-      navigate(`/dashboard/users/${formData.id}`);
+      // Only send fields that the backend accepts
+      const updatePayload = {
+        name: formData.name,
+        phone: formData.phone || undefined,
+        role: formData.role,
+        plan: formData.plan || undefined,
+      };
+      await usersAPI.updateUser(formData.id, updatePayload);
+      toast.success('Usuário atualizado com sucesso');
+      navigate('/dashboard/users');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update user');
+      toast.error(error.message || 'Falha ao atualizar usuário');
     } finally {
       setSaving(false);
     }
@@ -156,8 +163,8 @@ export function UserEditPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-muted-foreground">Access Denied</h2>
-          <p className="text-muted-foreground">You do not have permission to edit users.</p>
+          <h2 className="text-xl font-semibold text-muted-foreground">Acesso Negado</h2>
+          <p className="text-muted-foreground">Você não tem permissão para editar usuários.</p>
         </div>
       </div>
     );
@@ -177,11 +184,11 @@ export function UserEditPage() {
       <div className="flex items-center gap-4">
         <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Voltar
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Edit User</h1>
-          <p className="text-muted-foreground">Update user information</p>
+          <h1 className="text-2xl font-bold">Editar Usuário</h1>
+          <p className="text-muted-foreground">Atualizar informações do usuário</p>
         </div>
       </div>
 
@@ -190,21 +197,21 @@ export function UserEditPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
-            User Information
+            Informações do Usuário
           </CardTitle>
-          <CardDescription>Update the user details below. Some fields may be locked for security reasons.</CardDescription>
+          <CardDescription>Atualize os dados do usuário abaixo. Alguns campos podem estar bloqueados por razões de segurança.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name">Nome Completo *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter full name"
+                  placeholder="Digite o nome completo"
                   required
                 />
               </div>
@@ -216,16 +223,16 @@ export function UserEditPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter email address"
+                  placeholder="Digite o endereço de email"
                   required
                   disabled
                   className="bg-gray-50"
                 />
-                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                <p className="text-xs text-muted-foreground">O email não pode ser alterado</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (WhatsApp)</Label>
+                <Label htmlFor="phone">Telefone (WhatsApp)</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -244,18 +251,18 @@ export function UserEditPage() {
                   disabled
                   className="bg-gray-50"
                 />
-                <p className="text-xs text-muted-foreground">Document cannot be changed</p>
+                <p className="text-xs text-muted-foreground">O documento não pode ser alterado</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
+                <Label htmlFor="role">Função *</Label>
                 <select
                   id="role"
                   value={formData.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
                   className="w-full px-3 py-2 border rounded-md"
                 >
-                  <option value="">Select role</option>
+                  <option value="">Selecione a função</option>
                   {ROLES.map((role) => (
                     <option key={role.value} value={role.value}>
                       {role.label}
@@ -281,19 +288,19 @@ export function UserEditPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="plan">Plan</Label>
+                <Label htmlFor="plan">Plano</Label>
                 <Input
                   id="plan"
                   value={formData.plan}
                   onChange={(e) => handleInputChange('plan', e.target.value)}
-                  placeholder="User plan"
+                  placeholder="Plano do usuário"
                 />
               </div>
             </div>
 
             {/* Notification Preferences */}
             <div className="space-y-4">
-              <Label className="text-base font-medium">Notification Preferences</Label>
+              <Label className="text-base font-medium">Preferências de Notificação</Label>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -301,7 +308,7 @@ export function UserEditPage() {
                     checked={formData.notificationPreferences?.email || false}
                     onCheckedChange={(checked) => handleNotificationChange('email', checked as boolean)}
                   />
-                  <Label htmlFor="email-notifications">Email notifications</Label>
+                  <Label htmlFor="email-notifications">Notificações por email</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -309,7 +316,7 @@ export function UserEditPage() {
                     checked={formData.notificationPreferences?.whatsapp || false}
                     onCheckedChange={(checked) => handleNotificationChange('whatsapp', checked as boolean)}
                   />
-                  <Label htmlFor="whatsapp-notifications">WhatsApp notifications</Label>
+                  <Label htmlFor="whatsapp-notifications">Notificações por WhatsApp</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -317,7 +324,7 @@ export function UserEditPage() {
                     checked={formData.notificationPreferences?.push || false}
                     onCheckedChange={(checked) => handleNotificationChange('push', checked as boolean)}
                   />
-                  <Label htmlFor="push-notifications">Push notifications</Label>
+                  <Label htmlFor="push-notifications">Notificações push</Label>
                 </div>
               </div>
             </div>
@@ -325,11 +332,11 @@ export function UserEditPage() {
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={saving}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={saving} className="flex items-center gap-2">
                 <Save className="w-4 h-4" />
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </div>
           </form>

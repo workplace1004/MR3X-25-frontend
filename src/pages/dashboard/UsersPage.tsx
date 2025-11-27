@@ -44,10 +44,14 @@ export function UsersPage() {
     setLoading(true);
     try {
       const res = await usersAPI.listUsers({ search, role, status, plan, page, pageSize });
-      setItems(res.items || []);
-      setTotal(res.total || 0);
+      // Filter out current logged-in user from the list
+      const filteredItems = (res.items || []).filter((item: UserItem) => item.id !== user?.id);
+      setItems(filteredItems);
+      // Adjust total count if current user was in the results
+      const currentUserInResults = (res.items || []).some((item: UserItem) => item.id === user?.id);
+      setTotal(currentUserInResults ? (res.total || 1) - 1 : (res.total || 0));
     } catch (error: any) {
-      toast.error(error.message || 'Failed to load users');
+      toast.error(error.message || 'Falha ao carregar usuários');
     } finally {
       setLoading(false);
     }
@@ -68,16 +72,16 @@ export function UsersPage() {
 
   const handleStatusChange = async (userId: string, newStatus: string) => {
     if (!canDeleteUsers) {
-      toast.error('You do not have permission to change user status');
+      toast.error('Você não tem permissão para alterar o status do usuário');
       return;
     }
 
     try {
-      await usersAPI.changeStatus(userId, newStatus as 'ACTIVE' | 'SUSPENDED', `Status changed to ${newStatus}`);
-      toast.success(`User ${newStatus.toLowerCase()}`);
+      await usersAPI.changeStatus(userId, newStatus as 'ACTIVE' | 'SUSPENDED', `Status alterado para ${newStatus}`);
+      toast.success(newStatus === 'ACTIVE' ? 'Usuário ativado com sucesso' : 'Usuário suspenso com sucesso');
       load();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to change user status');
+      toast.error(error.message || 'Falha ao alterar status do usuário');
     }
   };
 
@@ -167,11 +171,11 @@ export function UsersPage() {
           </Button>
           <Button variant="outline" onClick={() => { setSearch(''); setRole(''); setStatus(''); setPlan(''); setPage(1); load(); }}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            Reset
+            Limpar
           </Button>
         </div>
         <select value={role} onChange={(e) => setRole(e.target.value)} className="border rounded-md px-3 py-2">
-          <option value="">Role</option>
+          <option value="">Função</option>
           {[
             { value: 'CEO', label: 'CEO' },
             { value: 'ADMIN', label: 'Admin' },
@@ -230,7 +234,7 @@ export function UsersPage() {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">Role:</span>
+                <span className="font-medium text-muted-foreground">Função:</span>
                 <Badge className={getRoleColor(u.role)}>{u.role}</Badge>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -286,7 +290,7 @@ export function UsersPage() {
                   Email
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Role
+                  Função
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Status

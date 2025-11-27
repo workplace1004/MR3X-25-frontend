@@ -29,6 +29,7 @@ import Plans from './pages/dashboard/Plans';
 import Billing from './pages/dashboard/Billing';
 import Communications from './pages/dashboard/Communications';
 import Integrations from './pages/dashboard/Integrations';
+import Documents from './pages/dashboard/Documents';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -120,7 +121,7 @@ function App() {
               <Route path="communications" element={<Communications />} />
               <Route path="integrations" element={<Integrations />} />
               <Route path="audit" element={<Audit />} />
-              <Route path="documents" element={<PlaceholderPage title="Documentos" />} />
+              <Route path="documents" element={<Documents />} />
               <Route path="settings" element={<Settings />} />
 
               <Route path="chat" element={<Chat />} />

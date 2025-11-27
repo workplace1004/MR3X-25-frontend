@@ -27,9 +27,9 @@ const ROLES = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: 'Active' },
-  { value: 'INVITED', label: 'Invited' },
-  { value: 'SUSPENDED', label: 'Suspended' },
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'INVITED', label: 'Convidado' },
+  { value: 'SUSPENDED', label: 'Suspenso' },
 ];
 
 export function UserNewPage() {
@@ -56,7 +56,7 @@ export function UserNewPage() {
   // Redirect if no permission
   useEffect(() => {
     if (!canCreateUsers) {
-      toast.error('You do not have permission to create users');
+      toast.error('Você não tem permissão para criar usuários');
       navigate('/dashboard/users');
     }
   }, [canCreateUsers, navigate]);
@@ -65,24 +65,35 @@ export function UserNewPage() {
     e.preventDefault();
 
     if (!canCreateUsers) {
-      toast.error('You do not have permission to create users');
+      toast.error('Você não tem permissão para criar usuários');
       return;
     }
 
     setLoading(true);
 
     try {
-      const docResult = validateDocument(formData.document);
-      if (!docResult.isValid) {
-        toast.error(docResult.error || 'Invalid document (CPF/CNPJ)');
-        setLoading(false);
-        return;
+      if (formData.document) {
+        const docResult = validateDocument(formData.document);
+        if (!docResult.isValid) {
+          toast.error(docResult.error || 'Documento inválido (CPF/CNPJ)');
+          setLoading(false);
+          return;
+        }
       }
-      await usersAPI.createUser(formData);
-      toast.success('User created successfully');
+      // Only send fields that the backend accepts
+      const createPayload = {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        role: formData.role,
+        phone: formData.phone || undefined,
+        document: formData.document || undefined,
+      };
+      await usersAPI.createUser(createPayload);
+      toast.success('Usuário criado com sucesso');
       navigate('/dashboard/users');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create user');
+      toast.error(error.message || 'Falha ao criar usuário');
     } finally {
       setLoading(false);
     }
@@ -110,8 +121,8 @@ export function UserNewPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-muted-foreground">Access Denied</h2>
-          <p className="text-muted-foreground">You do not have permission to create users.</p>
+          <h2 className="text-xl font-semibold text-muted-foreground">Acesso Negado</h2>
+          <p className="text-muted-foreground">Você não tem permissão para criar usuários.</p>
         </div>
       </div>
     );
@@ -123,11 +134,11 @@ export function UserNewPage() {
       <div className="flex items-center gap-4">
         <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" />
-          Back
+          Voltar
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Create New User</h1>
-          <p className="text-muted-foreground">Add a new user to the system</p>
+          <h1 className="text-2xl font-bold">Criar Novo Usuário</h1>
+          <p className="text-muted-foreground">Adicione um novo usuário ao sistema</p>
         </div>
       </div>
 
@@ -136,21 +147,21 @@ export function UserNewPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
-            User Information
+            Informações do Usuário
           </CardTitle>
-          <CardDescription>Fill in the details below to create a new user account</CardDescription>
+          <CardDescription>Preencha os dados abaixo para criar uma nova conta de usuário</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="name">Nome Completo *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter full name"
+                  placeholder="Digite o nome completo"
                   required
                 />
               </div>
@@ -162,13 +173,13 @@ export function UserNewPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter email address"
+                  placeholder="Digite o endereço de email"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (WhatsApp)</Label>
+                <Label htmlFor="phone">Telefone (WhatsApp)</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -188,7 +199,7 @@ export function UserNewPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
+                <Label htmlFor="role">Função *</Label>
                 <select
                   id="role"
                   value={formData.role}
@@ -196,7 +207,7 @@ export function UserNewPage() {
                   className="w-full px-3 py-2 border rounded-md"
                   required
                 >
-                  <option value="">Select role</option>
+                  <option value="">Selecione a função</option>
                   {ROLES.map((role) => (
                     <option key={role.value} value={role.value}>
                       {role.label}
@@ -222,13 +233,13 @@ export function UserNewPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">Senha *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Enter password"
+                  placeholder="Digite a senha"
                   required
                 />
               </div>
@@ -236,7 +247,7 @@ export function UserNewPage() {
 
             {/* Notification Preferences */}
             <div className="space-y-4">
-              <Label className="text-base font-medium">Notification Preferences</Label>
+              <Label className="text-base font-medium">Preferências de Notificação</Label>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -244,7 +255,7 @@ export function UserNewPage() {
                     checked={formData.notificationPreferences.email}
                     onCheckedChange={(checked) => handleNotificationChange('email', checked as boolean)}
                   />
-                  <Label htmlFor="email-notifications">Email notifications</Label>
+                  <Label htmlFor="email-notifications">Notificações por email</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -252,7 +263,7 @@ export function UserNewPage() {
                     checked={formData.notificationPreferences.whatsapp}
                     onCheckedChange={(checked) => handleNotificationChange('whatsapp', checked as boolean)}
                   />
-                  <Label htmlFor="whatsapp-notifications">WhatsApp notifications</Label>
+                  <Label htmlFor="whatsapp-notifications">Notificações por WhatsApp</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -260,7 +271,7 @@ export function UserNewPage() {
                     checked={formData.notificationPreferences.push}
                     onCheckedChange={(checked) => handleNotificationChange('push', checked as boolean)}
                   />
-                  <Label htmlFor="push-notifications">Push notifications</Label>
+                  <Label htmlFor="push-notifications">Notificações push</Label>
                 </div>
               </div>
             </div>
@@ -268,11 +279,11 @@ export function UserNewPage() {
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-6 border-t">
               <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={loading}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={loading} className="flex items-center gap-2">
                 <Save className="w-4 h-4" />
-                {loading ? 'Creating...' : 'Create User'}
+                {loading ? 'Criando...' : 'Criar Usuário'}
               </Button>
             </div>
           </form>

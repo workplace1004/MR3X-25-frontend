@@ -3,12 +3,21 @@ import { Wrench, Eye, EyeOff, Plus, Edit, Trash2, CheckCircle2, XCircle, Externa
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext'
+
+interface Integration {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  description: string;
+  config: Record<string, string>;
+}
 
 export default function IntegrationsPage() {
   const { hasPermission } = useAuth()
@@ -16,9 +25,15 @@ export default function IntegrationsPage() {
   const canManageIntegrations = hasPermission('integrations:create') || hasPermission('integrations:update')
 
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
-  const [_showEditModal, setShowEditModal] = useState(false)
-  const [_selectedIntegration, setSelectedIntegration] = useState<any>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null)
   const [showApiKey, setShowApiKey] = useState<Record<string, boolean>>({})
+
+  const [editForm, setEditForm] = useState({
+    apiKey: '',
+    environment: '',
+    workspace: '',
+  })
 
   const [apiKeyForm, setApiKeyForm] = useState({
     name: '',
@@ -84,6 +99,23 @@ export default function IntegrationsPage() {
     toast.success('API Key criada com sucesso!')
     setShowApiKeyModal(false)
     setApiKeyForm({ name: '', description: '' })
+  }
+
+  const handleEditIntegration = (integration: Integration) => {
+    setSelectedIntegration(integration)
+    setEditForm({
+      apiKey: integration.config.apiKey || '',
+      environment: integration.config.environment || '',
+      workspace: integration.config.workspace || '',
+    })
+    setShowEditModal(true)
+  }
+
+  const handleSaveIntegration = () => {
+    toast.success(`Integração ${selectedIntegration?.name} atualizada com sucesso!`)
+    setShowEditModal(false)
+    setSelectedIntegration(null)
+    setEditForm({ apiKey: '', environment: '', workspace: '' })
   }
 
   const toggleApiKeyVisibility = (id: string) => {
@@ -181,10 +213,7 @@ export default function IntegrationsPage() {
                       </Button>
                     )}
                     {integration.status === 'connected' && canManageIntegrations && (
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => {
-                        setSelectedIntegration(integration)
-                        setShowEditModal(true)
-                      }}>
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEditIntegration(integration)}>
                         <Edit className="w-4 h-4 mr-2" />
                         Configurar
                       </Button>
@@ -268,6 +297,9 @@ export default function IntegrationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Criar Nova API Key</DialogTitle>
+            <DialogDescription>
+              Crie uma nova chave de API para acesso programático ao sistema.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -294,6 +326,64 @@ export default function IntegrationsPage() {
               </Button>
               <Button onClick={handleCreateApiKey}>
                 Criar API Key
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Integration Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configurar {selectedIntegration?.name}</DialogTitle>
+            <DialogDescription>
+              Configure as credenciais e parâmetros da integração.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-api-key">API Key</Label>
+              <Input
+                id="edit-api-key"
+                type="password"
+                value={editForm.apiKey}
+                onChange={(e) => setEditForm(prev => ({ ...prev, apiKey: e.target.value }))}
+                placeholder="Digite a API Key"
+              />
+            </div>
+            {selectedIntegration?.type === 'payment' && (
+              <div>
+                <Label htmlFor="edit-environment">Ambiente</Label>
+                <select
+                  id="edit-environment"
+                  value={editForm.environment}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, environment: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-md"
+                >
+                  <option value="">Selecione o ambiente</option>
+                  <option value="sandbox">Sandbox (Testes)</option>
+                  <option value="production">Produção</option>
+                </select>
+              </div>
+            )}
+            {selectedIntegration?.type === 'document' && (
+              <div>
+                <Label htmlFor="edit-workspace">Workspace</Label>
+                <Input
+                  id="edit-workspace"
+                  value={editForm.workspace}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, workspace: e.target.value }))}
+                  placeholder="Ex: mr3x"
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveIntegration}>
+                Salvar Configuração
               </Button>
             </div>
           </div>

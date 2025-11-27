@@ -49,7 +49,7 @@ export function UserDetailPage() {
   // Redirect if no permission
   useEffect(() => {
     if (!canViewUsers) {
-      toast.error('You do not have permission to view users');
+      toast.error('Você não tem permissão para visualizar usuários');
       navigate('/dashboard/users');
     }
   }, [canViewUsers, navigate]);
@@ -67,7 +67,7 @@ export function UserDetailPage() {
       const userData = await usersAPI.getUserById(id);
       setUser(userData);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to fetch user details');
+      toast.error(error.message || 'Falha ao carregar detalhes do usuário');
       navigate('/dashboard/users');
     } finally {
       setLoading(false);
@@ -76,16 +76,16 @@ export function UserDetailPage() {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!user || !canDeleteUsers) {
-      toast.error('You do not have permission to change user status');
+      toast.error('Você não tem permissão para alterar o status do usuário');
       return;
     }
 
     try {
-      await usersAPI.changeStatus(user.id, newStatus as 'ACTIVE' | 'SUSPENDED', `Status changed to ${newStatus}`);
-      toast.success(`User ${newStatus.toLowerCase()}`);
+      await usersAPI.changeStatus(user.id, newStatus as 'ACTIVE' | 'SUSPENDED', `Status alterado para ${newStatus}`);
+      toast.success(newStatus === 'ACTIVE' ? 'Usuário ativado com sucesso' : 'Usuário suspenso com sucesso');
       fetchUserDetails(user.id);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to change user status');
+      toast.error(error.message || 'Falha ao alterar status do usuário');
     }
   };
 
@@ -134,8 +134,8 @@ export function UserDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-muted-foreground">Access Denied</h2>
-          <p className="text-muted-foreground">You do not have permission to view users.</p>
+          <h2 className="text-xl font-semibold text-muted-foreground">Acesso Negado</h2>
+          <p className="text-muted-foreground">Você não tem permissão para visualizar usuários.</p>
         </div>
       </div>
     );
@@ -152,7 +152,7 @@ export function UserDetailPage() {
   if (!user) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">User not found</p>
+        <p className="text-muted-foreground">Usuário não encontrado</p>
       </div>
     );
   }
@@ -164,30 +164,30 @@ export function UserDetailPage() {
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
-            Back
+            Voltar
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{user.name}</h1>
-            <p className="text-muted-foreground">User Profile Details</p>
+            <p className="text-muted-foreground">Detalhes do Perfil do Usuário</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {canEditUsers && (
             <Button variant="outline" onClick={() => navigate(`/dashboard/users/${user.id}/edit`)} className="flex items-center gap-2">
               <Edit className="w-4 h-4" />
-              Edit User
+              Editar Usuário
             </Button>
           )}
           {canDeleteUsers &&
             (user.status === 'ACTIVE' ? (
               <Button variant="destructive" onClick={() => handleStatusChange('SUSPENDED')} className="flex items-center gap-2">
                 <UserX className="w-4 h-4" />
-                Suspend
+                Suspender
               </Button>
             ) : (
               <Button onClick={() => handleStatusChange('ACTIVE')} className="flex items-center gap-2">
                 <UserCheck className="w-4 h-4" />
-                Activate
+                Ativar
               </Button>
             ))}
         </div>
@@ -201,7 +201,7 @@ export function UserDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                General Information
+                Informações Gerais
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -211,7 +211,7 @@ export function UserDetailPage() {
                   <p className="text-sm">#{user.id}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Name</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
                   <p className="text-sm">{user.name}</p>
                 </div>
                 <div className="space-y-2">
@@ -222,18 +222,18 @@ export function UserDetailPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Telefone</Label>
                   <p className="text-sm flex items-center gap-2">
                     <Phone className="w-4 h-4" />
-                    {user.phone || 'Not provided'}
+                    {user.phone || 'Não informado'}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Document</Label>
-                  <p className="text-sm">{user.document || 'Not provided'}</p>
+                  <Label className="text-sm font-medium text-muted-foreground">Documento</Label>
+                  <p className="text-sm">{user.document || 'Não informado'}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Role</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Função</Label>
                   <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
                 </div>
                 <div className="space-y-2">
@@ -241,7 +241,7 @@ export function UserDetailPage() {
                   <Badge className={getStatusColor(user.status)}>{user.status}</Badge>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-muted-foreground">Plan</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Plano</Label>
                   <Badge variant="outline">{user.plan}</Badge>
                 </div>
               </div>
@@ -251,41 +251,41 @@ export function UserDetailPage() {
           {/* Linked Entities */}
           <Card>
             <CardHeader>
-              <CardTitle>Linked Entities</CardTitle>
-              <CardDescription>Properties and contracts associated with this user</CardDescription>
+              <CardTitle>Entidades Vinculadas</CardTitle>
+              <CardDescription>Propriedades e contratos associados a este usuário</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium mb-2">Properties ({user._count?.ownedProperties || 0})</h4>
+                <h4 className="font-medium mb-2">Propriedades ({user._count?.ownedProperties || 0})</h4>
                 {user.ownedProperties && user.ownedProperties.length > 0 ? (
                   <div className="space-y-2">
                     {user.ownedProperties.map((property) => (
                       <div key={property.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">Property #{property.id}</span>
+                        <span className="text-sm">Propriedade #{property.id}</span>
                         <span className="text-sm text-muted-foreground">{property.name}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No properties linked</p>
+                  <p className="text-sm text-muted-foreground">Nenhuma propriedade vinculada</p>
                 )}
               </div>
 
               <Separator />
 
               <div>
-                <h4 className="font-medium mb-2">Contracts ({user._count?.contracts || 0})</h4>
+                <h4 className="font-medium mb-2">Contratos ({user._count?.contracts || 0})</h4>
                 {user.contracts && user.contracts.length > 0 ? (
                   <div className="space-y-2">
                     {user.contracts.map((contract) => (
                       <div key={contract.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">Contract #{contract.id}</span>
+                        <span className="text-sm">Contrato #{contract.id}</span>
                         <Badge variant="outline">{contract.status}</Badge>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No contracts linked</p>
+                  <p className="text-sm text-muted-foreground">Nenhum contrato vinculado</p>
                 )}
               </div>
             </CardContent>
@@ -299,17 +299,17 @@ export function UserDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Account Information
+                Informações da Conta
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Created at</Label>
-                <p className="text-sm">{new Date(user.createdAt).toLocaleDateString()}</p>
+                <Label className="text-sm font-medium text-muted-foreground">Criado em</Label>
+                <p className="text-sm">{new Date(user.createdAt).toLocaleDateString('pt-BR')}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Last login</Label>
-                <p className="text-sm">{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</p>
+                <Label className="text-sm font-medium text-muted-foreground">Último login</Label>
+                <p className="text-sm">{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'}</p>
               </div>
             </CardContent>
           </Card>
@@ -319,7 +319,7 @@ export function UserDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5" />
-                Recent Activity
+                Atividade Recente
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -329,13 +329,13 @@ export function UserDetailPage() {
                     <div key={index} className="text-sm">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{log.event}</span>
-                        <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleDateString()}</span>
+                        <span className="text-muted-foreground">{new Date(log.timestamp).toLocaleDateString('pt-BR')}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No recent activity</p>
+                <p className="text-sm text-muted-foreground">Nenhuma atividade recente</p>
               )}
             </CardContent>
           </Card>
