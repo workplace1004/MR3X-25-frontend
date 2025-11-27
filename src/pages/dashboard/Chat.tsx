@@ -1,14 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { chatAPI } from '@/api'
+import { chatAPI } from '../../api'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { MessageSquare, Send, Menu, Trash2, Users } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../components/ui/alert-dialog'
+import { Button } from '../../components/ui/button'
+import { Badge } from '../../components/ui/badge'
+import { Card, CardContent } from '../../components/ui/card'
 
 interface Chat {
   id: string
@@ -53,7 +53,7 @@ export function Chat() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-muted-foreground">Acesso Negado</h2>
-          <p className="text-muted-foreground">Voce nao tem permissao para visualizar chat.</p>
+          <p className="text-muted-foreground">Você não tem permissão para visualizar chat.</p>
         </div>
       </div>
     )
@@ -124,7 +124,7 @@ export function Chat() {
         setSelectedChat(null)
       }
       setChatToDelete(null)
-      toast.success('Chat excluido com sucesso')
+      toast.success('Chat excluído com sucesso')
     },
     onError: () => {
       toast.error('Erro ao excluir chat')
@@ -156,10 +156,11 @@ export function Chat() {
       setAvailableUsers(users || [])
 
       if (!users || users.length === 0) {
-        toast.info('Nenhum usuario disponivel para chat.')
+        toast.info('Nenhum usuário disponível para chat. Verifique se você tem inquilinos cadastrados (se for proprietário) ou se está vinculado a um proprietário (se for inquilino).')
       }
     } catch (error) {
-      toast.error('Erro ao carregar usuarios disponiveis')
+      console.error('Error loading available users:', error)
+      toast.error('Erro ao carregar usuários disponíveis')
     }
   }
 
@@ -204,7 +205,7 @@ export function Chat() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Chat</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Converse com inquilinos e gerencie comunicacoes
+            Converse com inquilinos e gerencie comunicações
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -482,12 +483,19 @@ export function Chat() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Novo Chat</DialogTitle>
+            <DialogDescription>
+              Selecione um usuário para iniciar uma nova conversa
+            </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             {availableUsers.length === 0 ? (
               <div className="text-center py-4">
                 <div className="text-muted-foreground text-sm mb-2">
-                  Nenhum usuario disponivel para chat
+                  Nenhum usuário disponível para chat
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p className="mb-1">• Se você é <strong>proprietário</strong>: cadastre inquilinos primeiro</p>
+                  <p>• Se você é <strong>inquilino</strong>: verifique se está vinculado a um proprietário</p>
                 </div>
               </div>
             ) : (
@@ -495,7 +503,7 @@ export function Chat() {
                 {availableUsers.map((u: any) => (
                   <li key={u.id} className="flex justify-between items-center p-2 border border-border rounded-lg">
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{u.name || 'Usuario'}</div>
+                      <div className="text-sm font-medium">{u.name || 'Usuário'}</div>
                       <div className="text-xs text-muted-foreground">{u.email}</div>
                     </div>
                     <Button
@@ -514,13 +522,13 @@ export function Chat() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de confirmacao de exclusao */}
+      {/* Modal de confirmação de exclusão */}
       <AlertDialog open={chatToDelete !== null} onOpenChange={(open) => !open && setChatToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Chat</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja deletar este chat? Esta acao nao pode ser desfeita.
+              Tem certeza que deseja deletar este chat? Esta ação não pode ser desfeita e todas as mensagens serão permanentemente removidas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

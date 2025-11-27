@@ -60,7 +60,7 @@ export default function IntegrationsPage() {
     },
   ]
 
-  const integrations = [
+  const integrations: Integration[] = [
     {
       id: '1',
       name: 'Asaas',
