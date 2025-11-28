@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesAPI, usersAPI, addressAPI } from '../../api';
+import { propertiesAPI, usersAPI, addressAPI, paymentsAPI } from '../../api';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
@@ -64,10 +64,12 @@ export function Properties() {
   const queryClient = useQueryClient();
 
   // Check permissions
+  // CEO can VIEW but cannot CREATE/EDIT/DELETE properties
+  const isCEO = user?.role === 'CEO';
   const canViewProperties = hasPermission('properties:read');
-  const canCreateProperties = hasPermission('properties:create');
-  const canUpdateProperties = hasPermission('properties:update');
-  const canDeleteProperties = hasPermission('properties:delete');
+  const canCreateProperties = hasPermission('properties:create') && !isCEO;
+  const canUpdateProperties = hasPermission('properties:update') && !isCEO;
+  const canDeleteProperties = hasPermission('properties:delete') && !isCEO;
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -449,6 +451,46 @@ export function Properties() {
     },
   });
 
+  // Issue charge mutation
+  const [issuingCharge, setIssuingCharge] = useState(false);
+  const issueChargeMutation = useMutation({
+    mutationFn: (data: any) => paymentsAPI.createPayment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      setShowInvoiceModal(false);
+      setInvoiceData({ amount: '', dueDate: '', description: '' });
+      toast.success('Cobrança emitida com sucesso!');
+    },
+    onError: (error: any) => {
+      console.error('Error issuing charge:', error);
+      toast.error('Erro ao emitir cobrança');
+    },
+    onSettled: () => {
+      setIssuingCharge(false);
+    },
+  });
+
+  // Generate receipt mutation
+  const [generatingReceipt, setGeneratingReceipt] = useState(false);
+  const generateReceiptMutation = useMutation({
+    mutationFn: (data: any) => paymentsAPI.createPayment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      setShowReceiptModal(false);
+      setReceiptData({ amount: '', paymentDate: '', paymentMethod: 'PIX' });
+      toast.success('Recibo gerado com sucesso!');
+    },
+    onError: (error: any) => {
+      console.error('Error generating receipt:', error);
+      toast.error('Erro ao gerar recibo');
+    },
+    onSettled: () => {
+      setGeneratingReceipt(false);
+    },
+  });
+
   // Handle form submissions
   const handleCreateProperty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -611,20 +653,76 @@ export function Properties() {
     setShowWhatsAppModal(true);
   };
 
-  const handleIssueInvoice = (property: any) => {
+  const handleIssueInvoice = async (property: any) => {
     closeAllModals();
     setSelectedProperty(property);
+
+    // Try to fetch the last PENDING payment for this property
+    try {
+      const payments = await paymentsAPI.getPaymentsByProperty(property.id);
+      const lastPendingPayment = payments.find((p: any) => p.status === 'PENDING');
+
+      if (lastPendingPayment) {
+        // Pre-fill with last pending payment data
+        setInvoiceData({
+          amount: lastPendingPayment.valorPago ? String(lastPendingPayment.valorPago) : (property.monthlyRent ? String(property.monthlyRent) : ''),
+          dueDate: lastPendingPayment.dueDate ? new Date(lastPendingPayment.dueDate).toISOString().split('T')[0] : '',
+          description: lastPendingPayment.description || `Aluguel - ${property.name || property.address}`
+        });
+        setShowInvoiceModal(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    }
+
+    // Calculate next due date based on dueDay
+    let nextDueDate = '';
+    if (property.dueDay) {
+      const today = new Date();
+      const dueDay = parseInt(property.dueDay);
+      let dueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
+      // If the due day has passed this month, move to next month
+      if (dueDate < today) {
+        dueDate = new Date(today.getFullYear(), today.getMonth() + 1, dueDay);
+      }
+      nextDueDate = dueDate.toISOString().split('T')[0];
+    } else if (property.nextDueDate) {
+      nextDueDate = new Date(property.nextDueDate).toISOString().split('T')[0];
+    }
+
     setInvoiceData({
       amount: property.monthlyRent ? String(property.monthlyRent) : '',
-      dueDate: '',
+      dueDate: nextDueDate,
       description: `Aluguel - ${property.name || property.address}`
     });
     setShowInvoiceModal(true);
   };
 
-  const handleGenerateReceipt = (property: any) => {
+  const handleGenerateReceipt = async (property: any) => {
     closeAllModals();
     setSelectedProperty(property);
+
+    // Try to fetch the last PAID payment for this property
+    try {
+      const payments = await paymentsAPI.getPaymentsByProperty(property.id);
+      const lastPaidPayment = payments.find((p: any) => p.status === 'PAID');
+
+      if (lastPaidPayment) {
+        // Pre-fill with last paid payment data
+        setReceiptData({
+          amount: lastPaidPayment.valorPago ? String(lastPaidPayment.valorPago) : (property.monthlyRent ? String(property.monthlyRent) : ''),
+          paymentDate: lastPaidPayment.dataPagamento ? new Date(lastPaidPayment.dataPagamento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          paymentMethod: lastPaidPayment.paymentMethod || 'PIX'
+        });
+        setShowReceiptModal(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    }
+
+    // Default values if no paid payment found
     setReceiptData({
       amount: property.monthlyRent ? String(property.monthlyRent) : '',
       paymentDate: new Date().toISOString().split('T')[0],
@@ -1725,20 +1823,44 @@ export function Properties() {
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setShowInvoiceModal(false)}>
+                  <Button type="button" variant="outline" onClick={() => setShowInvoiceModal(false)} disabled={issuingCharge}>
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     className="bg-primary hover:bg-primary/90"
+                    disabled={issuingCharge || !invoiceData.amount || !invoiceData.dueDate}
                     onClick={(e) => {
                       e.preventDefault();
-                      toast.success('Cobrança emitida com sucesso!');
-                      setShowInvoiceModal(false);
+                      if (!selectedProperty) return;
+
+                      // Parse amount (handle Brazilian format)
+                      const amountStr = invoiceData.amount.replace(/\./g, '').replace(',', '.');
+                      const amount = parseFloat(amountStr);
+
+                      if (isNaN(amount) || amount <= 0) {
+                        toast.error('Valor inválido');
+                        return;
+                      }
+
+                      setIssuingCharge(true);
+                      issueChargeMutation.mutate({
+                        valorPago: amount,
+                        dataPagamento: new Date().toISOString().split('T')[0],
+                        propertyId: selectedProperty.id,
+                        tipo: 'ALUGUEL',
+                        description: invoiceData.description || 'Cobrança de aluguel',
+                        dueDate: invoiceData.dueDate,
+                        status: 'PENDING',
+                      });
                     }}
                   >
-                    <Calculator className="w-4 h-4 mr-2" />
-                    Emitir Cobrança
+                    {issuingCharge ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Calculator className="w-4 h-4 mr-2" />
+                    )}
+                    {issuingCharge ? 'Emitindo...' : 'Emitir Cobrança'}
                   </Button>
                 </div>
               </form>
@@ -1791,20 +1913,44 @@ export function Properties() {
                   </select>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setShowReceiptModal(false)}>
+                  <Button type="button" variant="outline" onClick={() => setShowReceiptModal(false)} disabled={generatingReceipt}>
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     className="bg-primary hover:bg-primary/90"
+                    disabled={generatingReceipt || !receiptData.amount || !receiptData.paymentDate}
                     onClick={(e) => {
                       e.preventDefault();
-                      toast.success('Recibo gerado com sucesso!');
-                      setShowReceiptModal(false);
+                      if (!selectedProperty) return;
+
+                      // Parse amount (handle Brazilian format)
+                      const amountStr = receiptData.amount.replace(/\./g, '').replace(',', '.');
+                      const amount = parseFloat(amountStr);
+
+                      if (isNaN(amount) || amount <= 0) {
+                        toast.error('Valor inválido');
+                        return;
+                      }
+
+                      setGeneratingReceipt(true);
+                      generateReceiptMutation.mutate({
+                        valorPago: amount,
+                        dataPagamento: receiptData.paymentDate,
+                        propertyId: selectedProperty.id,
+                        tipo: 'ALUGUEL',
+                        description: `Recibo de pagamento - ${selectedProperty.name || selectedProperty.address}`,
+                        status: 'PAID',
+                        paymentMethod: receiptData.paymentMethod,
+                      });
                     }}
                   >
-                    <Receipt className="w-4 h-4 mr-2" />
-                    Gerar Recibo
+                    {generatingReceipt ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Receipt className="w-4 h-4 mr-2" />
+                    )}
+                    {generatingReceipt ? 'Gerando...' : 'Gerar Recibo'}
                   </Button>
                 </div>
               </form>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, UserPlus } from 'lucide-react';
+import { ArrowLeft, Save, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -12,28 +12,61 @@ import { validateDocument } from '../../lib/validation';
 import { usersAPI } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
 
-const ALL_ROLES = [
-  { value: 'CEO', label: 'CEO - Administrador MR3X' },
-  { value: 'ADMIN', label: 'Admin - Administrador Sistema' },
-  { value: 'AGENCY_MANAGER', label: 'Gestor - Gerente de Agência' },
-  { value: 'BROKER', label: 'Corretor - Agente Imobiliário' },
-  { value: 'PROPRIETARIO', label: 'Proprietário - Dono de Imóvel' },
-  { value: 'INDEPENDENT_OWNER', label: 'Proprietário Independente - Sem Agência' },
-  { value: 'INQUILINO', label: 'Inquilino - Locatário' },
-  { value: 'BUILDING_MANAGER', label: 'Síndico - Administrador de Condomínio' },
-  { value: 'LEGAL_AUDITOR', label: 'Auditor - Auditoria Legal' },
-  { value: 'REPRESENTATIVE', label: 'Representante - Afiliado' },
-  { value: 'API_CLIENT', label: 'Cliente API - Integração' },
-];
+/**
+ * Role labels for display in dropdown
+ */
+const ROLE_LABELS: Record<string, string> = {
+  'CEO': 'CEO - Administrador MR3X',
+  'ADMIN': 'Admin - Administrador Sistema',
+  'AGENCY_ADMIN': 'Diretor de Agência - Dono de Imobiliária',
+  'AGENCY_MANAGER': 'Gestor - Gerente de Agência',
+  'BROKER': 'Corretor - Agente Imobiliário',
+  'PROPRIETARIO': 'Proprietário - Dono de Imóvel',
+  'INDEPENDENT_OWNER': 'Proprietário Independente - Sem Agência',
+  'INQUILINO': 'Inquilino - Locatário',
+  'BUILDING_MANAGER': 'Síndico - Administrador de Condomínio',
+  'LEGAL_AUDITOR': 'Auditor - Auditoria Legal',
+  'REPRESENTATIVE': 'Representante - Afiliado',
+  'API_CLIENT': 'Cliente API - Integração',
+};
 
-// Filter roles based on current user's role
+/**
+ * Role Creation Hierarchy - Who can create which roles
+ * Based on MR3X Complete Hierarchy Requirements:
+ *
+ * CEO -> ADMIN only
+ * ADMIN -> AGENCY_MANAGER (MR3X), LEGAL_AUDITOR, REPRESENTATIVE, API_CLIENT
+ * AGENCY_ADMIN -> AGENCY_MANAGER, BROKER, PROPRIETARIO
+ * AGENCY_MANAGER -> BROKER, PROPRIETARIO
+ * INDEPENDENT_OWNER -> INQUILINO, BUILDING_MANAGER
+ * Others -> Cannot create users
+ */
+const ROLE_CREATION_ALLOWED: Record<string, string[]> = {
+  'CEO': ['ADMIN'],
+  'ADMIN': ['AGENCY_MANAGER', 'LEGAL_AUDITOR', 'REPRESENTATIVE', 'API_CLIENT'],
+  'AGENCY_ADMIN': ['AGENCY_MANAGER', 'BROKER', 'PROPRIETARIO'],
+  'AGENCY_MANAGER': ['BROKER', 'PROPRIETARIO'],
+  'INDEPENDENT_OWNER': ['INQUILINO', 'BUILDING_MANAGER'],
+  // These roles cannot create users
+  'BROKER': [],
+  'PROPRIETARIO': [],
+  'INQUILINO': [],
+  'BUILDING_MANAGER': [],
+  'LEGAL_AUDITOR': [],
+  'REPRESENTATIVE': [],
+  'API_CLIENT': [],
+};
+
+/**
+ * Get roles that the current user can create based on hierarchy
+ */
 const getAvailableRoles = (userRole: string | undefined) => {
-  // Only CEO can create CEO and ADMIN users
-  if (userRole === 'CEO') {
-    return ALL_ROLES;
-  }
-  // ADMIN and other roles cannot create CEO or ADMIN users
-  return ALL_ROLES.filter(role => role.value !== 'CEO' && role.value !== 'ADMIN');
+  if (!userRole) return [];
+  const allowedRoles = ROLE_CREATION_ALLOWED[userRole] || [];
+  return allowedRoles.map(role => ({
+    value: role,
+    label: ROLE_LABELS[role] || role
+  }));
 };
 
 const STATUS_OPTIONS = [
@@ -46,6 +79,7 @@ export function UserNewPage() {
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const availableRoles = getAvailableRoles(user?.role);
   const [formData, setFormData] = useState({
     name: '',
@@ -245,14 +279,24 @@ export function UserNewPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Digite a senha"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    placeholder="Digite a senha"
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 

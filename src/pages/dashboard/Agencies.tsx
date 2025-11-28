@@ -43,11 +43,13 @@ import {
 } from '@/components/ui/tooltip'
 
 export function Agencies() {
-  const { hasPermission } = useAuth()
+  const { hasPermission, user } = useAuth()
 
+  // CEO can VIEW but cannot CREATE/EDIT/DELETE agencies
+  const isCEO = user?.role === 'CEO'
   const canViewAgencies = hasPermission('agencies:read')
-  const canUpdateAgencies = hasPermission('agencies:update')
-  const canDeleteAgencies = hasPermission('agencies:delete')
+  const canUpdateAgencies = hasPermission('agencies:update') && !isCEO
+  const canDeleteAgencies = hasPermission('agencies:delete') && !isCEO
 
   if (!canViewAgencies) {
     return (

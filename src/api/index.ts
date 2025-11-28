@@ -145,6 +145,11 @@ export const paymentsAPI = {
     return response.data;
   },
 
+  getPaymentsByProperty: async (propertyId: string) => {
+    const response = await apiClient.get(`/payments/property/${propertyId}`);
+    return response.data;
+  },
+
   createPayment: async (payment: any) => {
     const response = await apiClient.post('/payments', payment);
     return response.data;
@@ -193,6 +198,11 @@ export const usersAPI = {
 
   getUserDetails: async () => {
     const response = await apiClient.get('/users/details');
+    return response.data;
+  },
+
+  checkEmailExists: async (email: string) => {
+    const response = await apiClient.get(`/users/check-email?email=${encodeURIComponent(email)}`);
     return response.data;
   },
 

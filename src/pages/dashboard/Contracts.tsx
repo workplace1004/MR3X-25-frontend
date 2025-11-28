@@ -56,10 +56,12 @@ export function Contracts() {
   const queryClient = useQueryClient();
 
   // Check permissions
+  // CEO can VIEW but cannot CREATE/EDIT/DELETE contracts
+  const isCEO = user?.role === 'CEO';
   const canViewContracts = hasPermission('contracts:read');
-  const canCreateContracts = hasPermission('contracts:create');
-  const canUpdateContracts = hasPermission('contracts:update');
-  const canDeleteContracts = hasPermission('contracts:delete');
+  const canCreateContracts = hasPermission('contracts:create') && !isCEO;
+  const canUpdateContracts = hasPermission('contracts:update') && !isCEO;
+  const canDeleteContracts = hasPermission('contracts:delete') && !isCEO;
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);

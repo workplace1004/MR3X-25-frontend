@@ -47,11 +47,16 @@ import {
 } from '../../components/ui/tooltip';
 
 export function Payments() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const queryClient = useQueryClient();
 
   // Check permissions
+  // CEO can VIEW but cannot CREATE/EDIT/DELETE payments
+  const isCEO = user?.role === 'CEO';
   const canViewPayments = hasPermission('payments:read');
+  const canCreatePayments = hasPermission('payments:create') && !isCEO;
+  const canUpdatePayments = hasPermission('payments:update') && !isCEO;
+  const canDeletePayments = hasPermission('payments:delete') && !isCEO;
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -298,20 +303,22 @@ export function Payments() {
               Acompanhe todos os seus pagamentos
             </p>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => {
-                  closeAllModals();
-                  setShowCreateModal(true);
-                }}
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Registrar Pagamento</TooltipContent>
-          </Tooltip>
+          {canCreatePayments && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={() => {
+                    closeAllModals();
+                    setShowCreateModal(true);
+                  }}
+                >
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Registrar Pagamento</TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         {/* Annual Summary */}
@@ -410,14 +417,18 @@ export function Payments() {
                                 <Eye className="w-4 h-4 mr-2" />
                                 Visualizar
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEditPayment(payment)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Editar pagamento
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeletePayment(payment)} className="text-red-600 focus:text-red-700">
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir pagamento
-                              </DropdownMenuItem>
+                              {canUpdatePayments && (
+                                <DropdownMenuItem onClick={() => handleEditPayment(payment)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Editar pagamento
+                                </DropdownMenuItem>
+                              )}
+                              {canDeletePayments && (
+                                <DropdownMenuItem onClick={() => handleDeletePayment(payment)} className="text-red-600 focus:text-red-700">
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Excluir pagamento
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -433,16 +444,18 @@ export function Payments() {
                 <p className="text-sm sm:text-base text-muted-foreground mb-4">
                   Comece registrando seu primeiro pagamento
                 </p>
-                <Button
-                  onClick={() => {
-                    closeAllModals();
-                    setShowCreateModal(true);
-                  }}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Registrar Pagamento
-                </Button>
+                {canCreatePayments && (
+                  <Button
+                    onClick={() => {
+                      closeAllModals();
+                      setShowCreateModal(true);
+                    }}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Registrar Pagamento
+                  </Button>
+                )}
               </div>
             )}
           </div>

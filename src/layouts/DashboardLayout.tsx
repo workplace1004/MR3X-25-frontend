@@ -79,47 +79,118 @@ export function DashboardLayout() {
     // Check role-specific items
     if (item.roles && !item.roles.includes(user?.role || '')) return false;
 
-    // CEO doesn't need operational property/contract/payment/notification management pages
+    /**
+     * Role-based menu exclusions based on MR3X Hierarchy Requirements
+     */
+
+    // CEO: Root profile - Can VIEW all pages but only EDIT specific things
+    // Can only create ADMIN users (enforced in backend and UserNewPage)
+    // CEO can view all menus - no exclusions for viewing
     if (user?.role === 'CEO') {
-      const excludeForCEO = [
+      // CEO can view everything - no menu exclusions
+      // Edit restrictions are enforced at the component/backend level
+    }
+
+    // ADMIN: SaaS administrator - manages agencies, internal users, integrations
+    // Does NOT manage properties, contracts, payments directly
+    if (user?.role === 'ADMIN') {
+      const excludeForAdmin = [
         '/dashboard/properties',
         '/dashboard/contracts',
         '/dashboard/payments',
-        '/dashboard/notifications',
         '/dashboard/brokers',
         '/dashboard/tenants',
         '/dashboard/owners',
+        '/dashboard/managers',
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
       ];
-      if (excludeForCEO.includes(item.href)) return false;
+      if (excludeForAdmin.includes(item.href)) return false;
     }
 
-    // AGENCY_ADMIN doesn't need certain pages
+    // AGENCY_ADMIN: Agency director - manages agency operations
     if (user?.role === 'AGENCY_ADMIN') {
       const excludeForAgencyAdmin = [
-        '/dashboard/agencies',
-        '/dashboard/users',
+        '/dashboard/agencies', // Only CEO/ADMIN manage agencies
+        '/dashboard/users', // Uses specific pages for brokers, owners, etc.
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/settings',
       ];
       if (excludeForAgencyAdmin.includes(item.href)) return false;
     }
 
+    // AGENCY_MANAGER: Manages brokers and owners
     if (user?.role === 'AGENCY_MANAGER') {
       const excludeForAgencyManager = [
         '/dashboard/users',
         '/dashboard/agencies',
+        '/dashboard/managers', // Only AGENCY_ADMIN sees this
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/settings',
       ];
       if (excludeForAgencyManager.includes(item.href)) return false;
     }
 
+    // BROKER: Manages own properties/contracts only
     if (user?.role === 'BROKER') {
       const excludeForBroker = [
         '/dashboard/brokers',
         '/dashboard/owners',
         '/dashboard/users',
-        '/dashboard/reports',
+        '/dashboard/reports', // Limited report access
+        '/dashboard/agencies',
+        '/dashboard/managers',
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/settings',
       ];
       if (excludeForBroker.includes(item.href)) return false;
     }
 
+    // PROPRIETARIO: Owner linked to agency - limited access
+    if (user?.role === 'PROPRIETARIO') {
+      const excludeForProprietario = [
+        '/dashboard/brokers',
+        '/dashboard/owners',
+        '/dashboard/users',
+        '/dashboard/agencies',
+        '/dashboard/managers',
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/tenants', // Cannot manage tenants - goes through agency
+      ];
+      if (excludeForProprietario.includes(item.href)) return false;
+    }
+
+    // INDEPENDENT_OWNER: Self-managed "mini agency"
     if (user?.role === 'INDEPENDENT_OWNER') {
       const excludeForIndependentOwner = [
         '/dashboard/brokers',
@@ -130,21 +201,114 @@ export function DashboardLayout() {
         '/dashboard/agency-split-config',
         '/dashboard/agency-plan-config',
         '/dashboard/users',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/audit',
       ];
       if (excludeForIndependentOwner.includes(item.href)) return false;
     }
 
-    if (user?.role === 'PROPRIETARIO') {
-      const excludeForProprietario = [
+    // INQUILINO: Tenant - very limited access
+    if (user?.role === 'INQUILINO') {
+      const excludeForInquilino = [
         '/dashboard/brokers',
         '/dashboard/owners',
+        '/dashboard/tenants',
+        '/dashboard/users',
         '/dashboard/agencies',
         '/dashboard/managers',
         '/dashboard/agency-admin',
         '/dashboard/agency-split-config',
         '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/settings',
+        '/dashboard/reports', // Limited or no report access
       ];
-      if (excludeForProprietario.includes(item.href)) return false;
+      if (excludeForInquilino.includes(item.href)) return false;
+    }
+
+    // BUILDING_MANAGER: Condominium manager - limited to common areas
+    if (user?.role === 'BUILDING_MANAGER') {
+      const excludeForBuildingManager = [
+        '/dashboard/brokers',
+        '/dashboard/owners',
+        '/dashboard/tenants',
+        '/dashboard/users',
+        '/dashboard/agencies',
+        '/dashboard/managers',
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/settings',
+      ];
+      if (excludeForBuildingManager.includes(item.href)) return false;
+    }
+
+    // LEGAL_AUDITOR: Read-only audit access
+    if (user?.role === 'LEGAL_AUDITOR') {
+      const excludeForAuditor = [
+        '/dashboard/brokers',
+        '/dashboard/owners',
+        '/dashboard/tenants',
+        '/dashboard/users',
+        '/dashboard/agencies',
+        '/dashboard/managers',
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/documents',
+        '/dashboard/settings',
+        '/dashboard/chat', // Auditors don't chat
+        '/dashboard/notifications',
+      ];
+      if (excludeForAuditor.includes(item.href)) return false;
+    }
+
+    // REPRESENTATIVE: Sales representative
+    if (user?.role === 'REPRESENTATIVE') {
+      const excludeForRepresentative = [
+        '/dashboard/properties',
+        '/dashboard/contracts',
+        '/dashboard/payments',
+        '/dashboard/brokers',
+        '/dashboard/owners',
+        '/dashboard/tenants',
+        '/dashboard/managers',
+        '/dashboard/agency-admin',
+        '/dashboard/agency-split-config',
+        '/dashboard/agency-plan-config',
+        '/dashboard/plans',
+        '/dashboard/billing',
+        '/dashboard/communications',
+        '/dashboard/integrations',
+        '/dashboard/audit',
+        '/dashboard/documents',
+        '/dashboard/notifications',
+      ];
+      if (excludeForRepresentative.includes(item.href)) return false;
+    }
+
+    // API_CLIENT: No web interface needed
+    if (user?.role === 'API_CLIENT') {
+      // API clients should not have web access - show minimal menu
+      const allowForApiClient = ['/dashboard', '/dashboard/change-password'];
+      if (!allowForApiClient.includes(item.href)) return false;
     }
 
     return true;

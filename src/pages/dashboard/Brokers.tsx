@@ -51,10 +51,12 @@ export function Brokers() {
   const { hasPermission, user } = useAuth()
   const queryClient = useQueryClient()
 
+  // CEO can VIEW but cannot CREATE/EDIT/DELETE brokers
+  const isCEO = user?.role === 'CEO'
   const canViewUsers = hasPermission('users:read')
-  const canCreateUsers = hasPermission('users:create')
-  const canUpdateUsers = hasPermission('users:update')
-  const canDeleteUsers = hasPermission('users:delete')
+  const canCreateUsers = hasPermission('users:create') && !isCEO
+  const canUpdateUsers = hasPermission('users:update') && !isCEO
+  const canDeleteUsers = hasPermission('users:delete') && !isCEO
 
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -97,6 +99,32 @@ export function Brokers() {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showEditPassword, setShowEditPassword] = useState(false)
+  const [emailError, setEmailError] = useState('')
+
+  // Email validation
+  const checkEmailExists = useCallback(async (email: string, currentEmail?: string) => {
+    if (!email || email === currentEmail) {
+      setEmailError('')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setEmailError('')
+      return
+    }
+
+    try {
+      const result = await usersAPI.checkEmailExists(email)
+      if (result.exists) {
+        setEmailError('Este email já está em uso, por favor altere o email')
+        toast.error('Este email já está em uso, por favor altere o email')
+      } else {
+        setEmailError('')
+      }
+    } catch (error) {
+      console.error('Error checking email:', error)
+    }
+  }, [])
 
   if (!canViewUsers) {
     return (
@@ -276,6 +304,7 @@ export function Brokers() {
 
   const handleEditBroker = async (broker: any) => {
     closeAllModals()
+    setEmailError('')
     setLoadingDetails(true)
     try {
       const fullBrokerDetails = await usersAPI.getUserById(broker.id)
@@ -375,6 +404,7 @@ export function Brokers() {
                 className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
                 onClick={() => {
                   closeAllModals()
+                  setEmailError('')
                   setShowCreateModal(true)
                 }}
               >
@@ -526,10 +556,12 @@ export function Brokers() {
             <p className="text-sm sm:text-base text-muted-foreground mb-4">
               Comece adicionando seu primeiro corretor
             </p>
-            <Button onClick={() => setShowCreateModal(true)} className="bg-orange-600 hover:bg-orange-700 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Cadastrar Corretor
-            </Button>
+            {canCreateUsers && (
+              <Button onClick={() => { setEmailError(''); setShowCreateModal(true) }} className="bg-orange-600 hover:bg-orange-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Cadastrar Corretor
+              </Button>
+            )}
           </div>
         )}
 
@@ -569,7 +601,8 @@ export function Brokers() {
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" type="email" value={newBroker.email} onChange={handleInputChange} placeholder="email@exemplo.com" required />
+                    <Input id="email" name="email" type="email" value={newBroker.email} onChange={handleInputChange} onBlur={(e) => checkEmailExists(e.target.value)} placeholder="email@exemplo.com" required className={emailError ? 'border-red-500' : ''} />
+                    {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
                   </div>
                 </div>
 
@@ -669,7 +702,8 @@ export function Brokers() {
                   </div>
                   <div>
                     <Label htmlFor="edit-email">Email</Label>
-                    <Input id="edit-email" name="email" type="email" value={editForm.email} onChange={handleEditInputChange} placeholder="email@exemplo.com" required />
+                    <Input id="edit-email" name="email" type="email" value={editForm.email} onChange={handleEditInputChange} onBlur={(e) => checkEmailExists(e.target.value, selectedBroker?.email)} placeholder="email@exemplo.com" required className={emailError ? 'border-red-500' : ''} />
+                    {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
                   </div>
                 </div>
 

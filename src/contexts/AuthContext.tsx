@@ -47,33 +47,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 //   API_CLIENT: 0,
 // };
 
-// Permission matrix for all roles
+/**
+ * Permission Matrix for all roles
+ * Based on MR3X Complete Hierarchy Requirements
+ *
+ * CEO: Root profile - manages platform, settings, security, admins only
+ *      Does NOT participate in real estate operations
+ *
+ * ADMIN: SaaS administrator - manages agencies, auditors, representatives, integrations
+ *        Does NOT manage properties, contracts, payments directly
+ *
+ * AGENCY_ADMIN: Agency director - full agency operations
+ * AGENCY_MANAGER: Agency manager - manages brokers and owners
+ * BROKER: Manages their own properties/contracts only
+ * PROPRIETARIO: Linked to agency, limited operations
+ * INDEPENDENT_OWNER: Self-managed "mini agency"
+ * INQUILINO: Tenant - read-only + payments
+ * BUILDING_MANAGER: Condominium manager - read-only for common areas
+ * LEGAL_AUDITOR: Read-only audit access
+ * REPRESENTATIVE: Sales representative
+ * API_CLIENT: API access only
+ */
 const ROLE_PERMISSIONS: Record<string, string[]> = {
+  // CEO: Root profile - Can VIEW all pages but only EDIT specific things
+  // Can ONLY create ADMIN users (enforced by backend)
+  // Cannot: create agencies, owners, operate properties/contracts
   CEO: [
     'dashboard:read',
-    'users:read', 'users:create', 'users:update', 'users:delete',
-    'agencies:read', 'agencies:create', 'agencies:update', 'agencies:delete',
-    'properties:read', 'properties:create', 'properties:update', 'properties:delete',
-    'contracts:read', 'contracts:create', 'contracts:update', 'contracts:delete',
-    'payments:read', 'payments:create', 'payments:update', 'payments:delete',
-    'reports:read', 'reports:create', 'reports:export',
-    'chat:read', 'chat:create', 'chat:update', 'chat:delete',
-    'notifications:read', 'notifications:create', 'notifications:update', 'notifications:delete',
-    'audit:read', 'audit:create',
-    'settings:read', 'settings:update',
-    'billing:read', 'billing:update',
-    'integrations:read', 'integrations:create', 'integrations:update', 'integrations:delete',
+    // View all
+    'users:read', 'users:create', 'users:update', 'users:delete', // Only ADMIN creation (backend enforced)
+    'agencies:read', // View agencies
+    'properties:read', // View properties
+    'contracts:read', // View contracts
+    'payments:read', // View payments
+    'reports:read', // View reports
+    'audit:read', // View audit logs
+    'documents:read', // View documents
+    'notifications:read', // View notifications
+    'chat:read', // View chats
+    // Edit only platform-level settings
+    'settings:read', 'settings:update', // Global settings
+    'billing:read', 'billing:update', // Platform billing
+    'integrations:read', 'integrations:create', 'integrations:update', 'integrations:delete', // Internal tokens
   ],
+  // ADMIN: SaaS administrator - manages agencies, internal users, integrations
+  // Does NOT manage properties, contracts, payments directly
   ADMIN: [
     'dashboard:read',
-    'users:read', 'users:create', 'users:update', 'users:delete',
+    'users:read', 'users:create', 'users:update', 'users:delete', // Manager, Auditor, Representative, API Client
     'agencies:read', 'agencies:create', 'agencies:update', 'agencies:delete',
-    'properties:read', 'properties:create', 'properties:update', 'properties:delete',
-    'contracts:read', 'contracts:create', 'contracts:update', 'contracts:delete',
-    'payments:read', 'payments:create', 'payments:update', 'payments:delete',
-    'reports:read', 'reports:create', 'reports:export',
-    'chat:read', 'chat:create', 'chat:update', 'chat:delete',
-    'notifications:read', 'notifications:create', 'notifications:update', 'notifications:delete',
+    'reports:read', 'reports:export',
+    'chat:read', 'chat:create', 'chat:update',
+    'notifications:read', 'notifications:create',
     'audit:read', 'audit:create',
     'documents:read', 'documents:create',
     'settings:read', 'settings:update',
@@ -120,14 +145,16 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'notifications:read', 'notifications:create', 'notifications:update',
     'settings:read', 'settings:update',
   ],
+  // PROPRIETARIO: Owner linked to agency - cannot create users or contracts without agency
+  // Limited operations, must go through agency for most actions
   PROPRIETARIO: [
     'dashboard:read',
-    'properties:read', 'properties:create', 'properties:update', 'properties:delete',
-    'contracts:read', 'contracts:create', 'contracts:update', 'contracts:delete',
-    'payments:read', 'payments:create', 'payments:update', 'payments:delete',
-    'reports:read', 'reports:create', 'reports:export',
-    'chat:read', 'chat:create', 'chat:update', 'chat:delete',
-    'notifications:read', 'notifications:create', 'notifications:update', 'notifications:delete',
+    'properties:read', // Can view their properties
+    'contracts:read', // Can view contracts
+    'payments:read', 'payments:create', // Can view and make payments
+    'reports:read', 'reports:export',
+    'chat:read', 'chat:create', 'chat:update',
+    'notifications:read',
     'settings:read', 'settings:update',
   ],
   INDEPENDENT_OWNER: [
@@ -143,15 +170,17 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'settings:read', 'settings:update',
     'integrations:read', 'integrations:update',
   ],
+  // INQUILINO: Tenant - read-only access except for signing and payments
+  // Cannot create or edit any registration
   INQUILINO: [
     'dashboard:read',
-    'properties:read',
-    'contracts:read',
-    'payments:read', 'payments:create', 'payments:update',
-    'reports:read', 'reports:export',
-    'chat:read', 'chat:create', 'chat:update', 'chat:delete',
-    'notifications:read', 'notifications:create',
-    'settings:read', 'settings:update',
+    'properties:read', // View property info
+    'contracts:read', // View their contract
+    'payments:read', 'payments:create', // View and make payments
+    'reports:read',
+    'chat:read', 'chat:create', // Can message but not delete
+    'notifications:read',
+    'settings:read',
   ],
   BUILDING_MANAGER: [
     'dashboard:read',

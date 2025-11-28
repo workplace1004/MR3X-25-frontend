@@ -24,9 +24,10 @@ export function UsersPage() {
   const pageSize = 10;
 
   // Check permissions
+  // CEO can VIEW all users but can only CREATE Admin users
   const canViewUsers = hasPermission('users:read');
-  const canCreateUsers = hasPermission('users:create') && user?.role !== 'CEO';
-  const canEditUsers = hasPermission('users:update') && user?.role !== 'CEO';
+  const canCreateUsers = hasPermission('users:create'); // CEO can create (only ADMIN)
+  const canEditUsers = hasPermission('users:update');
   const canDeleteUsers = hasPermission('users:delete');
   const isAllowedRole = user?.role === 'CEO' || user?.role === 'ADMIN';
   const allowAccess = canViewUsers && isAllowedRole;

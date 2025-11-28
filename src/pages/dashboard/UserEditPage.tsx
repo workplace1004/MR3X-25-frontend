@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, User } from 'lucide-react';
+import { ArrowLeft, Save, User, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -26,9 +26,9 @@ const ALL_ROLES = [
 
 // Filter roles based on current user's role
 const getAvailableRoles = (userRole: string | undefined) => {
-  // Only CEO can create/edit CEO and ADMIN users
+  // CEO can ONLY create ADMIN users
   if (userRole === 'CEO') {
-    return ALL_ROLES;
+    return ALL_ROLES.filter(role => role.value === 'ADMIN');
   }
   // ADMIN and other roles cannot create/edit CEO or ADMIN users
   return ALL_ROLES.filter(role => role.value !== 'CEO' && role.value !== 'ADMIN');
@@ -49,6 +49,7 @@ interface UserData {
   role: string;
   status: string;
   plan: string;
+  password?: string;
   notificationPreferences?: {
     email: boolean;
     whatsapp: boolean;
@@ -62,6 +63,7 @@ export function UserEditPage() {
   const { hasPermission, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const availableRoles = getAvailableRoles(user?.role);
   const [formData, setFormData] = useState<UserData>({
     id: '',
@@ -72,6 +74,7 @@ export function UserEditPage() {
     role: '',
     status: 'ACTIVE',
     plan: '',
+    password: '',
     notificationPreferences: {
       email: true,
       whatsapp: true,
@@ -110,6 +113,7 @@ export function UserEditPage() {
         role: userData.role || '',
         status: userData.status || 'ACTIVE',
         plan: userData.plan || '',
+        password: userData.plainPassword || '',
         notificationPreferences: userData.notificationPreferences || {
           email: true,
           whatsapp: true,
@@ -136,12 +140,16 @@ export function UserEditPage() {
 
     try {
       // Only send fields that the backend accepts
-      const updatePayload = {
+      const updatePayload: any = {
         name: formData.name,
         phone: formData.phone || undefined,
         role: formData.role,
         plan: formData.plan || undefined,
       };
+      // Only include password if it's provided
+      if (formData.password) {
+        updatePayload.password = formData.password;
+      }
       await usersAPI.updateUser(formData.id, updatePayload);
       toast.success('Usuário atualizado com sucesso');
       navigate('/dashboard/users');
@@ -306,6 +314,27 @@ export function UserEditPage() {
                   onChange={(e) => handleInputChange('plan', e.target.value)}
                   placeholder="Plano do usuário"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    placeholder="Digite a senha"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 

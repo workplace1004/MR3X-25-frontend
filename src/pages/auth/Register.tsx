@@ -14,7 +14,7 @@ export function Register() {
     password: '',
     confirmPassword: '',
     name: '',
-    role: 'PROPRIETARIO',
+    role: 'INDEPENDENT_OWNER', // Default to INDEPENDENT_OWNER (self-registration allowed)
     plan: 'FREE',
     phone: '',
     document: '',
@@ -255,24 +255,22 @@ export function Register() {
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base"
                 >
-                  {[
-                    { value: 'CEO', label: 'CEO - Administrador MR3X' },
-                    { value: 'ADMIN', label: 'Admin - Administrador Sistema' },
-                    { value: 'AGENCY_ADMIN', label: 'Diretor Agência - Proprietário de Agência' },
-                    { value: 'AGENCY_MANAGER', label: 'Gestor - Gerente de Agência' },
-                    { value: 'BROKER', label: 'Corretor - Agente Imobiliário' },
-                    { value: 'PROPRIETARIO', label: 'Proprietário - Dono de Imóvel' },
-                    { value: 'INQUILINO', label: 'Inquilino - Locatário' },
-                    { value: 'BUILDING_MANAGER', label: 'Síndico - Administrador de Condomínio' },
-                    { value: 'LEGAL_AUDITOR', label: 'Auditor - Auditoria Legal' },
-                    { value: 'REPRESENTATIVE', label: 'Representante - Afiliado' },
-                    { value: 'API_CLIENT', label: 'Cliente API - Integração' }
-                  ].map(item => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
+                  {/*
+                    Only AGENCY_ADMIN and INDEPENDENT_OWNER can self-register
+                    Per MR3X Hierarchy Requirements:
+                    - AGENCY_ADMIN: Self-registers and creates their own agency
+                    - INDEPENDENT_OWNER: Self-registers as "mini real estate agency"
+                    - All other roles must be created by authorized users
+                  */}
+                  <option value="INDEPENDENT_OWNER">Proprietário Independente - Gerenciar meus imóveis sem agência</option>
+                  <option value="AGENCY_ADMIN">Diretor de Agência - Criar minha imobiliária</option>
                 </select>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {formData.role === 'INDEPENDENT_OWNER' &&
+                    'Como Proprietário Independente, você poderá gerenciar seus próprios imóveis, inquilinos e contratos.'}
+                  {formData.role === 'AGENCY_ADMIN' &&
+                    'Como Diretor de Agência, você poderá criar sua imobiliária e gerenciar corretores, proprietários e imóveis.'}
+                </p>
               </div>
             )}
 
