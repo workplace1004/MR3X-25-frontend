@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Package, Edit, Crown, Star, Zap, Building2, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Package, Edit, Crown, Star, Zap, Building2, Clock, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Badge } from '../../components/ui/badge'
@@ -52,6 +52,8 @@ export default function PlansPage() {
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
   const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set())
+  const [requestsPage, setRequestsPage] = useState(1)
+  const requestsPerPage = 5
 
   const toggleRequestExpanded = (requestId: string) => {
     setExpandedRequests(prev => {
@@ -438,7 +440,13 @@ export default function PlansPage() {
       </Dialog>
 
       {/* Modification Requests Modal */}
-      <Dialog open={showRequestsModal} onOpenChange={setShowRequestsModal}>
+      <Dialog open={showRequestsModal} onOpenChange={(open) => {
+        setShowRequestsModal(open)
+        if (!open) {
+          setRequestsPage(1)
+          setExpandedRequests(new Set())
+        }
+      }}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Solicitações de Modificação de Planos</DialogTitle>
@@ -450,7 +458,14 @@ export default function PlansPage() {
             {allRequests.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">Nenhuma solicitação encontrada.</p>
             ) : (
-              allRequests.map((request: ModificationRequest) => {
+              (() => {
+                const totalPages = Math.ceil(allRequests.length / requestsPerPage)
+                const startIndex = (requestsPage - 1) * requestsPerPage
+                const paginatedRequests = allRequests.slice(startIndex, startIndex + requestsPerPage)
+
+                return (
+                  <>
+                    {paginatedRequests.map((request: ModificationRequest) => {
                 const isExpanded = expandedRequests.has(request.id)
                 return (
                   <Card key={request.id} className={`${request.status === 'PENDING' ? 'border-yellow-500' : ''}`}>
@@ -570,7 +585,40 @@ export default function PlansPage() {
                     </div>
                   </Card>
                 )
-              })
+              })}
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-4 border-t mt-4">
+                        <p className="text-sm text-muted-foreground">
+                          Mostrando {startIndex + 1}-{Math.min(startIndex + requestsPerPage, allRequests.length)} de {allRequests.length}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRequestsPage(prev => Math.max(1, prev - 1))}
+                            disabled={requestsPage === 1}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </Button>
+                          <span className="text-sm font-medium px-2">
+                            {requestsPage} / {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRequestsPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={requestsPage === totalPages}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )
+              })()
             )}
           </div>
         </DialogContent>
