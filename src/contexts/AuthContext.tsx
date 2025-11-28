@@ -105,20 +105,39 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'billing:read', 'billing:update',
     'integrations:read', 'integrations:create', 'integrations:update', 'integrations:delete',
   ],
+  // AGENCY_ADMIN (Agency Director): Full agency management
+  // CAN: Manage staff (except Owner), clients, listings, leads, CRM pipelines,
+  // website, landing pages, forms, agency messages, maintenance, tasks,
+  // agency integrations (email, SMS), reporting, co-brokers, branding
+  // CANNOT: Change subscription plan, access billing/payment, edit Independent Owner or Agency Owner,
+  // approve new agencies, access system-wide settings, manage global configs, delete agency, view other agencies' data
   AGENCY_ADMIN: [
     'dashboard:read',
+    // Manage agency staff (agents, managers) - except Owner
     'users:read', 'users:create', 'users:update', 'users:delete',
+    // View own agency info, update branding/settings
     'agencies:read', 'agencies:update',
+    // Full property management for agency
     'properties:read', 'properties:create', 'properties:update', 'properties:delete',
+    // Full contract management
     'contracts:read', 'contracts:create', 'contracts:update', 'contracts:delete', 'contracts:approve',
+    // Full payment management for agency properties
     'payments:read', 'payments:create', 'payments:update', 'payments:delete', 'payments:approve',
+    // Full reporting and analytics for agency
     'reports:read', 'reports:create', 'reports:export',
+    // Agency-wide messaging and communications
     'chat:read', 'chat:create', 'chat:update', 'chat:delete',
+    // Notification management
     'notifications:read', 'notifications:create', 'notifications:update', 'notifications:delete',
+    // View audit logs for agency
     'audit:read',
-    'documents:read', 'documents:create',
+    // Document management
+    'documents:read', 'documents:create', 'documents:update',
+    // Agency settings (NOT system-wide)
     'settings:read', 'settings:update',
-    'billing:read', 'billing:update',
+    // Billing: READ ONLY - cannot change subscription
+    'billing:read',
+    // Agency integrations (email, SMS)
     'integrations:read', 'integrations:update',
   ],
   // AGENCY_MANAGER (Gestor): Limited permissions
@@ -156,33 +175,37 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'notifications:read',
     'settings:read', 'settings:update',
   ],
-  // INDEPENDENT_OWNER: Works as a "mini-real estate agency" within MR3X
-  // Full CRUD for: Tenants, Properties, Contracts, Inspections, Notifications, Agreements
-  // Configures split directly with Asaas, sends invoices/receipts, digitally signs as landlord
+  // INDEPENDENT_OWNER: Private investor who owns properties and works directly with MR3X
+  // NOT part of any agency - manages their own properties personally
+  // CAN: Manage own properties, add tenants/contracts, receive maintenance requests,
+  // create work orders, manage payments/collections, view financial dashboard,
+  // send/receive messages with tenants, access own documents/reports
+  // CANNOT: Access agency tools, manage staff, branding, CRM pipelines, agency plans,
+  // agency website/landing pages, or any agency-specific features
   INDEPENDENT_OWNER: [
     'dashboard:read',
-    // Full CRUD for tenants (users with INQUILINO role)
+    // Manage tenants for their own properties
     'users:read', 'users:create', 'users:update', 'users:delete',
-    // Full CRUD for properties
+    // Manage their own properties
     'properties:read', 'properties:create', 'properties:update', 'properties:delete',
-    // Full CRUD for contracts (agreements)
-    'contracts:read', 'contracts:create', 'contracts:update', 'contracts:delete', 'contracts:approve',
-    // Full CRUD for payments (invoices/receipts)
+    // Manage contracts for their properties
+    'contracts:read', 'contracts:create', 'contracts:update', 'contracts:delete',
+    // Manage payments/collections for their tenants
     'payments:read', 'payments:create', 'payments:update', 'payments:delete',
-    // Reports
-    'reports:read', 'reports:create', 'reports:export',
-    // Full CRUD for notifications
-    'notifications:read', 'notifications:create', 'notifications:update', 'notifications:delete',
-    // Chat
-    'chat:read', 'chat:create', 'chat:update', 'chat:delete',
-    // Documents (for digital signing)
-    'documents:read', 'documents:create', 'documents:update', 'documents:delete',
-    // Settings
+    // View financial reports for their own units
+    'reports:read', 'reports:export',
+    // Send/receive messages with tenants
+    'chat:read', 'chat:create', 'chat:update',
+    // Notifications
+    'notifications:read', 'notifications:create', 'notifications:update',
+    // Access own documents
+    'documents:read', 'documents:create', 'documents:update',
+    // Personal settings
     'settings:read', 'settings:update',
-    // Billing - for split configuration with Asaas
-    'billing:read', 'billing:update',
-    // Integrations - for Asaas configuration
-    'integrations:read', 'integrations:create', 'integrations:update',
+    // View billing for their subscription with MR3X
+    'billing:read',
+    // Integrations for payment processing (Asaas)
+    'integrations:read', 'integrations:update',
   ],
   // INQUILINO: Tenant - read-only access except for signing and payments
   // Cannot create or edit any registration

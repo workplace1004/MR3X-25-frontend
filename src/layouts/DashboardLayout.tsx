@@ -197,22 +197,23 @@ export function DashboardLayout() {
       if (excludeForProprietario.includes(item.href)) return false;
     }
 
-    // INDEPENDENT_OWNER: Self-managed "mini agency"
-    // Full CRUD for: Tenants, Properties, Contracts, Payments, Notifications, Documents
-    // Access to: Settings, Billing (Asaas split config), Integrations (Asaas)
+    // INDEPENDENT_OWNER: Private investor who owns properties and works directly with MR3X
+    // NOT part of any agency - manages their own properties personally
+    // NO access to: agency tools, staff management, branding, CRM pipelines, agency plans
     if (user?.role === 'INDEPENDENT_OWNER') {
       const excludeForIndependentOwner = [
-        '/dashboard/brokers', // No brokers - manages alone
-        '/dashboard/owners', // No other owners
+        '/dashboard/brokers', // No brokers - not an agency
+        '/dashboard/owners', // No other owners - manages alone
         '/dashboard/agencies', // Not an agency
-        '/dashboard/managers', // No managers
-        '/dashboard/agency-admin', // Not agency admin
-        '/dashboard/agency-split-config', // Uses own split config
-        '/dashboard/agency-plan-config', // Not an agency
-        '/dashboard/users', // Uses specific pages (tenants)
-        '/dashboard/plans', // CEO/ADMIN only
+        '/dashboard/managers', // No staff management
+        '/dashboard/agency-admin', // No agency admin features
+        '/dashboard/agency-split-config', // No agency split config
+        '/dashboard/agency-plan-config', // No agency plan config
+        '/dashboard/users', // Uses specific pages (tenants only)
+        '/dashboard/plans', // CEO/ADMIN only - no agency plans
         '/dashboard/communications', // CEO/ADMIN only
         '/dashboard/audit', // CEO/ADMIN only
+        '/dashboard/reports', // Limited - only sees own financial dashboard
       ];
       if (excludeForIndependentOwner.includes(item.href)) return false;
     }
