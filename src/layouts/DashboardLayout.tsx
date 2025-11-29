@@ -218,23 +218,28 @@ export function DashboardLayout() {
       if (excludeForProprietario.includes(item.href)) return false;
     }
 
-    // INDEPENDENT_OWNER: Private investor who owns properties and works directly with MR3X
-    // NOT part of any agency - manages their own properties personally
-    // NO access to: agency tools, staff management, branding, CRM pipelines, agency plans
+    // INDEPENDENT_OWNER: Self-managed landlord who acts as a standalone mini-agency
+    // - Creates their own account
+    // - Manages their own properties
+    // - Creates tenants
+    // - Creates and signs contracts
+    // - Issues invoices
+    // - Tracks payments
+    // - Manages inspections and documents
     if (user?.role === 'INDEPENDENT_OWNER') {
       const excludeForIndependentOwner = [
-        '/dashboard/brokers', // No brokers - not an agency
+        '/dashboard/brokers', // No brokers - manages alone
         '/dashboard/owners', // No other owners - manages alone
-        '/dashboard/agencies', // Not an agency
+        '/dashboard/agencies', // Not an agency - standalone
         '/dashboard/managers', // No staff management
         '/dashboard/agency-admin', // No agency admin features
         '/dashboard/agency-split-config', // No agency split config
-        '/dashboard/agency-plan-config', // No agency plan config
+        '/dashboard/agency-plan-config', // Uses owner-plan-config instead
         '/dashboard/users', // Uses specific pages (tenants only)
-        '/dashboard/plans', // CEO/ADMIN only - no agency plans
+        '/dashboard/plans', // CEO/ADMIN only
         '/dashboard/communications', // CEO/ADMIN only
         '/dashboard/audit', // CEO/ADMIN only
-        '/dashboard/reports', // Limited - only sees own financial dashboard
+        '/dashboard/chat', // No chat - works independently
       ];
       if (excludeForIndependentOwner.includes(item.href)) return false;
     }
@@ -430,6 +435,7 @@ export function DashboardLayout() {
                            user.role === 'AGENCY_ADMIN' ? 'Diretor' :
                            user.role === 'AGENCY_MANAGER' ? 'Gestor' :
                          user.role === 'BROKER' ? 'Corretor' :
+                         user.role === 'INDEPENDENT_OWNER' ? 'Proprietário Indep.' :
                          user.role === 'PROPRIETARIO' ? 'Proprietário' :
                          user.role === 'INQUILINO' ? 'Inquilino' :
                          user.role === 'BUILDING_MANAGER' ? 'Síndico' :
