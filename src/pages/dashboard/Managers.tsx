@@ -9,6 +9,7 @@ import {
   Edit,
   Trash2,
   Eye,
+  EyeOff,
   MoreHorizontal,
   MapPin,
   Grid3X3,
@@ -79,6 +80,7 @@ export function Managers() {
     email: '',
     phone: '',
     document: '',
+    password: '',
     birthDate: '',
     address: '',
     cep: '',
@@ -86,6 +88,7 @@ export function Managers() {
     city: '',
     state: '',
   })
+  const [showEditPassword, setShowEditPassword] = useState(false)
 
   const [selectedManager, setSelectedManager] = useState<any>(null)
   const [managerToDelete, setManagerToDelete] = useState<any>(null)
@@ -147,7 +150,7 @@ export function Managers() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       closeAllModals()
       setNewManager({
-        document: '', name: '', phone: '', email: '', birthDate: '',
+        document: '', name: '', phone: '', email: '', password: '', birthDate: '',
         cep: '', address: '', neighborhood: '', city: '', state: ''
       })
       toast.success('Gerente criado com sucesso')
@@ -209,7 +212,6 @@ export function Managers() {
       }
       const managerToSend = {
         ...newManager,
-        password: '',
         birthDate: newManager.birthDate ? new Date(newManager.birthDate) : null,
       }
       createManagerMutation.mutate(managerToSend)
@@ -288,6 +290,7 @@ export function Managers() {
         email: fullManagerDetails.email || '',
         phone: fullManagerDetails.phone || '',
         document: fullManagerDetails.document || '',
+        password: fullManagerDetails.plainPassword || '',
         birthDate: fullManagerDetails.birthDate ? fullManagerDetails.birthDate.split('T')[0] : '',
         address: fullManagerDetails.address || '',
         cep: fullManagerDetails.cep || '',
@@ -575,9 +578,33 @@ export function Managers() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="birthDate">Data de Nascimento</Label>
-                  <Input id="birthDate" name="birthDate" type="date" value={newManager.birthDate} onChange={handleInputChange} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="password">Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={newManager.password}
+                        onChange={handleInputChange}
+                        placeholder="Minimo 6 caracteres"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Se vazio, uma senha sera gerada automaticamente</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="birthDate">Data de Nascimento</Label>
+                    <Input id="birthDate" name="birthDate" type="date" value={newManager.birthDate} onChange={handleInputChange} />
+                  </div>
                 </div>
               </div>
 
@@ -660,9 +687,33 @@ export function Managers() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
-                  <Input id="edit-birthDate" name="birthDate" type="date" value={editForm.birthDate} onChange={handleEditInputChange} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-password">Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="edit-password"
+                        name="password"
+                        type={showEditPassword ? 'text' : 'password'}
+                        value={editForm.password}
+                        onChange={handleEditInputChange}
+                        placeholder="Deixe vazio para manter a senha atual"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowEditPassword(!showEditPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Deixe vazio para manter a senha atual</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
+                    <Input id="edit-birthDate" name="birthDate" type="date" value={editForm.birthDate} onChange={handleEditInputChange} />
+                  </div>
                 </div>
               </div>
 
