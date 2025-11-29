@@ -92,28 +92,28 @@ const getPlanIcon = (name: string) => {
     case 'free':
       return Package;
     case 'essential':
-      return Zap;
-    case 'professional':
       return Star;
+    case 'professional':
+      return Building2;
     case 'enterprise':
       return Crown;
     default:
-      return Package;
+      return Zap;
   }
 };
 
 const getPlanColor = (name: string) => {
   switch (name.toLowerCase()) {
     case 'free':
-      return 'bg-gray-100 text-gray-800 border-gray-300';
+      return 'bg-gray-500';
     case 'essential':
-      return 'bg-blue-100 text-blue-800 border-blue-300';
+      return 'bg-blue-500';
     case 'professional':
-      return 'bg-purple-100 text-purple-800 border-purple-300';
+      return 'bg-purple-500';
     case 'enterprise':
-      return 'bg-amber-100 text-amber-800 border-amber-300';
+      return 'bg-orange-500';
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-300';
+      return 'bg-primary';
   }
 };
 
@@ -242,11 +242,12 @@ export function AgencyPlanConfig() {
       </div>
 
       {/* Current Plan Card */}
-      <Card className={`border-2 ${currentPlanColor}`}>
+      <Card className="relative overflow-visible">
+        <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-lg ${currentPlanColor}`} />
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${currentPlanColor}`}>
+              <div className={`p-3 rounded-lg ${currentPlanColor} text-white`}>
                 <CurrentPlanIcon className="w-6 h-6" />
               </div>
               <div>
@@ -254,7 +255,7 @@ export function AgencyPlanConfig() {
                 <CardDescription>{currentPlanData?.description || 'Seu plano atual'}</CardDescription>
               </div>
             </div>
-            <Badge className={currentPlanColor}>
+            <Badge className={`${currentPlanColor} text-white`}>
               Plano Atual
             </Badge>
           </div>
@@ -450,7 +451,7 @@ export function AgencyPlanConfig() {
 
               return (
                 <Card key={plan.id} className={`relative overflow-visible flex flex-col ${isCurrentPlan ? 'border-2 border-primary' : ''}`}>
-                  <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-lg ${planColor.split(' ')[0]}`} />
+                  <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-lg ${planColor}`} />
                   {isCurrentPlan && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <Badge className="bg-primary">Atual</Badge>
@@ -458,8 +459,8 @@ export function AgencyPlanConfig() {
                   )}
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-lg ${planColor}`}>
+                      <div className="flex items-start gap-3">
+                        <div className={`p-3 rounded-lg ${planColor} text-white`}>
                           <PlanIcon className="w-8 h-8" />
                         </div>
                         <div>

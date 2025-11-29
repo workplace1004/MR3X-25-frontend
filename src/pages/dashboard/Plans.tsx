@@ -296,13 +296,13 @@ export default function PlansPage() {
           <p className="text-muted-foreground">Nenhum plano encontrado</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">
           {plans.map((plan: any) => (
           <Card key={plan.id} className="relative overflow-hidden flex flex-col">
             <div className={`absolute top-0 right-0 w-full h-2 ${getPlanColor(plan.name)}`} />
             <CardHeader>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className={`p-3 rounded-lg ${getPlanColor(plan.name)} text-white`}>
                     {getPlanIcon(plan.name)}
                   </div>
