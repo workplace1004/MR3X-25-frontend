@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { agenciesAPI, plansAPI } from '../../api';
@@ -8,7 +8,6 @@ import {
   Building2,
   Users,
   Check,
-  X,
   ArrowUpCircle,
   AlertTriangle,
   Loader2,
@@ -17,7 +16,6 @@ import {
   Crown,
   Zap,
   Star,
-  Briefcase
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -73,48 +71,54 @@ interface Agency {
   frozenUsersCount: number;
 }
 
-const planDetails = {
-  FREE: {
-    name: 'Gratuito',
-    icon: Package,
-    color: 'bg-gray-100 text-gray-800 border-gray-300',
-    description: 'Para experimentar a plataforma',
-    properties: 1,
-    users: 5,
-    features: ['1 propriedade ativa', '5 usuários', 'Suporte por email'],
-  },
-  ESSENTIAL: {
-    name: 'Essencial',
-    icon: Zap,
-    color: 'bg-blue-100 text-blue-800 border-blue-300',
-    description: 'Para pequenas imobiliárias',
-    properties: 10,
-    users: 10,
-    features: ['10 propriedades', '10 usuários', 'Relatórios básicos', 'Suporte prioritário'],
-  },
-  PROFESSIONAL: {
-    name: 'Profissional',
-    icon: Star,
-    color: 'bg-purple-100 text-purple-800 border-purple-300',
-    description: 'Para imobiliárias em crescimento',
-    properties: 50,
-    users: 25,
-    features: ['50 propriedades', '25 usuários', 'Relatórios avançados', 'API de integração', 'Suporte 24/7'],
-  },
-  ENTERPRISE: {
-    name: 'Enterprise',
-    icon: Crown,
-    color: 'bg-amber-100 text-amber-800 border-amber-300',
-    description: 'Para grandes operações',
-    properties: -1, // Unlimited
-    users: -1, // Unlimited
-    features: ['Propriedades ilimitadas', 'Usuários ilimitados', 'Relatórios personalizados', 'API completa', 'Suporte dedicado', 'SLA garantido'],
-  },
+// Helper functions to get plan display info
+const getPlanNameInPortuguese = (name: string) => {
+  switch (name.toLowerCase()) {
+    case 'free':
+      return 'Gratuito';
+    case 'essential':
+      return 'Essencial';
+    case 'professional':
+      return 'Profissional';
+    case 'enterprise':
+      return 'Empresarial';
+    default:
+      return name;
+  }
+};
+
+const getPlanIcon = (name: string) => {
+  switch (name.toLowerCase()) {
+    case 'free':
+      return Package;
+    case 'essential':
+      return Zap;
+    case 'professional':
+      return Star;
+    case 'enterprise':
+      return Crown;
+    default:
+      return Package;
+  }
+};
+
+const getPlanColor = (name: string) => {
+  switch (name.toLowerCase()) {
+    case 'free':
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+    case 'essential':
+      return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'professional':
+      return 'bg-purple-100 text-purple-800 border-purple-300';
+    case 'enterprise':
+      return 'bg-amber-100 text-amber-800 border-amber-300';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
 };
 
 export function AgencyPlanConfig() {
   const { user, hasPermission } = useAuth();
-  const queryClient = useQueryClient();
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -147,10 +151,17 @@ export function AgencyPlanConfig() {
     enabled: !!agencyId && canViewPlan,
   });
 
-  // Fetch available plans
-  const { data: plans } = useQuery({
+  // Fetch available plans from API
+  const { data: plans = [], isLoading: plansLoading } = useQuery({
     queryKey: ['plans'],
-    queryFn: () => plansAPI.getPlans(),
+    queryFn: async () => {
+      const data = await plansAPI.getPlans();
+      // Ensure features are parsed if they come as a JSON string
+      return data.map((plan: any) => ({
+        ...plan,
+        features: typeof plan.features === 'string' ? JSON.parse(plan.features) : plan.features
+      }));
+    },
     enabled: canViewPlan,
   });
 
@@ -166,7 +177,7 @@ export function AgencyPlanConfig() {
     );
   }
 
-  if (agencyLoading || usageLoading) {
+  if (agencyLoading || usageLoading || plansLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -174,8 +185,11 @@ export function AgencyPlanConfig() {
     );
   }
 
-  const currentPlan = agency?.plan || 'FREE';
-  const currentPlanDetails = planDetails[currentPlan as keyof typeof planDetails] || planDetails.FREE;
+  const currentPlanName = agency?.plan || 'FREE';
+  // Find current plan from API data
+  const currentPlanData = plans.find((p: any) => p.name.toUpperCase() === currentPlanName.toUpperCase());
+  const currentPlanColor = getPlanColor(currentPlanName);
+  const CurrentPlanIcon = getPlanIcon(currentPlanName);
 
   const handlePreviewPlanChange = async (newPlan: string) => {
     if (!agencyId) return;
@@ -228,31 +242,56 @@ export function AgencyPlanConfig() {
       </div>
 
       {/* Current Plan Card */}
-      <Card className={`border-2 ${currentPlanDetails.color}`}>
+      <Card className={`border-2 ${currentPlanColor}`}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${currentPlanDetails.color}`}>
-                <currentPlanDetails.icon className="w-6 h-6" />
+              <div className={`p-3 rounded-lg ${currentPlanColor}`}>
+                <CurrentPlanIcon className="w-6 h-6" />
               </div>
               <div>
-                <CardTitle className="text-xl">Plano {currentPlanDetails.name}</CardTitle>
-                <CardDescription>{currentPlanDetails.description}</CardDescription>
+                <CardTitle className="text-xl">Plano {getPlanNameInPortuguese(currentPlanName)}</CardTitle>
+                <CardDescription>{currentPlanData?.description || 'Seu plano atual'}</CardDescription>
               </div>
             </div>
-            <Badge className={currentPlanDetails.color}>
+            <Badge className={currentPlanColor}>
               Plano Atual
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {currentPlanDetails.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm">
-                <Check className="w-4 h-4 text-green-600" />
-                <span>{feature}</span>
-              </div>
-            ))}
+        <CardContent className="space-y-4">
+          <div>
+            <div className="text-3xl font-bold">
+              {currentPlanData?.price === 0 ? 'Grátis' : `R$ ${currentPlanData?.price?.toFixed(2) || '0.00'}`}
+              {currentPlanData?.price > 0 && <span className="text-sm text-muted-foreground">/mês</span>}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Limite de Propriedades:</span>
+              <Badge variant="outline">
+                {currentPlanData?.propertyLimit || 1}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Limite de Usuários:</span>
+              <Badge variant="outline">
+                {currentPlanData?.userLimit || 1}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t">
+            <h4 className="text-sm font-semibold mb-2">Recursos:</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(currentPlanData?.features || []).map((feature: string, index: number) => (
+                <div key={index} className="flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4 text-green-600" />
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -396,64 +435,99 @@ export function AgencyPlanConfig() {
       )}
 
       {/* Available Plans */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Planos Disponíveis</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Object.entries(planDetails).map(([planKey, plan]) => {
-            const isCurrentPlan = currentPlan === planKey;
-            const PlanIcon = plan.icon;
-
-            return (
-              <Card
-                key={planKey}
-                className={`relative flex flex-col ${isCurrentPlan ? 'border-2 border-primary' : 'hover:border-gray-300'}`}
-              >
-                {isCurrentPlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary">Atual</Badge>
-                  </div>
-                )}
-                <CardHeader className="text-center pb-2">
-                  <div className={`mx-auto p-3 rounded-lg w-fit ${plan.color}`}>
-                    <PlanIcon className="w-6 h-6" />
-                  </div>
-                  <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <CardDescription className="text-xs">{plan.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <div className="text-center space-y-1 flex-1">
-                    <p className="text-sm">
-                      <Building2 className="w-4 h-4 inline mr-1" />
-                      {plan.properties === -1 ? 'Ilimitado' : plan.properties} propriedades
-                    </p>
-                    <p className="text-sm">
-                      <Users className="w-4 h-4 inline mr-1" />
-                      {plan.users === -1 ? 'Ilimitado' : plan.users} usuários
-                    </p>
-                  </div>
-                  <Button
-                    className="w-full mt-4"
-                    variant={isCurrentPlan ? 'outline' : 'default'}
-                    disabled={isCurrentPlan || loadingPreview}
-                    onClick={() => handlePreviewPlanChange(planKey)}
-                  >
-                    {loadingPreview && selectedPlan === planKey ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : isCurrentPlan ? (
-                      'Plano Atual'
-                    ) : (
-                      <>
-                        <ArrowUpCircle className="w-4 h-4 mr-2" />
-                        Selecionar
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+      {plans.length === 0 ? (
+        <div className="flex items-center justify-center h-32">
+          <p className="text-muted-foreground">Nenhum plano encontrado</p>
         </div>
-      </div>
+      ) : (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Planos Disponíveis</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {plans.map((plan: any) => {
+              const isCurrentPlan = currentPlanName.toUpperCase() === plan.name.toUpperCase();
+              const PlanIcon = getPlanIcon(plan.name);
+              const planColor = getPlanColor(plan.name);
+
+              return (
+                <Card key={plan.id} className="relative overflow-hidden flex flex-col">
+                  <div className={`absolute top-0 right-0 w-full h-2 ${planColor.split(' ')[0]}`} />
+                  {isCurrentPlan && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <Badge className="bg-primary">Atual</Badge>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-3 rounded-lg ${planColor}`}>
+                          <PlanIcon className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl">{getPlanNameInPortuguese(plan.name)}</CardTitle>
+                          <CardDescription>{plan.description}</CardDescription>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 flex-1 flex flex-col">
+                    <div>
+                      <div className="text-3xl font-bold">
+                        {plan.price === 0 ? 'Grátis' : `R$ ${plan.price.toFixed(2)}`}
+                        {plan.price > 0 && <span className="text-sm text-muted-foreground">/mês</span>}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Limite de Propriedades:</span>
+                        <Badge variant="outline">
+                          {plan.propertyLimit}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Limite de Usuários:</span>
+                        <Badge variant="outline">
+                          {plan.userLimit}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t flex-1">
+                      <h4 className="text-sm font-semibold mb-2">Recursos:</h4>
+                      <ul className="space-y-1">
+                        {(plan.features || []).map((feature: any, idx: number) => (
+                          <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <Button
+                      className="w-full mt-4"
+                      variant={isCurrentPlan ? 'outline' : 'default'}
+                      disabled={isCurrentPlan || loadingPreview}
+                      onClick={() => handlePreviewPlanChange(plan.name.toUpperCase())}
+                    >
+                      {loadingPreview && selectedPlan === plan.name.toUpperCase() ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : isCurrentPlan ? (
+                        'Plano Atual'
+                      ) : (
+                        <>
+                          <ArrowUpCircle className="w-4 h-4 mr-2" />
+                          Selecionar
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Plan Change Preview Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
@@ -469,12 +543,12 @@ export function AgencyPlanConfig() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="text-sm text-muted-foreground">De</p>
-                  <p className="font-medium">{planDetails[previewData.currentPlan as keyof typeof planDetails]?.name || previewData.currentPlan}</p>
+                  <p className="font-medium">{getPlanNameInPortuguese(previewData.currentPlan)}</p>
                 </div>
                 <ArrowUpCircle className="w-5 h-5 text-muted-foreground" />
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Para</p>
-                  <p className="font-medium">{planDetails[previewData.newPlan as keyof typeof planDetails]?.name || previewData.newPlan}</p>
+                  <p className="font-medium">{getPlanNameInPortuguese(previewData.newPlan)}</p>
                 </div>
               </div>
 
