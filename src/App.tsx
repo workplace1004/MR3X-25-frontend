@@ -19,6 +19,8 @@ import { Owners } from './pages/dashboard/Owners';
 import { Managers } from './pages/dashboard/Managers';
 import { Agencies } from './pages/dashboard/Agencies';
 import { AgencyAdmin } from './pages/dashboard/AgencyAdmin';
+import { AgencyPlanConfig } from './pages/dashboard/AgencyPlanConfig';
+import { AgencySplitConfig } from './pages/dashboard/AgencySplitConfig';
 import { Audit } from './pages/dashboard/Audit';
 import { Notifications } from './pages/dashboard/Notifications';
 import { Chat } from './pages/dashboard/Chat';
@@ -107,8 +109,8 @@ function App() {
 
               <Route path="managers" element={<Managers />} />
               <Route path="agency-admin" element={<AgencyAdmin />} />
-              <Route path="agency-split-config" element={<PlaceholderPage title="Split Configuration" />} />
-              <Route path="agency-plan-config" element={<PlaceholderPage title="Plano da Agencia" />} />
+              <Route path="agency-split-config" element={<AgencySplitConfig />} />
+              <Route path="agency-plan-config" element={<AgencyPlanConfig />} />
 
               <Route path="agencies" element={<Agencies />} />
               <Route path="agencies/new" element={<PlaceholderPage title="Nova Agencia" />} />
