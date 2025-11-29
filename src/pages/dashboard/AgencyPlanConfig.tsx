@@ -442,15 +442,15 @@ export function AgencyPlanConfig() {
       ) : (
         <div>
           <h2 className="text-xl font-semibold mb-4">Planos Disponíveis</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4">
             {plans.map((plan: any) => {
               const isCurrentPlan = currentPlanName.toUpperCase() === plan.name.toUpperCase();
               const PlanIcon = getPlanIcon(plan.name);
               const planColor = getPlanColor(plan.name);
 
               return (
-                <Card key={plan.id} className="relative overflow-hidden flex flex-col">
-                  <div className={`absolute top-0 right-0 w-full h-2 ${planColor.split(' ')[0]}`} />
+                <Card key={plan.id} className={`relative overflow-visible flex flex-col ${isCurrentPlan ? 'border-2 border-primary' : ''}`}>
+                  <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-lg ${planColor.split(' ')[0]}`} />
                   {isCurrentPlan && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                       <Badge className="bg-primary">Atual</Badge>
