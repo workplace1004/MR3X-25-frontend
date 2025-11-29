@@ -6,8 +6,9 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { FrozenUserBadge } from '../../components/ui/FrozenBadge';
 
-type UserItem = { id: string; name: string | null; email: string; role: string; status: string; plan?: string; createdAt?: string };
+type UserItem = { id: string; name: string | null; email: string; role: string; status: string; plan?: string; createdAt?: string; isFrozen?: boolean; frozenReason?: string };
 
 export function UsersPage() {
   const { user, hasPermission } = useAuth();
@@ -259,6 +260,7 @@ export function UsersPage() {
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-muted-foreground">Status:</span>
                 <Badge className={getStatusColor(u.status)}>{u.status}</Badge>
+                {u.isFrozen && <FrozenUserBadge reason={u.frozenReason} />}
               </div>
               <div className="flex items-center gap-2">
                 <Button asChild variant="outline" size="sm" className="w-full">
@@ -352,7 +354,10 @@ export function UsersPage() {
                       <Badge className={getRoleColor(u.role)}>{u.role}</Badge>
                     </td>
                     <td className="px-4 py-2">
-                      <Badge className={getStatusColor(u.status)}>{u.status}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className={getStatusColor(u.status)}>{u.status}</Badge>
+                        {u.isFrozen && <FrozenUserBadge reason={u.frozenReason} />}
+                      </div>
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">

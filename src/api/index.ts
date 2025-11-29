@@ -319,6 +319,42 @@ export const agenciesAPI = {
     const response = await apiClient.delete(`/agencies/${id}`);
     return response.data;
   },
+
+  // Plan Enforcement APIs
+  getPlanUsage: async (id: string) => {
+    const response = await apiClient.get(`/agencies/${id}/plan-usage`);
+    return response.data;
+  },
+
+  getFrozenEntities: async (id: string) => {
+    const response = await apiClient.get(`/agencies/${id}/frozen-entities`);
+    return response.data;
+  },
+
+  previewPlanChange: async (id: string, newPlan: string) => {
+    const response = await apiClient.get(`/agencies/${id}/preview-plan-change?newPlan=${newPlan}`);
+    return response.data;
+  },
+
+  switchActiveProperty: async (id: string, newActivePropertyId: string) => {
+    const response = await apiClient.post(`/agencies/${id}/switch-active-property`, { newActivePropertyId });
+    return response.data;
+  },
+
+  enforcePlanLimits: async (id: string) => {
+    const response = await apiClient.post(`/agencies/${id}/enforce-plan`);
+    return response.data;
+  },
+
+  checkPropertyCreationAllowed: async (id: string) => {
+    const response = await apiClient.get(`/agencies/${id}/check-property-creation`);
+    return response.data;
+  },
+
+  checkUserCreationAllowed: async (id: string) => {
+    const response = await apiClient.get(`/agencies/${id}/check-user-creation`);
+    return response.data;
+  },
 };
 
 // Plans API

@@ -24,6 +24,7 @@ import {
   Loader2,
   Search
 } from 'lucide-react';
+import { FrozenBadge } from '../../components/ui/FrozenBadge';
 import { CEPInput } from '../../components/ui/cep-input';
 import { ImageUpload } from '../../components/ui/image-upload';
 import { isValidCEPFormat } from '../../lib/validation';
@@ -1180,7 +1181,10 @@ export function Properties() {
                           )}
                         </div>
                         <div className="flex items-center justify-between mt-2 gap-2 flex-shrink-0">
-                          <div className="min-w-0 flex-shrink">{getStatusBadge(property.status)}</div>
+                          <div className="min-w-0 flex-shrink flex items-center gap-2">
+                            {getStatusBadge(property.status)}
+                            {property.isFrozen && <FrozenBadge reason={property.frozenReason} />}
+                          </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button size="icon" variant="outline" className="flex-shrink-0">
@@ -1192,10 +1196,16 @@ export function Properties() {
                                 <Eye className="w-4 h-4 mr-2" />
                                 Visualizar
                               </DropdownMenuItem>
-                              {canUpdateProperties && (
+                              {canUpdateProperties && !property.isFrozen && (
                                 <DropdownMenuItem onClick={() => handleEditProperty(property)}>
                                   <Edit className="w-4 h-4 mr-2" />
                                   Editar imóvel
+                                </DropdownMenuItem>
+                              )}
+                              {canUpdateProperties && property.isFrozen && (
+                                <DropdownMenuItem disabled className="text-muted-foreground">
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Editar imóvel (congelado)
                                 </DropdownMenuItem>
                               )}
                               {['AGENCY_MANAGER', 'AGENCY_ADMIN'].includes(user?.role || '') && (
@@ -1218,14 +1228,29 @@ export function Properties() {
                                 <MessageSquare className="w-4 h-4 mr-2" />
                                 Notificar por WhatsApp
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleIssueInvoice(property)}>
-                                <Calculator className="w-4 h-4 mr-2" />
-                                Emitir cobrança
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleGenerateReceipt(property)}>
-                                <Receipt className="w-4 h-4 mr-2" />
-                                Gerar recibo
-                              </DropdownMenuItem>
+                              {!property.isFrozen ? (
+                                <>
+                                  <DropdownMenuItem onClick={() => handleIssueInvoice(property)}>
+                                    <Calculator className="w-4 h-4 mr-2" />
+                                    Emitir cobrança
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleGenerateReceipt(property)}>
+                                    <Receipt className="w-4 h-4 mr-2" />
+                                    Gerar recibo
+                                  </DropdownMenuItem>
+                                </>
+                              ) : (
+                                <>
+                                  <DropdownMenuItem disabled className="text-muted-foreground">
+                                    <Calculator className="w-4 h-4 mr-2" />
+                                    Emitir cobrança (congelado)
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem disabled className="text-muted-foreground">
+                                    <Receipt className="w-4 h-4 mr-2" />
+                                    Gerar recibo (congelado)
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                               {canDeleteProperties && (
                                 <DropdownMenuItem onClick={() => handleDeleteProperty(property)} className="text-red-600 focus:text-red-700">
                                   <Trash2 className="w-4 h-4 mr-2" />
@@ -1664,7 +1689,19 @@ export function Properties() {
                   {propertyDetail.agencyFee !== null && propertyDetail.agencyFee !== undefined && (
                     <div><b>Taxa da Agência (Específica):</b> {propertyDetail.agencyFee}%</div>
                   )}
-                  <div><b>Status:</b> {getStatusBadge(propertyDetail.status)}</div>
+                  <div className="flex items-center gap-2">
+                    <b>Status:</b> {getStatusBadge(propertyDetail.status)}
+                    {propertyDetail.isFrozen && <FrozenBadge reason={propertyDetail.frozenReason} />}
+                  </div>
+                  {propertyDetail.isFrozen && (
+                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                      <p className="font-medium">Este imóvel está congelado</p>
+                      <p className="text-xs mt-1">
+                        Não é possível criar contratos, emitir cobranças ou gerar recibos enquanto o imóvel estiver congelado.
+                        Faça upgrade do plano para desbloquear.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (

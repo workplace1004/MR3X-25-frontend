@@ -5,9 +5,12 @@ import { Building2, Users, FileText, DollarSign, AlertCircle } from 'lucide-reac
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
+import { PlanUsageWidget } from '../../components/dashboard/PlanUsageWidget';
+import { useNavigate } from 'react-router-dom';
 
 export function DashboardHome() {
   const { hasPermission, user } = useAuth();
+  const navigate = useNavigate();
 
   // Check permissions for different dashboard sections
   const canViewDashboard = hasPermission('dashboard:read');
@@ -162,6 +165,16 @@ export function DashboardHome() {
           <StatCard title="Taxa MR3X (2%)" value={formatCurrency(overview.platformFee || 0)} icon={DollarSign} color="yellow" isAmount />
           <StatCard title="Inadimplência" value={`${overview.defaultRate || 0}%`} icon={AlertCircle} color={overview.defaultRate > 10 ? 'red' : overview.defaultRate > 5 ? 'yellow' : 'green'} />
           <StatCard title="Pagamentos Vencidos" value={overview.overdueCount || 0} icon={AlertCircle} color="red" />
+        </div>
+      )}
+
+      {/* Plan Usage Widget for Agency Users */}
+      {!isCEO && user?.agencyId && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <PlanUsageWidget
+            agencyId={user.agencyId}
+            onUpgradeClick={() => navigate('/dashboard/plans')}
+          />
         </div>
       )}
 

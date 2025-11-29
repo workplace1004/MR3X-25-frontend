@@ -950,12 +950,22 @@ export function Contracts() {
                     {properties.map((property) => {
                       const propId = property.id?.toString() || String(property.id);
                       return (
-                        <option key={propId} value={propId}>
+                        <option
+                          key={propId}
+                          value={propId}
+                          disabled={property.isFrozen}
+                        >
                           {property.name || property.address}
+                          {property.isFrozen ? ' (Congelado - Faça upgrade)' : ''}
                         </option>
                       );
                     })}
                   </select>
+                  {properties.some(p => p.isFrozen) && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      Propriedades congeladas não podem ter novos contratos. Faça upgrade do plano para desbloquear.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="tenantId">Inquilino</Label>
