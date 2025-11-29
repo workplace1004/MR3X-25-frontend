@@ -20,6 +20,7 @@ const baseNavigation = [
   { name: 'Pagamentos', href: '/dashboard/payments', icon: DollarSign, perm: 'payments:read' },
   { name: 'Split Configuration', href: '/dashboard/agency-split-config', icon: Handshake, perm: 'payments:read', roles: ['AGENCY_ADMIN'] },
   { name: 'Plano da Agência', href: '/dashboard/agency-plan-config', icon: Package, perm: 'agencies:update', roles: ['AGENCY_ADMIN'] },
+  { name: 'Meu Plano', href: '/dashboard/owner-plan-config', icon: Package, perm: undefined, roles: ['INDEPENDENT_OWNER'] },
   { name: 'Usuários', href: '/dashboard/users', icon: Users, perm: 'users:read' },
   { name: 'Agências', href: '/dashboard/agencies', icon: Building, perm: undefined, roles: ['CEO', 'ADMIN'] },
   { name: 'Relatórios', href: '/dashboard/reports', icon: BarChart3, perm: 'reports:read' },

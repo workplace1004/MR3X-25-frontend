@@ -21,6 +21,7 @@ import { Agencies } from './pages/dashboard/Agencies';
 import { AgencyAdmin } from './pages/dashboard/AgencyAdmin';
 import { AgencyPlanConfig } from './pages/dashboard/AgencyPlanConfig';
 import { AgencySplitConfig } from './pages/dashboard/AgencySplitConfig';
+import { OwnerPlanConfig } from './pages/dashboard/OwnerPlanConfig';
 import { Audit } from './pages/dashboard/Audit';
 import { Notifications } from './pages/dashboard/Notifications';
 import { Chat } from './pages/dashboard/Chat';
@@ -111,6 +112,7 @@ function App() {
               <Route path="agency-admin" element={<AgencyAdmin />} />
               <Route path="agency-split-config" element={<AgencySplitConfig />} />
               <Route path="agency-plan-config" element={<AgencyPlanConfig />} />
+              <Route path="owner-plan-config" element={<OwnerPlanConfig />} />
 
               <Route path="agencies" element={<Agencies />} />
               <Route path="agencies/new" element={<PlaceholderPage title="Nova Agencia" />} />
