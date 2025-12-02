@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/client';
+import { toast } from 'sonner';
 import {
   MessageSquare, Send, Search, User, Clock, CheckCheck, Check,
   Bell, Star, StarOff, Trash2, MoreVertical, Plus, X
@@ -145,8 +146,12 @@ export function SalesInbox() {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread' | 'starred'>('all');
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [localNotifications, setLocalNotifications] = useState<Notification[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
 
-  const { data: messages = mockMessages, isLoading: loadingMessages } = useQuery({
+  const { data: fetchedMessages = mockMessages, isLoading: loadingMessages } = useQuery({
     queryKey: ['sales-messages'],
     queryFn: async () => {
       try {
@@ -158,7 +163,7 @@ export function SalesInbox() {
     },
   });
 
-  const { data: notifications = mockNotifications, isLoading: loadingNotifications } = useQuery({
+  const { data: fetchedNotifications = mockNotifications, isLoading: loadingNotifications } = useQuery({
     queryKey: ['sales-notifications'],
     queryFn: async () => {
       try {
@@ -170,27 +175,80 @@ export function SalesInbox() {
     },
   });
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await apiClient.patch(`/sales-rep/messages/${id}/read`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
-    },
-  });
+  // Sync fetched data to local state
+  useEffect(() => {
+    setLocalMessages(fetchedMessages);
+  }, [fetchedMessages]);
 
-  const toggleStarMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const response = await apiClient.patch(`/sales-rep/messages/${id}/star`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
-    },
-  });
+  useEffect(() => {
+    setLocalNotifications(fetchedNotifications);
+  }, [fetchedNotifications]);
 
-  const filteredMessages = messages.filter((message: Message) => {
+  const handleMarkAsRead = async (id: string) => {
+    // Update local state immediately
+    setLocalMessages(prev => prev.map(msg =>
+      msg.id === id ? { ...msg, isRead: true, readAt: new Date().toISOString() } : msg
+    ));
+    // Update selected message if it's the one being marked
+    if (selectedMessage?.id === id) {
+      setSelectedMessage(prev => prev ? { ...prev, isRead: true, readAt: new Date().toISOString() } : null);
+    }
+    // Try API call (fire and forget)
+    try {
+      await apiClient.patch(`/sales-rep/messages/${id}/read`);
+    } catch {
+      // API failed but local state already updated
+    }
+  };
+
+  const handleToggleStar = async (id: string) => {
+    // Update local state immediately
+    setLocalMessages(prev => prev.map(msg =>
+      msg.id === id ? { ...msg, isStarred: !msg.isStarred } : msg
+    ));
+    // Update selected message if it's the one being starred
+    if (selectedMessage?.id === id) {
+      setSelectedMessage(prev => prev ? { ...prev, isStarred: !prev.isStarred } : null);
+    }
+    toast.success('Mensagem atualizada');
+    // Try API call (fire and forget)
+    try {
+      await apiClient.patch(`/sales-rep/messages/${id}/star`);
+    } catch {
+      // API failed but local state already updated
+    }
+  };
+
+  const openDeleteModal = (id: string) => {
+    setMessageToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setMessageToDelete(null);
+  };
+
+  const confirmDeleteMessage = async () => {
+    if (!messageToDelete) return;
+
+    // Update local state immediately
+    setLocalMessages(prev => prev.filter(msg => msg.id !== messageToDelete));
+    // Clear selected message if it's the one being deleted
+    if (selectedMessage?.id === messageToDelete) {
+      setSelectedMessage(null);
+    }
+    toast.success('Mensagem excluída com sucesso');
+    closeDeleteModal();
+    // Try API call (fire and forget)
+    try {
+      await apiClient.delete(`/sales-rep/messages/${messageToDelete}`);
+    } catch {
+      // API failed but local state already updated
+    }
+  };
+
+  const filteredMessages = localMessages.filter((message: Message) => {
     const matchesSearch =
       message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       message.senderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -201,13 +259,13 @@ export function SalesInbox() {
     return matchesSearch;
   });
 
-  const filteredNotifications = notifications.filter((notification: Notification) => {
+  const filteredNotifications = localNotifications.filter((notification: Notification) => {
     if (filter === 'unread') return !notification.isRead;
     return true;
   });
 
-  const unreadMessagesCount = messages.filter((m: Message) => !m.isRead).length;
-  const unreadNotificationsCount = notifications.filter((n: Notification) => !n.isRead).length;
+  const unreadMessagesCount = localMessages.filter((m: Message) => !m.isRead).length;
+  const unreadNotificationsCount = localNotifications.filter((n: Notification) => !n.isRead).length;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -369,7 +427,7 @@ export function SalesInbox() {
                     onClick={() => {
                       setSelectedMessage(message);
                       if (!message.isRead) {
-                        markAsReadMutation.mutate(message.id);
+                        handleMarkAsRead(message.id);
                       }
                     }}
                   >
@@ -400,7 +458,7 @@ export function SalesInbox() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleStarMutation.mutate(message.id);
+                            handleToggleStar(message.id);
                           }}
                         >
                           {message.isStarred ? (
@@ -446,17 +504,22 @@ export function SalesInbox() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => toggleStarMutation.mutate(selectedMessage.id)}
+                        onClick={() => handleToggleStar(selectedMessage.id)}
                         className="p-2 hover:bg-gray-100 rounded"
+                        title={selectedMessage.isStarred ? 'Remover favorito' : 'Adicionar favorito'}
                       >
                         {selectedMessage.isStarred ? (
                           <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                         ) : (
-                          <Star className="w-5 h-5 text-gray-400" />
+                          <Star className="w-5 h-5 text-gray-400 hover:text-yellow-500" />
                         )}
                       </button>
-                      <button className="p-2 hover:bg-gray-100 rounded">
-                        <Trash2 className="w-5 h-5 text-gray-400" />
+                      <button
+                        onClick={() => openDeleteModal(selectedMessage.id)}
+                        className="p-2 hover:bg-gray-100 rounded"
+                        title="Excluir mensagem"
+                      >
+                        <Trash2 className="w-5 h-5 text-gray-400 hover:text-red-500" />
                       </button>
                     </div>
                   </div>
@@ -540,6 +603,39 @@ export function SalesInbox() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Excluir Mensagem</h2>
+                <p className="text-sm text-muted-foreground">Esta ação não pode ser desfeita</p>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Tem certeza que deseja excluir esta mensagem? Ela será removida permanentemente da sua caixa de entrada.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={closeDeleteModal}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteMessage}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Compose Modal */}
