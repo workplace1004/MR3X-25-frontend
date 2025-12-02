@@ -6,7 +6,7 @@ import {
   UserCheck, UserCog, ShieldCheck, Settings, FileDown,
   Crown, Package, Mail, Wrench, Receipt, Key, ClipboardCheck, FileSignature,
   Code, KeyRound, Activity, Webhook, BookOpen, UserCog2,
-  Target, Award, Inbox, TrendingUp, Kanban
+  Award, Inbox, TrendingUp, Kanban
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 

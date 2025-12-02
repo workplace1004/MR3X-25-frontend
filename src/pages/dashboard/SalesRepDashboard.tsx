@@ -7,9 +7,10 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
 import {
   TrendingUp, Users, FileText, DollarSign, Target, Award,
-  Clock, CheckCircle, XCircle, AlertCircle
+  Clock, CheckCircle
 } from 'lucide-react';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
@@ -259,7 +260,7 @@ export function SalesRepDashboard() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }: { name: string; percent: number }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: PieLabelRenderProps) => `${name || ''}: ${((percent as number) * 100).toFixed(0)}%`}
                   >
                     {salesStats.pipelineData.map((entry: { name: string; value: number; color: string }, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />

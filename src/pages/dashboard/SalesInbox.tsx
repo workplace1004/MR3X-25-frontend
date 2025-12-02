@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -7,9 +7,18 @@ import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/client';
 import { toast } from 'sonner';
 import {
-  MessageSquare, Send, Search, User, Clock, CheckCheck, Check,
-  Bell, Star, StarOff, Trash2, MoreVertical, Plus, X
+  MessageSquare, Send, Search, User, CheckCheck,
+  Bell, Star, StarOff, Trash2, Plus, X
 } from 'lucide-react';
+
+interface Reply {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: string;
+  content: string;
+  createdAt: string;
+}
 
 interface Message {
   id: string;
@@ -24,6 +33,7 @@ interface Message {
   isStarred: boolean;
   createdAt: string;
   readAt: string | null;
+  replies?: Reply[];
 }
 
 interface Notification {
@@ -150,6 +160,7 @@ export function SalesInbox() {
   const [localNotifications, setLocalNotifications] = useState<Notification[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   const { data: fetchedMessages = mockMessages, isLoading: loadingMessages } = useQuery({
     queryKey: ['sales-messages'],
@@ -193,9 +204,10 @@ export function SalesInbox() {
     if (selectedMessage?.id === id) {
       setSelectedMessage(prev => prev ? { ...prev, isRead: true, readAt: new Date().toISOString() } : null);
     }
-    // Try API call (fire and forget)
+    // Try API call
     try {
       await apiClient.patch(`/sales-rep/messages/${id}/read`);
+      queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
       // API failed but local state already updated
     }
@@ -211,9 +223,10 @@ export function SalesInbox() {
       setSelectedMessage(prev => prev ? { ...prev, isStarred: !prev.isStarred } : null);
     }
     toast.success('Mensagem atualizada');
-    // Try API call (fire and forget)
+    // Try API call
     try {
       await apiClient.patch(`/sales-rep/messages/${id}/star`);
+      queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
       // API failed but local state already updated
     }
@@ -240,9 +253,54 @@ export function SalesInbox() {
     }
     toast.success('Mensagem excluída com sucesso');
     closeDeleteModal();
-    // Try API call (fire and forget)
+    // Try API call
     try {
       await apiClient.delete(`/sales-rep/messages/${messageToDelete}`);
+      queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
+    } catch {
+      // API failed but local state already updated
+    }
+  };
+
+  const handleReply = async () => {
+    if (!replyText.trim() || !selectedMessage) {
+      toast.error('Por favor, escreva uma resposta');
+      return;
+    }
+
+    // Create a new reply in the same conversation
+    const newReply: Reply = {
+      id: Date.now().toString(),
+      senderId: user?.id || 'current-user',
+      senderName: user?.name || 'Você',
+      senderRole: 'REPRESENTATIVE',
+      content: replyText,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Update local messages - add reply to the selected message
+    setLocalMessages(prev => prev.map(msg =>
+      msg.id === selectedMessage.id
+        ? { ...msg, replies: [...(msg.replies || []), newReply] }
+        : msg
+    ));
+
+    // Update selected message to show the new reply immediately
+    setSelectedMessage(prev => prev
+      ? { ...prev, replies: [...(prev.replies || []), newReply] }
+      : null
+    );
+
+    const replyContent = replyText;
+    setReplyText('');
+    toast.success('Resposta enviada com sucesso');
+
+    // Try API call
+    try {
+      await apiClient.post(`/sales-rep/messages/${selectedMessage.id}/reply`, {
+        content: replyContent,
+      });
+      queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
       // API failed but local state already updated
     }
@@ -528,14 +586,83 @@ export function SalesInbox() {
                     <h2 className="text-xl font-semibold">{selectedMessage.subject}</h2>
                   </div>
 
-                  <div className="prose max-w-none">
-                    <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
+                  {/* Conversation Thread */}
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                    {/* Original Message - Left aligned (received) */}
+                    <div className="flex gap-3 justify-start">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="max-w-[75%] bg-gray-100 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-semibold text-sm">{selectedMessage.senderName}</span>
+                          {getRoleBadge(selectedMessage.senderRole)}
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(selectedMessage.createdAt).toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm">{selectedMessage.content}</p>
+                      </div>
+                    </div>
+
+                    {/* Replies */}
+                    {selectedMessage.replies?.map((reply) => {
+                      const isMyReply = reply.senderRole === 'REPRESENTATIVE' || reply.senderRole === 'SALES_REP';
+                      return (
+                        <div
+                          key={reply.id}
+                          className={`flex gap-3 ${isMyReply ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {/* Avatar on left for received messages */}
+                          {!isMyReply && (
+                            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                              <User className="w-5 h-5 text-primary" />
+                            </div>
+                          )}
+
+                          <div className={`max-w-[75%] rounded-lg p-4 ${
+                            isMyReply ? 'bg-orange-500 text-white' : 'bg-gray-100'
+                          }`}>
+                            <div className={`flex items-center gap-2 mb-2 ${isMyReply ? 'justify-end' : ''}`}>
+                              {!isMyReply && (
+                                <>
+                                  <span className="font-semibold text-sm">{reply.senderName}</span>
+                                  {getRoleBadge(reply.senderRole)}
+                                </>
+                              )}
+                              <span className={`text-xs ${isMyReply ? 'text-orange-100' : 'text-muted-foreground'}`}>
+                                {new Date(reply.createdAt).toLocaleString('pt-BR')}
+                              </span>
+                            </div>
+                            <p className="whitespace-pre-wrap text-sm">{reply.content}</p>
+                          </div>
+
+                          {/* Avatar on right for sent messages */}
+                          {isMyReply && (
+                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <User className="w-5 h-5 text-orange-600" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="pt-4 border-t">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Input placeholder="Escreva uma resposta..." className="flex-1" />
-                      <Button>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Escreva uma resposta..."
+                        className="flex-1"
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleReply();
+                          }
+                        }}
+                      />
+                      <Button onClick={handleReply} disabled={!replyText.trim()}>
                         <Send className="w-4 h-4 mr-2" />
                         Responder
                       </Button>

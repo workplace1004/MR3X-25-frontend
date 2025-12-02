@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import apiClient from '../../api/client';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
 import {
   DollarSign, Award, Clock, CheckCircle, Calendar, Building2,
-  TrendingUp, Download, Filter, ChevronDown
+  TrendingUp, Download, Filter
 } from 'lucide-react';
 
 interface Commission {
@@ -178,7 +179,7 @@ export function SalesCommissions() {
     );
   };
 
-  const uniqueMonths = [...new Set(commissions.map((c: Commission) => c.paymentMonth))].sort().reverse();
+  const uniqueMonths = [...new Set(commissions.map((c: Commission) => c.paymentMonth))].sort().reverse() as string[];
 
   const isLoading = loadingCommissions || loadingSummary;
 
@@ -311,7 +312,7 @@ export function SalesCommissions() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }: { name: string; percent: number }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: PieLabelRenderProps) => `${name || ''}: ${((percent as number) * 100).toFixed(0)}%`}
                   >
                     {summary.byPlan.map((entry: { name: string; value: number; color: string }, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
@@ -361,7 +362,7 @@ export function SalesCommissions() {
               className="px-3 py-2 border rounded-lg bg-background"
             >
               <option value="all">Todos os Meses</option>
-              {uniqueMonths.map((month) => (
+              {uniqueMonths.map((month: string) => (
                 <option key={month} value={month}>
                   {new Date(month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                 </option>

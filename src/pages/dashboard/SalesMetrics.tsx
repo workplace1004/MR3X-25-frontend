@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import apiClient from '../../api/client';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, Legend, LineChart, Line
+  BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts';
+import type { PieLabelRenderProps } from 'recharts';
 import {
-  TrendingUp, TrendingDown, Target, DollarSign, Users, FileText,
+  TrendingUp, TrendingDown, Target, DollarSign, Users,
   Percent, Clock, Award, Calendar
 } from 'lucide-react';
 
@@ -428,7 +429,7 @@ export function SalesMetrics() {
                     cy="50%"
                     outerRadius={100}
                     dataKey="value"
-                    label={({ name, percent }: { name: string; percent: number }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }: PieLabelRenderProps) => `${name || ''}: ${((percent as number) * 100).toFixed(0)}%`}
                   >
                     {data.revenueBySource.map((entry: { name: string; value: number; color: string }, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />

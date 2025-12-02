@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/input';
 import apiClient from '../../api/client';
 import {
   Building2, Plus, Search, Phone, Mail, MapPin, Calendar,
-  MoreVertical, Edit, Trash2, Eye, MessageSquare, FileText,
+  Edit, Eye, MessageSquare, FileText,
   Clock, CheckCircle, XCircle, User
 } from 'lucide-react';
 

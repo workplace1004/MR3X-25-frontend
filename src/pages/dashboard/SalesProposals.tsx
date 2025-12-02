@@ -5,9 +5,9 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import apiClient from '../../api/client';
 import {
-  FileText, Plus, Search, Send, Eye, Edit, Trash2,
-  Clock, CheckCircle, XCircle, AlertCircle, Calendar,
-  DollarSign, Building2, Mail, Download, Copy, MoreVertical
+  FileText, Plus, Search, Send, Eye, Edit,
+  CheckCircle, XCircle, AlertCircle, Calendar,
+  Building2, Download, Copy
 } from 'lucide-react';
 
 interface Proposal {

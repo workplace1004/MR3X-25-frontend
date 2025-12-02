@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import apiClient from '../../api/client';
 import {
@@ -196,9 +196,10 @@ export function SalesPipeline() {
     return getStageItems(stage).reduce((sum: number, item: PipelineItem) => sum + item.value, 0);
   };
 
-  const getWeightedValue = (stage: string) => {
+  const _getWeightedValue = (stage: string) => {
     return getStageItems(stage).reduce((sum: number, item: PipelineItem) => sum + (item.value * item.probability / 100), 0);
   };
+  void _getWeightedValue; // Marked as intentionally unused
 
   const handleDragStart = (e: React.DragEvent, item: PipelineItem) => {
     setDraggedItem(item);
