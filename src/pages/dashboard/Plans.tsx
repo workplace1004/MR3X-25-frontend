@@ -280,10 +280,10 @@ export default function PlansPage() {
       {isAdmin && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-black mt-0.5" />
             <div>
-              <h3 className="font-medium text-yellow-800 dark:text-yellow-200">Aprovação Necessária</h3>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+              <h3 className="font-medium text-black">Aprovação Necessária</h3>
+              <p className="text-sm text-black mt-1">
                 Como administrador, suas alterações nos planos precisam ser aprovadas pelo CEO antes de entrarem em vigor.
               </p>
             </div>

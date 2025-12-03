@@ -13,6 +13,10 @@ import { ApiClientDashboard } from './ApiClientDashboard';
 import { SalesRepDashboard } from './SalesRepDashboard';
 import { AuditorDashboard } from './auditor';
 import { ManagerDashboard } from './platform-manager';
+import { AdminDashboard } from './AdminDashboard';
+import { CEODashboard } from './CEODashboard';
+import { IndependentOwnerDashboard } from './IndependentOwnerDashboard';
+import { AgencyAdminDashboard } from './AgencyAdminDashboard';
 
 export function DashboardHome() {
   const { hasPermission, user } = useAuth();
@@ -46,6 +50,26 @@ export function DashboardHome() {
   // Render PLATFORM_MANAGER users manager dashboard directly
   if (user?.role === 'PLATFORM_MANAGER') {
     return <ManagerDashboard />;
+  }
+
+  // Render ADMIN users admin dashboard directly
+  if (user?.role === 'ADMIN') {
+    return <AdminDashboard />;
+  }
+
+  // Render CEO users CEO dashboard directly
+  if (user?.role === 'CEO') {
+    return <CEODashboard />;
+  }
+
+  // Render INDEPENDENT_OWNER users independent owner dashboard directly
+  if (user?.role === 'INDEPENDENT_OWNER') {
+    return <IndependentOwnerDashboard />;
+  }
+
+  // Render AGENCY_ADMIN users (Diretor) agency admin dashboard directly
+  if (user?.role === 'AGENCY_ADMIN') {
+    return <AgencyAdminDashboard />;
   }
 
   // Check permissions for different dashboard sections
