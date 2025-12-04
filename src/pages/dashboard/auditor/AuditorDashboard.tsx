@@ -124,8 +124,7 @@ export function AuditorDashboard() {
           <Eye className="w-6 h-6 text-gray-700" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Painel do Auditor</h1>
-          <p className="text-muted-foreground">Visão geral completa do sistema (somente leitura)</p>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
         </div>
       </div>
 

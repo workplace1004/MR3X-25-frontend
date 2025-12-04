@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import {
-  Eye, Activity, Shield, Server, AlertTriangle, Search, Download, Filter
+  Eye, Activity, Shield, Server, AlertTriangle, Search, Download, Filter, Loader2
 } from 'lucide-react';
+import { auditorAPI } from '../../../api';
 
 type LogType = 'access' | 'activity' | 'system' | 'auth' | 'error';
 
@@ -19,18 +21,54 @@ interface LogEntry {
   details: string;
 }
 
-const mockLogs: LogEntry[] = [
-  { id: '1', timestamp: '2024-12-01 10:45:23', type: 'access', level: 'info', user: 'admin@mr3x.com', ip: '192.168.1.100', action: 'LOGIN', details: 'Login bem-sucedido via web' },
-  { id: '2', timestamp: '2024-12-01 10:44:15', type: 'activity', level: 'info', user: 'gestor@imob.com', ip: '192.168.1.105', action: 'CREATE', details: 'Contrato #2834 criado' },
-  { id: '3', timestamp: '2024-12-01 10:43:00', type: 'system', level: 'info', action: 'BACKUP', details: 'Backup automático iniciado' },
-  { id: '4', timestamp: '2024-12-01 10:42:30', type: 'auth', level: 'warning', user: 'unknown', ip: '45.67.89.123', action: 'FAILED_LOGIN', details: 'Tentativa de login falhou (3x)' },
-  { id: '5', timestamp: '2024-12-01 10:41:00', type: 'error', level: 'error', action: 'API_ERROR', details: 'Timeout na conexão com Asaas API' },
-  { id: '6', timestamp: '2024-12-01 10:40:45', type: 'access', level: 'info', user: 'corretor@imob.com', ip: '192.168.1.110', action: 'LOGOUT', details: 'Logout realizado' },
-  { id: '7', timestamp: '2024-12-01 10:39:20', type: 'activity', level: 'success', user: 'diretor@imob.com', ip: '192.168.1.108', action: 'SIGN', details: 'Documento assinado digitalmente' },
-  { id: '8', timestamp: '2024-12-01 10:38:00', type: 'system', level: 'info', action: 'DEPLOY', details: 'Nova versão v2.3.1 implantada' },
-  { id: '9', timestamp: '2024-12-01 10:37:15', type: 'auth', level: 'info', user: 'api@cliente.com', ip: '200.100.50.25', action: 'TOKEN_REFRESH', details: 'Token de API renovado' },
-  { id: '10', timestamp: '2024-12-01 10:36:00', type: 'error', level: 'warning', action: 'DISK_SPACE', details: 'Espaço em disco abaixo de 20%' },
-];
+// Map API response to component format
+const mapApiLogToEntry = (log: any): LogEntry => {
+  // Determine log type based on event name
+  let type: LogType = 'activity';
+  const eventLower = (log.event || '').toLowerCase();
+  if (eventLower.includes('login') || eventLower.includes('logout') || eventLower.includes('access')) {
+    type = 'access';
+  } else if (eventLower.includes('auth') || eventLower.includes('token') || eventLower.includes('password')) {
+    type = 'auth';
+  } else if (eventLower.includes('error') || eventLower.includes('fail')) {
+    type = 'error';
+  } else if (eventLower.includes('system') || eventLower.includes('backup') || eventLower.includes('deploy')) {
+    type = 'system';
+  }
+
+  // Determine level based on event
+  let level: 'info' | 'warning' | 'error' | 'success' = 'info';
+  if (eventLower.includes('error') || eventLower.includes('fail')) {
+    level = 'error';
+  } else if (eventLower.includes('warning') || eventLower.includes('alert')) {
+    level = 'warning';
+  } else if (eventLower.includes('success') || eventLower.includes('create') || eventLower.includes('sign')) {
+    level = 'success';
+  }
+
+  // Format timestamp
+  const timestamp = log.timestamp
+    ? new Date(log.timestamp).toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }).replace(',', '')
+    : '';
+
+  return {
+    id: log.id,
+    timestamp,
+    type,
+    level,
+    user: log.user || undefined,
+    ip: log.ip || undefined,
+    action: log.event || 'UNKNOWN',
+    details: log.entity ? `${log.entity} #${log.entityId}` : (log.event || 'N/A'),
+  };
+};
 
 const logTypeConfig: Record<LogType, { label: string; icon: React.ElementType; color: string; bgColor: string }> = {
   access: { label: 'Acesso', icon: Eye, color: 'text-blue-600', bgColor: 'bg-blue-100' },
@@ -44,7 +82,17 @@ export function AuditorLogs() {
   const [activeTab, setActiveTab] = useState<LogType | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredLogs = mockLogs.filter(log => {
+  // Fetch logs from API
+  const { data: apiLogs = [], isLoading, error } = useQuery({
+    queryKey: ['auditor-logs'],
+    queryFn: () => auditorAPI.getLogs(),
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Map API logs to component format
+  const logs: LogEntry[] = Array.isArray(apiLogs) ? apiLogs.map(mapApiLogToEntry) : [];
+
+  const filteredLogs = logs.filter(log => {
     if (activeTab !== 'all' && log.type !== activeTab) return false;
     if (searchTerm && !log.details.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !log.action.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -130,49 +178,68 @@ export function AuditorLogs() {
           <CardTitle className="text-base flex items-center gap-2">
             <Eye className="w-4 h-4" />
             Registros ({filteredLogs.length})
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left p-4 text-sm font-medium">Timestamp</th>
-                  <th className="text-left p-4 text-sm font-medium">Tipo</th>
-                  <th className="text-left p-4 text-sm font-medium">Nível</th>
-                  <th className="text-left p-4 text-sm font-medium">Usuário</th>
-                  <th className="text-left p-4 text-sm font-medium">IP</th>
-                  <th className="text-left p-4 text-sm font-medium">Ação</th>
-                  <th className="text-left p-4 text-sm font-medium">Detalhes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredLogs.map((log) => {
-                  const typeConfig = logTypeConfig[log.type];
-                  return (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="p-4 text-sm font-mono text-muted-foreground">{log.timestamp}</td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${typeConfig.bgColor} ${typeConfig.color}`}>
-                          <typeConfig.icon className="w-3 h-3" />
-                          {typeConfig.label}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${getLevelStyle(log.level)}`}>
-                          {log.level}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm">{log.user || '-'}</td>
-                      <td className="p-4 text-sm font-mono">{log.ip || '-'}</td>
-                      <td className="p-4 text-sm font-medium">{log.action}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{log.details}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Carregando logs...</span>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12 text-red-500">
+              <AlertTriangle className="w-6 h-6 mr-2" />
+              <span>Erro ao carregar logs. Tente novamente.</span>
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Activity className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium">Nenhum log encontrado</p>
+              <p className="text-sm">Não há registros de auditoria no sistema ainda.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left p-4 text-sm font-medium">Timestamp</th>
+                    <th className="text-left p-4 text-sm font-medium">Tipo</th>
+                    <th className="text-left p-4 text-sm font-medium">Nível</th>
+                    <th className="text-left p-4 text-sm font-medium">Usuário</th>
+                    <th className="text-left p-4 text-sm font-medium">IP</th>
+                    <th className="text-left p-4 text-sm font-medium">Ação</th>
+                    <th className="text-left p-4 text-sm font-medium">Detalhes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredLogs.map((log) => {
+                    const typeConfig = logTypeConfig[log.type];
+                    return (
+                      <tr key={log.id} className="hover:bg-gray-50">
+                        <td className="p-4 text-sm font-mono text-muted-foreground">{log.timestamp}</td>
+                        <td className="p-4">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${typeConfig.bgColor} ${typeConfig.color}`}>
+                            <typeConfig.icon className="w-3 h-3" />
+                            {typeConfig.label}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs ${getLevelStyle(log.level)}`}>
+                            {log.level}
+                          </span>
+                        </td>
+                        <td className="p-4 text-sm">{log.user || '-'}</td>
+                        <td className="p-4 text-sm font-mono">{log.ip || '-'}</td>
+                        <td className="p-4 text-sm font-medium">{log.action}</td>
+                        <td className="p-4 text-sm text-muted-foreground">{log.details}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

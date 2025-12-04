@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import {
   Receipt, Search, Eye, DollarSign, ArrowUpRight, ArrowDownRight,
-  Clock, AlertTriangle, Building2, User
+  Clock, AlertTriangle, Building2, User, Loader2
 } from 'lucide-react';
+import { auditorAPI } from '../../../api';
 
 interface Transaction {
   id: string;
@@ -26,74 +28,34 @@ interface SplitDetail {
   percentage: number;
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: 'TXN-001',
+// Map API response to component format
+const mapApiPaymentToTransaction = (payment: any): Transaction => {
+  return {
+    id: `TXN-${payment.id}`,
     type: 'payment',
-    description: 'Aluguel Apt 501 - Dezembro/2024',
-    amount: 2500.00,
-    date: '2024-12-01 10:30:00',
+    description: `${payment.type || 'Pagamento'} - ${payment.property || 'N/A'}`,
+    amount: Number(payment.amount) || 0,
+    date: payment.date ? new Date(payment.date).toLocaleString('pt-BR') : '',
     status: 'completed',
-    payer: 'João Silva (Inquilino)',
-    recipient: 'Imobiliária Centro',
-    splitDetails: [
-      { recipient: 'Imobiliária Centro', recipientType: 'agency', amount: 250.00, percentage: 10 },
-      { recipient: 'Maria Santos (Proprietário)', recipientType: 'owner', amount: 2125.00, percentage: 85 },
-      { recipient: 'MR3X Platform', recipientType: 'platform', amount: 125.00, percentage: 5 },
-    ],
-  },
-  {
-    id: 'TXN-002',
-    type: 'payment',
-    description: 'Aluguel Casa 12 - Dezembro/2024',
-    amount: 3500.00,
-    date: '2024-12-01 09:15:00',
-    status: 'completed',
-    payer: 'Pedro Lima (Inquilino)',
-    recipient: 'Imobiliária Norte',
-    splitDetails: [
-      { recipient: 'Imobiliária Norte', recipientType: 'agency', amount: 350.00, percentage: 10 },
-      { recipient: 'Carlos Mendes (Proprietário)', recipientType: 'owner', amount: 2975.00, percentage: 85 },
-      { recipient: 'MR3X Platform', recipientType: 'platform', amount: 175.00, percentage: 5 },
-    ],
-  },
-  {
-    id: 'TXN-003',
-    type: 'payment',
-    description: 'Aluguel Sala 302 - Dezembro/2024',
-    amount: 1800.00,
-    date: '2024-12-05',
-    status: 'scheduled',
-    payer: 'Ana Costa (Inquilino)',
-    recipient: 'Imobiliária Centro',
-  },
-  {
-    id: 'TXN-004',
-    type: 'chargeback',
-    description: 'Estorno - Cobrança duplicada',
-    amount: -2500.00,
-    date: '2024-11-28 16:45:00',
-    status: 'completed',
-    payer: 'MR3X Platform',
-    recipient: 'Roberto Oliveira (Inquilino)',
-  },
-  {
-    id: 'TXN-005',
-    type: 'payment',
-    description: 'Aluguel Loja 5 - Novembro/2024',
-    amount: 4200.00,
-    date: '2024-11-15 14:20:00',
-    status: 'failed',
-    payer: 'Empresa XYZ (Inquilino)',
-    recipient: 'Imobiliária Sul',
-  },
-];
+    payer: payment.tenant || 'N/A',
+    recipient: payment.agency || 'N/A',
+  };
+};
 
 export function AuditorPayments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
-  const filteredTransactions = mockTransactions.filter(txn =>
+  // Fetch payments from API
+  const { data: apiPayments = [], isLoading } = useQuery({
+    queryKey: ['auditor-payments'],
+    queryFn: () => auditorAPI.getPayments(),
+  });
+
+  // Map API payments to component format
+  const transactions: Transaction[] = Array.isArray(apiPayments) ? apiPayments.map(mapApiPaymentToTransaction) : [];
+
+  const filteredTransactions = transactions.filter(txn =>
     txn.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     txn.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -141,41 +103,41 @@ export function AuditorPayments() {
               <ArrowUpRight className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Recebidos (Mês)</p>
-              <p className="text-xl font-bold">R$ 245.680</p>
+              <p className="text-xs text-muted-foreground">Total Pagamentos</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : transactions.length}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Clock className="w-5 h-5 text-blue-600" />
+              <DollarSign className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Agendados</p>
-              <p className="text-xl font-bold">R$ 89.400</p>
+              <p className="text-xs text-muted-foreground">Valor Total</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : formatCurrency(transactions.reduce((sum, t) => sum + t.amount, 0))}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <ArrowDownRight className="w-5 h-5 text-red-600" />
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Receipt className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Chargebacks</p>
-              <p className="text-xl font-bold">R$ 7.500</p>
+              <p className="text-xs text-muted-foreground">Concluídos</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : transactions.filter(t => t.status === 'completed').length}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 bg-yellow-100 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+              <Clock className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Falhas</p>
-              <p className="text-xl font-bold">12</p>
+              <p className="text-xs text-muted-foreground">Pendentes</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : transactions.filter(t => t.status === 'pending' || t.status === 'scheduled').length}</p>
             </div>
           </CardContent>
         </Card>

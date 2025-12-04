@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import {
-  FileText, Search, Eye, FileSignature, ClipboardCheck, Bell, Upload, Download
+  FileText, Search, Eye, FileSignature, ClipboardCheck, Bell, Upload, Download, Loader2, CheckCircle, Clock
 } from 'lucide-react';
+import { auditorAPI } from '../../../api';
 
 type DocumentType = 'contract' | 'agreement' | 'notification' | 'inspection';
 
@@ -21,123 +23,38 @@ interface Document {
   version: number;
 }
 
-interface UploadLog {
-  id: string;
-  fileName: string;
-  uploadedBy: string;
-  uploadedAt: string;
-  fileSize: string;
-  status: 'success' | 'failed';
-  documentId?: string;
-}
-
-const mockDocuments: Document[] = [
-  {
-    id: 'doc_001',
-    type: 'contract',
-    name: 'Contrato de Locação - Apt 501',
-    description: 'Contrato de locação residencial por 12 meses',
-    agency: 'Imobiliária Centro',
-    createdBy: 'gestor@imobcentro.com',
-    createdAt: '2024-11-15',
-    status: 'signed',
-    fileSize: '245 KB',
-    version: 3,
-  },
-  {
-    id: 'doc_002',
-    type: 'contract',
-    name: 'Contrato de Locação - Casa 12',
-    description: 'Contrato de locação residencial por 24 meses',
-    agency: 'Imobiliária Norte',
-    createdBy: 'diretor@imobnorte.com',
-    createdAt: '2024-11-20',
-    status: 'active',
-    fileSize: '312 KB',
-    version: 2,
-  },
-  {
-    id: 'doc_003',
-    type: 'agreement',
-    name: 'Acordo de Rescisão - Sala 302',
-    description: 'Acordo de rescisão antecipada do contrato comercial',
-    agency: 'Imobiliária Centro',
-    createdBy: 'corretor@imobcentro.com',
-    createdAt: '2024-11-28',
-    status: 'draft',
-    fileSize: '156 KB',
-    version: 1,
-  },
-  {
-    id: 'doc_004',
-    type: 'notification',
-    name: 'Notificação de Reajuste',
-    description: 'Notificação de reajuste anual de aluguel',
-    agency: 'Imobiliária Centro',
+// Map API response to component format
+const mapApiDocToDocument = (doc: any): Document => {
+  return {
+    id: doc.id,
+    type: doc.type?.toLowerCase() === 'contract' ? 'contract' : 'contract',
+    name: doc.name || `Documento #${doc.id}`,
+    description: doc.tenant ? `Inquilino: ${doc.tenant}` : 'Documento do sistema',
+    agency: 'N/A', // Not returned by API
     createdBy: 'sistema',
-    createdAt: '2024-12-01',
-    status: 'active',
-    fileSize: '45 KB',
+    createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString().split('T')[0] : '',
+    status: doc.status?.toLowerCase() === 'signed' ? 'signed' :
+            doc.status?.toLowerCase() === 'pending' ? 'draft' : 'active',
+    fileSize: 'N/A',
     version: 1,
-  },
-  {
-    id: 'doc_005',
-    type: 'inspection',
-    name: 'Vistoria de Entrada - Apt 501',
-    description: 'Relatório de vistoria com fotos e observações',
-    agency: 'Imobiliária Centro',
-    createdBy: 'corretor@imobcentro.com',
-    createdAt: '2024-11-10',
-    status: 'signed',
-    fileSize: '2.4 MB',
-    version: 1,
-  },
-];
-
-const mockUploadLogs: UploadLog[] = [
-  {
-    id: 'upl_001',
-    fileName: 'contrato_apt501_v3.pdf',
-    uploadedBy: 'gestor@imobcentro.com',
-    uploadedAt: '2024-12-01 10:45:00',
-    fileSize: '245 KB',
-    status: 'success',
-    documentId: 'doc_001',
-  },
-  {
-    id: 'upl_002',
-    fileName: 'vistoria_fotos.zip',
-    uploadedBy: 'corretor@imobcentro.com',
-    uploadedAt: '2024-12-01 09:30:00',
-    fileSize: '15.6 MB',
-    status: 'success',
-    documentId: 'doc_005',
-  },
-  {
-    id: 'upl_003',
-    fileName: 'documento_corrompido.pdf',
-    uploadedBy: 'admin@imobnorte.com',
-    uploadedAt: '2024-12-01 08:15:00',
-    fileSize: '0 KB',
-    status: 'failed',
-  },
-  {
-    id: 'upl_004',
-    fileName: 'acordo_rescisao.pdf',
-    uploadedBy: 'corretor@imobcentro.com',
-    uploadedAt: '2024-11-30 16:20:00',
-    fileSize: '156 KB',
-    status: 'success',
-    documentId: 'doc_003',
-  },
-];
+  };
+};
 
 export function AuditorDocuments() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'documents' | 'uploads'>('documents');
   const [typeFilter, setTypeFilter] = useState<'all' | DocumentType>('all');
 
-  const filteredDocuments = mockDocuments.filter(doc => {
+  // Fetch documents from API
+  const { data: apiDocs = [], isLoading } = useQuery({
+    queryKey: ['auditor-documents'],
+    queryFn: () => auditorAPI.getDocuments(),
+  });
+
+  // Map API docs to component format
+  const documents: Document[] = Array.isArray(apiDocs) ? apiDocs.map(mapApiDocToDocument) : [];
+
+  const filteredDocuments = documents.filter(doc => {
     if (typeFilter !== 'all' && doc.type !== typeFilter) return false;
     return doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.agency.toLowerCase().includes(searchTerm.toLowerCase());
@@ -209,41 +126,41 @@ export function AuditorDocuments() {
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Contratos</p>
-              <p className="text-xl font-bold">2,834</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <FileSignature className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Acordos</p>
-              <p className="text-xl font-bold">456</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Bell className="w-5 h-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Notificações</p>
-              <p className="text-xl font-bold">1,234</p>
+              <p className="text-xs text-muted-foreground">Total Documentos</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : documents.length}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
-              <ClipboardCheck className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Vistorias</p>
-              <p className="text-xl font-bold">892</p>
+              <p className="text-xs text-muted-foreground">Assinados</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : documents.filter(d => d.status === 'signed').length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <Clock className="w-5 h-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Pendentes</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : documents.filter(d => d.status === 'draft').length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Ativos</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : documents.filter(d => d.status === 'active').length}</p>
             </div>
           </CardContent>
         </Card>
@@ -376,45 +293,11 @@ export function AuditorDocuments() {
               Logs de Upload
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="text-left p-4 text-sm font-medium">Arquivo</th>
-                    <th className="text-left p-4 text-sm font-medium">Enviado por</th>
-                    <th className="text-left p-4 text-sm font-medium">Data/Hora</th>
-                    <th className="text-left p-4 text-sm font-medium">Tamanho</th>
-                    <th className="text-left p-4 text-sm font-medium">Status</th>
-                    <th className="text-left p-4 text-sm font-medium">Documento</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {mockUploadLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Download className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-mono">{log.fileName}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-sm">{log.uploadedBy}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{log.uploadedAt}</td>
-                      <td className="p-4 text-sm text-muted-foreground">{log.fileSize}</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          log.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                          {log.status === 'success' ? 'Sucesso' : 'Falhou'}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm font-mono text-muted-foreground">
-                        {log.documentId || '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Upload className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium">Nenhum log de upload</p>
+              <p className="text-sm">Os logs de upload estarão disponíveis em breve.</p>
             </div>
           </CardContent>
         </Card>

@@ -1,13 +1,15 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import {
-  Users, Search, Eye, Shield, CheckCircle, XCircle, Building2, User
+  Users, Search, Eye, Shield, CheckCircle, XCircle, Building2, User, Loader2
 } from 'lucide-react';
+import { auditorAPI } from '../../../api';
 
 type UserRole = 'CEO' | 'ADMIN' | 'PLATFORM_MANAGER' | 'REPRESENTATIVE' |
-  'AGENCY_ADMIN' | 'AGENCY_MANAGER' | 'BROKER' | 'PROPRIETARIO' | 'INQUILINO';
+  'AGENCY_ADMIN' | 'AGENCY_MANAGER' | 'BROKER' | 'PROPRIETARIO' | 'INQUILINO' | 'LEGAL_AUDITOR' | 'INDEPENDENT_OWNER' | 'BUILDING_MANAGER' | 'API_CLIENT';
 
 type UserCategory = 'internal' | 'agency';
 
@@ -24,121 +26,41 @@ interface SystemUser {
   permissions: string[];
 }
 
-const mockUsers: SystemUser[] = [
-  // MR3X Internal Users
-  {
-    id: 'usr_001',
-    name: 'Roberto Diretor',
-    email: 'ceo@mr3x.com',
-    role: 'CEO',
-    category: 'internal',
-    status: 'active',
-    createdAt: '2022-01-01',
-    lastLogin: '2024-12-01 08:00:00',
-    permissions: ['full_access'],
-  },
-  {
-    id: 'usr_002',
-    name: 'Carlos Admin',
-    email: 'admin@mr3x.com',
-    role: 'ADMIN',
-    category: 'internal',
-    status: 'active',
-    createdAt: '2022-01-15',
-    lastLogin: '2024-12-01 09:30:00',
-    permissions: ['manage_agencies', 'manage_users', 'view_reports', 'manage_plans'],
-  },
-  {
-    id: 'usr_003',
-    name: 'Ana Support',
-    email: 'support@mr3x.com',
-    role: 'PLATFORM_MANAGER',
-    category: 'internal',
-    status: 'active',
-    createdAt: '2023-03-10',
-    lastLogin: '2024-12-01 10:15:00',
-    permissions: ['view_agencies', 'view_reports', 'support_tickets'],
-  },
-  {
-    id: 'usr_004',
-    name: 'Pedro Sales',
-    email: 'sales@mr3x.com',
-    role: 'REPRESENTATIVE',
-    category: 'internal',
-    status: 'active',
-    createdAt: '2023-06-01',
-    lastLogin: '2024-12-01 09:00:00',
-    permissions: ['manage_prospects', 'view_commissions', 'create_proposals'],
-  },
-  // Agency Staff
-  {
-    id: 'usr_005',
-    name: 'Maria Diretora',
-    email: 'maria@imobcentro.com',
-    role: 'AGENCY_ADMIN',
-    category: 'agency',
-    agency: 'Imobiliária Centro',
-    status: 'active',
-    createdAt: '2023-01-20',
-    lastLogin: '2024-12-01 10:30:00',
-    permissions: ['manage_agency', 'manage_staff', 'manage_properties', 'manage_contracts'],
-  },
-  {
-    id: 'usr_006',
-    name: 'João Gestor',
-    email: 'joao@imobcentro.com',
-    role: 'AGENCY_MANAGER',
-    category: 'agency',
-    agency: 'Imobiliária Centro',
-    status: 'active',
-    createdAt: '2023-02-15',
-    lastLogin: '2024-12-01 08:45:00',
-    permissions: ['manage_brokers', 'manage_properties', 'manage_contracts'],
-  },
-  {
-    id: 'usr_007',
-    name: 'Paula Corretora',
-    email: 'paula@imobcentro.com',
-    role: 'BROKER',
-    category: 'agency',
-    agency: 'Imobiliária Centro',
-    status: 'active',
-    createdAt: '2023-04-01',
-    lastLogin: '2024-12-01 09:15:00',
-    permissions: ['create_properties', 'create_contracts', 'view_tenants'],
-  },
-  {
-    id: 'usr_008',
-    name: 'Antônio Silva',
-    email: 'antonio@email.com',
-    role: 'PROPRIETARIO',
-    category: 'agency',
-    agency: 'Imobiliária Centro',
-    status: 'inactive',
-    createdAt: '2023-05-10',
-    lastLogin: '2024-10-15 14:00:00',
-    permissions: ['view_properties', 'view_contracts', 'view_payments'],
-  },
-  {
-    id: 'usr_009',
-    name: 'Fernanda Costa',
-    email: 'fernanda@email.com',
-    role: 'INQUILINO',
-    category: 'agency',
-    agency: 'Imobiliária Norte',
-    status: 'active',
-    createdAt: '2023-08-20',
-    lastLogin: '2024-12-01 07:30:00',
-    permissions: ['view_contract', 'make_payments', 'view_invoices'],
-  },
-];
+// Internal roles that belong to MR3X platform
+const INTERNAL_ROLES = ['CEO', 'ADMIN', 'PLATFORM_MANAGER', 'REPRESENTATIVE', 'LEGAL_AUDITOR', 'API_CLIENT'];
+
+// Map API response to component format
+const mapApiUserToSystemUser = (user: any): SystemUser => {
+  const isInternal = INTERNAL_ROLES.includes(user.role);
+  return {
+    id: user.id,
+    name: user.name || 'N/A',
+    email: user.email,
+    role: user.role as UserRole,
+    category: isInternal ? 'internal' : 'agency',
+    agency: user.agencyName || undefined,
+    status: user.status?.toLowerCase() === 'active' ? 'active' : 'inactive',
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '',
+    lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString('pt-BR') : 'Nunca',
+    permissions: [], // Permissions not returned by API
+  };
+};
 
 export function AuditorUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'all' | UserCategory>('all');
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
 
-  const filteredUsers = mockUsers.filter(user => {
+  // Fetch users from API
+  const { data: apiUsers = [], isLoading } = useQuery({
+    queryKey: ['auditor-users'],
+    queryFn: () => auditorAPI.getUsers(),
+  });
+
+  // Map API users to component format
+  const users: SystemUser[] = Array.isArray(apiUsers) ? apiUsers.map(mapApiUserToSystemUser) : [];
+
+  const filteredUsers = users.filter(user => {
     if (categoryFilter !== 'all' && user.category !== categoryFilter) return false;
     return user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -156,8 +78,12 @@ export function AuditorUsers() {
       BROKER: 'bg-yellow-100 text-yellow-700',
       PROPRIETARIO: 'bg-green-100 text-green-700',
       INQUILINO: 'bg-orange-100 text-orange-700',
+      LEGAL_AUDITOR: 'bg-gray-100 text-gray-700',
+      INDEPENDENT_OWNER: 'bg-teal-100 text-teal-700',
+      BUILDING_MANAGER: 'bg-violet-100 text-violet-700',
+      API_CLIENT: 'bg-stone-100 text-stone-700',
     };
-    return styles[role];
+    return styles[role] || 'bg-gray-100 text-gray-700';
   };
 
   const getRoleLabel = (role: UserRole) => {
@@ -171,13 +97,17 @@ export function AuditorUsers() {
       BROKER: 'Corretor',
       PROPRIETARIO: 'Proprietário',
       INQUILINO: 'Inquilino',
+      LEGAL_AUDITOR: 'Auditor Legal',
+      INDEPENDENT_OWNER: 'Proprietário Indep.',
+      BUILDING_MANAGER: 'Síndico',
+      API_CLIENT: 'Cliente API',
     };
-    return labels[role];
+    return labels[role] || role;
   };
 
-  const internalCount = mockUsers.filter(u => u.category === 'internal').length;
-  const agencyCount = mockUsers.filter(u => u.category === 'agency').length;
-  const activeCount = mockUsers.filter(u => u.status === 'active').length;
+  const internalCount = users.filter(u => u.category === 'internal').length;
+  const agencyCount = users.filter(u => u.category === 'agency').length;
+  const activeCount = users.filter(u => u.status === 'active').length;
 
   return (
     <div className="space-y-6">
@@ -201,7 +131,7 @@ export function AuditorUsers() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Usuários</p>
-              <p className="text-xl font-bold">{mockUsers.length}</p>
+              <p className="text-xl font-bold">{isLoading ? '...' : users.length}</p>
             </div>
           </CardContent>
         </Card>

@@ -71,6 +71,7 @@ const baseNavigation = [
   { name: 'Documentos', href: '/dashboard/auditor-documents', icon: FileText, perm: undefined, roles: ['LEGAL_AUDITOR'] },
   { name: 'Ferramentas', href: '/dashboard/auditor-tools', icon: GitCompare, perm: undefined, roles: ['LEGAL_AUDITOR'] },
   { name: 'Configurações', href: '/dashboard/auditor-settings', icon: Settings, perm: undefined, roles: ['LEGAL_AUDITOR'] },
+  { name: 'Alterar Senha', href: '/dashboard/change-password', icon: Key, perm: undefined, roles: ['LEGAL_AUDITOR'] },
   // PLATFORM_MANAGER specific menu items (MR3X Internal Manager)
   { name: 'Agências', href: '/dashboard/manager-agencies', icon: Building, perm: undefined, roles: ['PLATFORM_MANAGER'] },
   { name: 'Suporte', href: '/dashboard/manager-support', icon: Headphones, perm: undefined, roles: ['PLATFORM_MANAGER'] },
@@ -369,6 +370,10 @@ export function DashboardLayout() {
         '/dashboard/change-password',     // Change Password
       ];
       if (!allowForAuditor.includes(item.href)) return false;
+      // Exclude general Alterar Senha (show only the LEGAL_AUDITOR specific one at end)
+      if (item.href === '/dashboard/change-password' && !item.roles?.includes('LEGAL_AUDITOR')) {
+        return false;
+      }
     }
 
     // REPRESENTATIVE: Sales representative for MR3X platform
