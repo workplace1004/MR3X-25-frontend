@@ -31,7 +31,7 @@ jobs:
         run: npm run build
         env:
           # if VITE_API_URL var is not set, fallback to backend IP
-          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'http://89.117.32.174:8081' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'http://89.117.32.174:8081/api' }}
 
       - name: Setup SSH
         run: |
