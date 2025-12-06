@@ -1,15 +1,17 @@
-name: Frontend CI/CD
+name: Frontend CI CD
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
 env:
-  NODE_VERSION: '20.x'
+  NODE_VERSION: 20
 
 jobs:
   build-and-deploy:
-    name: Build & Deploy
+    name: Build and deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -20,15 +22,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project (skip TypeScript errors)
-        run: npx vite build
+      - name: Build project
+        run: npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || 'http://89.117.32.174:8081' }}
+          # if VITE_API_URL var is not set, fallback to backend IP
+          VITE_API_URL: ${{ vars.VITE_API_URL != '' && vars.VITE_API_URL || 'http://89.117.32.174:8081' }}
 
       - name: Setup SSH
         run: |
@@ -37,30 +40,38 @@ jobs:
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-      - name: Deploy to Server
+      - name: Deploy to server
         run: |
-          # Create tarball from contents of dist (not the folder itself)
-          cd dist && tar -czf ../deploy.tar.gz . && cd ..
+          # Create tarball from contents of dist
+          tar -C dist -czf deploy.tar.gz .
 
+          # Upload archive
           scp -o StrictHostKeyChecking=no deploy.tar.gz \
-            ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}:/tmp/
+            "${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}:/tmp/deploy.tar.gz"
 
-          ssh -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'ENDSSH'
+          # Connect and deploy
+          ssh -o StrictHostKeyChecking=no "${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}" << 'ENDSSH'
             set -e
-            cd ${{ secrets.PRODUCTION_PATH }}
+
+            TARGET_DIR='${{ secrets.PRODUCTION_PATH }}'
+
+            # Make sure target directory exists
+            mkdir -p "$TARGET_DIR"
 
             # Backup current files
-            rm -rf backup 2>/dev/null || true
-            mkdir -p backup
-            mv *.html *.js *.css assets 2>/dev/null backup/ || true
+            rm -rf "$TARGET_DIR/backup"
+            mkdir -p "$TARGET_DIR/backup"
+            if ls "$TARGET_DIR" | grep -q .; then
+              mv "$TARGET_DIR"/* "$TARGET_DIR/backup/" 2>/dev/null || true
+            fi
 
-            # Extract new files directly to the directory
-            tar -xzf /tmp/deploy.tar.gz
+            # Extract new build
+            tar -xzf /tmp/deploy.tar.gz -C "$TARGET_DIR"
 
             # Cleanup
             rm /tmp/deploy.tar.gz
-            rm -rf backup
+            rm -rf "$TARGET_DIR/backup"
 
-            echo "✅ Frontend deployment completed!"
-            ls -la
+            echo 'Frontend deployment completed'
+            ls -la "$TARGET_DIR"
           ENDSSH
