@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import {
@@ -16,11 +15,10 @@ import {
   Upload,
   MapPin,
   Clock,
-  User,
   AlertTriangle,
   ChevronDown,
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '../../lib/utils';
+import { formatDate } from '../../lib/utils';
 import { cn } from '../../lib/utils';
 
 const API_URL = import.meta.env.VITE_API_URL;

@@ -9,7 +9,7 @@ import {
   isReadOnlyForModule,
   getRestrictionMessage,
 } from '../lib/owner-permissions';
-import type { OwnerAction, ModulePermission } from '../lib/owner-permissions';
+import type { OwnerAction } from '../lib/owner-permissions';
 
 /**
  * Hook for managing owner-specific permissions in components

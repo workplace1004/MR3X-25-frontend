@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   Copy,
   ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../lib/utils';
 import { toast } from 'sonner';
@@ -186,7 +185,7 @@ export function ContractPdfPreview({
                 <div className="min-w-0">
                   <span className="hidden sm:inline font-medium">Período: </span>
                   <span className="text-[10px] sm:text-sm">
-                    {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                    {contract.startDate ? formatDate(contract.startDate) : 'N/A'} - {contract.endDate ? formatDate(contract.endDate) : 'N/A'}
                   </span>
                 </div>
               </div>

@@ -22,7 +22,6 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,8 +45,6 @@ export function ClauseEditor({
   readOnly = false,
   className,
 }: ClauseEditorProps) {
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
