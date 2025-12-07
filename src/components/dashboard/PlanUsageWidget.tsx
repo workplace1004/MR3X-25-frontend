@@ -122,7 +122,7 @@ export function PlanUsageWidget({ agencyId, onUpgradeClick }: PlanUsageWidgetPro
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-muted-foreground" />
-              <span>Propriedades</span>
+              <span>Imóveis</span>
             </div>
             <span className="font-medium">
               {usage.properties.active} / {usage.properties.limit}

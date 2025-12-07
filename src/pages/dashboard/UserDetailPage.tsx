@@ -248,22 +248,22 @@ export function UserDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Entidades Vinculadas</CardTitle>
-              <CardDescription>Propriedades e contratos associados a este usuário</CardDescription>
+              <CardDescription>Imóveis e contratos associados a este usuário</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium mb-2">Propriedades ({user._count?.ownedProperties || 0})</h4>
+                <h4 className="font-medium mb-2">Imóveis ({user._count?.ownedProperties || 0})</h4>
                 {user.ownedProperties && user.ownedProperties.length > 0 ? (
                   <div className="space-y-2">
                     {user.ownedProperties.map((property) => (
                       <div key={property.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">Propriedade #{property.id}</span>
+                        <span className="text-sm">Imóvel #{property.id}</span>
                         <span className="text-sm text-muted-foreground">{property.name}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Nenhuma propriedade vinculada</p>
+                  <p className="text-sm text-muted-foreground">Nenhum imóvel vinculado</p>
                 )}
               </div>
 

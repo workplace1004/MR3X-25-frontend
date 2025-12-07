@@ -197,16 +197,16 @@ export function DashboardHome() {
           <>
             <StatCard title="Agências Ativas" value={overview.totalAgencies || 0} icon={Building2} color="blue" />
             <StatCard title="Usuários Registrados" value={overview.totalUsers || 0} icon={Users} color="green" />
-            <StatCard title="Total de Propriedades" value={overview.totalProperties || 0} icon={Building2} color="purple" />
+            <StatCard title="Total de Imóveis" value={overview.totalProperties || 0} icon={Building2} color="purple" />
             <StatCard title="Contratos Ativos" value={overview.activeContracts || 0} icon={FileText} color="orange" />
           </>
         ) : (
           <>
             {canViewProperties && (
-              <StatCard title="Total de Propriedades" value={overview.totalProperties || 0} icon={Building2} color="blue" />
+              <StatCard title="Total de Imóveis" value={overview.totalProperties || 0} icon={Building2} color="blue" />
             )}
             {canViewProperties && (
-              <StatCard title="Propriedades Ocupadas" value={overview.occupiedProperties || 0} icon={Users} color="green" />
+              <StatCard title="Imóveis Ocupados" value={overview.occupiedProperties || 0} icon={Users} color="green" />
             )}
             {canViewContracts && (
               <StatCard title="Contratos Ativos" value={overview.activeContracts || 0} icon={FileText} color="purple" />
@@ -497,7 +497,7 @@ export function DashboardHome() {
                 <div className="flex gap-4 text-sm">
                   <div className="text-center">
                     <p className="font-semibold">{agency.propertyCount}</p>
-                    <p className="text-muted-foreground">Propriedades</p>
+                    <p className="text-muted-foreground">Imóveis</p>
                   </div>
                   <div className="text-center">
                     <p className="font-semibold">{agency.userCount}</p>

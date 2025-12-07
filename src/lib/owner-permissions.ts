@@ -62,7 +62,7 @@ const PROPRIETARIO_PERMISSIONS: Record<string, ModulePermission> = {
     canSign: false,
     canApprove: false,
     canExport: false,
-    message: 'Propriedades são gerenciadas pela imobiliária',
+    message: 'Imóveis são gerenciados pela imobiliária',
   },
   tenant_analysis: {
     canView: true,
@@ -280,7 +280,7 @@ export function isReadOnlyForModule(role: string | undefined, module: string): b
  */
 export function getRestrictionMessage(module: string): string {
   const messages: Record<string, string> = {
-    properties: 'Propriedades são gerenciadas pela imobiliária',
+    properties: 'Imóveis são gerenciados pela imobiliária',
     tenant_analysis: 'Análise de inquilinos é realizada pela imobiliária',
     payments: 'Pagamentos são gerenciados pela imobiliária',
     invoices: 'Faturas são gerenciadas pela imobiliária',

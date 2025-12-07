@@ -326,7 +326,7 @@ export default function PlansPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Limite de Propriedades:</span>
+                  <span className="text-sm">Limite de Imóveis:</span>
                   <Badge variant="outline">
                     {plan.propertyLimit}
                   </Badge>
@@ -399,7 +399,7 @@ export default function PlansPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-plan-property-limit">Limite de Propriedades</Label>
+                <Label htmlFor="edit-plan-property-limit">Limite de Imóveis</Label>
                 <Input
                   id="edit-plan-property-limit"
                   type="number"
@@ -425,7 +425,7 @@ export default function PlansPage() {
                 id="edit-plan-features"
                 value={planForm.features}
                 onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
-                placeholder="Ex: 5 propriedades, 3 usuários, Suporte por email"
+                placeholder="Ex: 5 imóveis, 3 usuários, Suporte por email"
               />
             </div>
             <div>
@@ -534,7 +534,7 @@ export default function PlansPage() {
                             <h4 className="font-semibold mb-2">Valores Atuais</h4>
                             <ul className="space-y-1 text-muted-foreground">
                               <li>Preço: R$ {request.currentValues.price?.toFixed(2) || '0.00'}</li>
-                              <li>Limite de Propriedades: {request.currentValues.propertyLimit}</li>
+                              <li>Limite de Imóveis: {request.currentValues.propertyLimit}</li>
                               <li>Limite de Usuários: {request.currentValues.userLimit}</li>
                             </ul>
                           </div>
@@ -545,7 +545,7 @@ export default function PlansPage() {
                                 Preço: R$ {request.requestedValues.price?.toFixed(2) || '0.00'}
                               </li>
                               <li className={request.requestedValues.propertyLimit !== request.currentValues.propertyLimit ? 'text-blue-600 font-medium' : 'text-muted-foreground'}>
-                                Limite de Propriedades: {request.requestedValues.propertyLimit}
+                                Limite de Imóveis: {request.requestedValues.propertyLimit}
                               </li>
                               <li className={request.requestedValues.userLimit !== request.currentValues.userLimit ? 'text-blue-600 font-medium' : 'text-muted-foreground'}>
                                 Limite de Usuários: {request.requestedValues.userLimit}

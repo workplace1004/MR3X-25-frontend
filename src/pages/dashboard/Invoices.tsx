@@ -517,10 +517,10 @@ export function Invoices() {
           </Select>
           <Select value={filterProperty} onValueChange={setFilterProperty}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Propriedade" />
+              <SelectValue placeholder="Imóvel" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas propriedades</SelectItem>
+              <SelectItem value="all">Todos imóveis</SelectItem>
               {properties.map((property) => (
                 <SelectItem key={property.id} value={property.id?.toString()}>
                   {property.name || property.address}
@@ -562,7 +562,7 @@ export function Invoices() {
                     <tr>
                       <th className="text-left p-4 font-semibold">Fatura</th>
                       <th className="text-left p-4 font-semibold">Inquilino</th>
-                      <th className="text-left p-4 font-semibold">Propriedade</th>
+                      <th className="text-left p-4 font-semibold">Imóvel</th>
                       <th className="text-left p-4 font-semibold">Tipo</th>
                       <th className="text-left p-4 font-semibold">Vencimento</th>
                       <th className="text-right p-4 font-semibold">Valor</th>
@@ -801,7 +801,7 @@ export function Invoices() {
                     </div>
                   </div>
                   <div className="p-4 border rounded-lg">
-                    <Label className="text-muted-foreground">Propriedade</Label>
+                    <Label className="text-muted-foreground">Imóvel</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Building2 className="w-4 h-4" />
                       <div>

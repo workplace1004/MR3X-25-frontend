@@ -255,7 +255,7 @@ export function AuditorAgencies() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-lg font-bold">{selectedAgency.stats.properties}</p>
-                      <p className="text-xs text-muted-foreground">Propriedades</p>
+                      <p className="text-xs text-muted-foreground">Imóveis</p>
                     </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <p className="text-lg font-bold">{selectedAgency.stats.contracts}</p>

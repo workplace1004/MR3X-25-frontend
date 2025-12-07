@@ -389,9 +389,9 @@ export function AgencySplitConfig() {
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2">Posso ter taxas diferentes por propriedade?</h4>
+              <h4 className="font-medium mb-2">Posso ter taxas diferentes por imóvel?</h4>
               <p className="text-sm text-muted-foreground">
-                Sim! Você pode configurar uma taxa específica para cada propriedade na página de detalhes da propriedade.
+                Sim! Você pode configurar uma taxa específica para cada imóvel na página de detalhes do imóvel.
               </p>
             </div>
             <div className="p-4 border rounded-lg">

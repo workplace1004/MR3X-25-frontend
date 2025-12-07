@@ -359,7 +359,7 @@ export function AdminDashboard() {
               <Building2 className="w-5 h-5 text-indigo-500" />
               Agências Vinculadas
             </CardTitle>
-            <CardDescription>Agências com propriedades gerenciadas</CardDescription>
+            <CardDescription>Agências com imóveis gerenciados</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

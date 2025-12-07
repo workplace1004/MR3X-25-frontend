@@ -598,10 +598,10 @@ export function Inspections() {
           </Select>
           <Select value={filterProperty} onValueChange={setFilterProperty}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Propriedade" />
+              <SelectValue placeholder="Imóvel" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas propriedades</SelectItem>
+              <SelectItem value="all">Todos imóveis</SelectItem>
               {properties.map((property) => (
                 <SelectItem key={property.id} value={property.id?.toString()}>
                   {property.name || property.address}
@@ -633,7 +633,7 @@ export function Inspections() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-4 font-semibold">Propriedade</th>
+                      <th className="text-left p-4 font-semibold">Imóvel</th>
                       <th className="text-left p-4 font-semibold">Tipo</th>
                       <th className="text-left p-4 font-semibold">Data</th>
                       <th className="text-left p-4 font-semibold">Vistoriador</th>
@@ -645,7 +645,7 @@ export function Inspections() {
                     {inspections.map((inspection: Inspection) => (
                       <tr key={inspection.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                         <td className="p-4">
-                          <div className="font-medium">{inspection.property?.name || inspection.property?.address || 'Sem propriedade'}</div>
+                          <div className="font-medium">{inspection.property?.name || inspection.property?.address || 'Sem imóvel'}</div>
                           <div className="text-sm text-muted-foreground">{inspection.property?.city || ''}</div>
                         </td>
                         <td className="p-4">{getTypeBadge(inspection.type)}</td>
@@ -725,7 +725,7 @@ export function Inspections() {
                   <div key={inspection.id} className="border-b border-border last:border-b-0 p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold">{inspection.property?.name || inspection.property?.address || 'Propriedade'}</h3>
+                        <h3 className="font-semibold">{inspection.property?.name || inspection.property?.address || 'Imóvel'}</h3>
                         <p className="text-sm text-muted-foreground">{inspection.inspector?.name || 'Sem vistoriador'}</p>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -775,7 +775,7 @@ export function Inspections() {
                         </div>
                         <div>
                           <h3 className="font-semibold line-clamp-1">
-                            {inspection.property?.name || inspection.property?.address || 'Propriedade'}
+                            {inspection.property?.name || inspection.property?.address || 'Imóvel'}
                           </h3>
                           <p className="text-sm text-muted-foreground">{getTypeBadge(inspection.type)}</p>
                         </div>
@@ -879,13 +879,13 @@ export function Inspections() {
             <form className="space-y-4" onSubmit={handleCreateInspection}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="propertyId">Propriedade *</Label>
+                  <Label htmlFor="propertyId">Imóvel *</Label>
                   <Select
                     value={newInspection.propertyId}
                     onValueChange={(value) => setNewInspection({ ...newInspection, propertyId: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma propriedade" />
+                      <SelectValue placeholder="Selecione um imóvel" />
                     </SelectTrigger>
                     <SelectContent>
                       {properties.map((property) => (
@@ -1285,7 +1285,7 @@ export function Inspections() {
                 {/* General Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Propriedade</Label>
+                    <Label className="text-muted-foreground">Imóvel</Label>
                     <p className="font-medium">{inspectionDetail.property?.name || inspectionDetail.property?.address}</p>
                   </div>
                   <div>

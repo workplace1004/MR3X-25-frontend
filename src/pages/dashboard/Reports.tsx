@@ -231,7 +231,7 @@ export default function Reports() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="monthly">Mensal</SelectItem>
-              <SelectItem value="property">Por Propriedade</SelectItem>
+              <SelectItem value="property">Por Imóvel</SelectItem>
               <SelectItem value="tenant">Por Inquilino</SelectItem>
             </SelectContent>
           </Select>
@@ -257,12 +257,12 @@ export default function Reports() {
         <CardHeader>
           <CardTitle className="text-lg sm:text-xl">
             {reportType === 'monthly' && `Recebimentos por mês - ${year}`}
-            {reportType === 'property' && 'Performance por Propriedade'}
+            {reportType === 'property' && 'Performance por Imóvel'}
             {reportType === 'tenant' && 'Performance por Inquilino'}
           </CardTitle>
           <CardDescription className="text-sm sm:text-base">
             {reportType === 'monthly' && 'Somatório de valores pagos em cada mês'}
-            {reportType === 'property' && 'Receita gerada por cada propriedade'}
+            {reportType === 'property' && 'Receita gerada por cada imóvel'}
             {reportType === 'tenant' && 'Valores pagos por cada inquilino'}
           </CardDescription>
         </CardHeader>
@@ -361,7 +361,7 @@ export default function Reports() {
               <div className="mt-4 text-center">
                 <div className="text-sm sm:text-base font-semibold text-primary">
                   {reportType === 'monthly' && `Total no ano: R$ ${totalAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                  {reportType === 'property' && `Total de propriedades: ${properties.length}`}
+                  {reportType === 'property' && `Total de imóveis: ${properties.length}`}
                   {reportType === 'tenant' && `Total de inquilinos: ${tenants.length}`}
                 </div>
               </div>
@@ -416,7 +416,7 @@ export default function Reports() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg flex items-center gap-2">
               <Building2 className="w-4 h-4" />
-              Propriedades
+              Imóveis
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               Total de imóveis
@@ -500,9 +500,9 @@ export default function Reports() {
         {/* Top Properties */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Top Propriedades</CardTitle>
+            <CardTitle className="text-lg">Top Imóveis</CardTitle>
             <CardDescription>
-              Propriedades com maior receita
+              Imóveis com maior receita
             </CardDescription>
           </CardHeader>
           <CardContent>

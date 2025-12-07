@@ -220,7 +220,7 @@ export function ManagerAgencies() {
                     <th className="text-left py-3 px-4 font-medium">Status</th>
                     <th className="text-left py-3 px-4 font-medium">Cobrança</th>
                     <th className="text-left py-3 px-4 font-medium">Usuários</th>
-                    <th className="text-left py-3 px-4 font-medium">Propriedades</th>
+                    <th className="text-left py-3 px-4 font-medium">Imóveis</th>
                     <th className="text-left py-3 px-4 font-medium">Ações</th>
                   </tr>
                 </thead>
@@ -283,7 +283,7 @@ export function ManagerAgencies() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <p className="text-2xl font-bold">{selectedAgency.properties}</p>
-                      <p className="text-sm text-muted-foreground">Propriedades</p>
+                      <p className="text-sm text-muted-foreground">Imóveis</p>
                     </CardContent>
                   </Card>
                   <Card>

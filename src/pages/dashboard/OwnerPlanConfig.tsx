@@ -301,7 +301,7 @@ export function OwnerPlanConfig() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Limite de Propriedades:</span>
+              <span className="text-sm">Limite de Imóveis:</span>
               <Badge variant="outline">
                 {currentPlanData?.propertyLimit || 1}
               </Badge>
@@ -335,7 +335,7 @@ export function OwnerPlanConfig() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Building2 className="w-5 h-5" />
-              Uso de Propriedades
+              Uso de Imóveis
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -352,7 +352,7 @@ export function OwnerPlanConfig() {
               <div className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg">
                 <Lock className="w-4 h-4 text-amber-600" />
                 <span className="text-sm text-amber-800">
-                  {planUsage?.properties?.frozen} propriedade(s) congelada(s)
+                  {planUsage?.properties?.frozen} imóvel(eis) congelado(s)
                 </span>
               </div>
             )}
@@ -396,7 +396,7 @@ export function OwnerPlanConfig() {
           <AlertDescription className="text-amber-800">
             <p className="font-medium mb-2">Você tem itens congelados devido ao limite do seu plano.</p>
             <p className="text-sm">
-              Faça upgrade para um plano maior para desbloquear todas as suas propriedades e inquilinos.
+              Faça upgrade para um plano maior para desbloquear todos os seus imóveis e inquilinos.
             </p>
           </AlertDescription>
         </Alert>
@@ -447,7 +447,7 @@ export function OwnerPlanConfig() {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Limite de Propriedades:</span>
+                        <span className="text-sm">Limite de Imóveis:</span>
                         <Badge variant="outline">
                           {plan.propertyLimit}
                         </Badge>
@@ -522,7 +522,7 @@ export function OwnerPlanConfig() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Limite de Propriedades</span>
+                  <span>Limite de Imóveis</span>
                   <span>
                     {previewData.currentLimits.properties === -1 ? 'Ilimitado' : previewData.currentLimits.properties}
                     {' '}&rarr;{' '}
@@ -544,7 +544,7 @@ export function OwnerPlanConfig() {
                   <Unlock className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800 text-sm">
                     {previewData.willUnfreeze.properties > 0 && (
-                      <span>{previewData.willUnfreeze.properties} propriedade(s) serão desbloqueadas. </span>
+                      <span>{previewData.willUnfreeze.properties} imóvel(eis) serão desbloqueados. </span>
                     )}
                     {previewData.willUnfreeze.users > 0 && (
                       <span>{previewData.willUnfreeze.users} inquilino(s) serão reativados.</span>
@@ -558,7 +558,7 @@ export function OwnerPlanConfig() {
                   <Lock className="h-4 w-4 text-amber-600" />
                   <AlertDescription className="text-amber-800 text-sm">
                     {previewData.willFreeze.properties > 0 && (
-                      <span>{previewData.willFreeze.properties} propriedade(s) serão congeladas. </span>
+                      <span>{previewData.willFreeze.properties} imóvel(eis) serão congelados. </span>
                     )}
                     {previewData.willFreeze.users > 0 && (
                       <span>{previewData.willFreeze.users} inquilino(s) serão desativados.</span>

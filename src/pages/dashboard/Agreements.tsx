@@ -927,10 +927,10 @@ export function Agreements() {
           </Select>
           <Select value={filterProperty} onValueChange={setFilterProperty}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Propriedade" />
+              <SelectValue placeholder="Imóvel" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas propriedades</SelectItem>
+              <SelectItem value="all">Todos imóveis</SelectItem>
               {properties.map((property) => (
                 <SelectItem key={property.id} value={property.id?.toString()}>
                   {property.name || property.address}
@@ -964,7 +964,7 @@ export function Agreements() {
                     <tr>
                       <th className="text-left p-4 font-semibold">Titulo</th>
                       <th className="text-left p-4 font-semibold">Tipo</th>
-                      <th className="text-left p-4 font-semibold">Propriedade</th>
+                      <th className="text-left p-4 font-semibold">Imóvel</th>
                       <th className="text-left p-4 font-semibold">Inquilino</th>
                       <th className="text-left p-4 font-semibold">Valor</th>
                       <th className="text-left p-4 font-semibold">Status</th>
@@ -1161,13 +1161,13 @@ export function Agreements() {
             <form className="space-y-4" onSubmit={handleCreateAgreement}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="propertyId">Propriedade *</Label>
+                  <Label htmlFor="propertyId">Imóvel *</Label>
                   <Select
                     value={newAgreement.propertyId}
                     onValueChange={(value) => setNewAgreement({ ...newAgreement, propertyId: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma propriedade" />
+                      <SelectValue placeholder="Selecione um imóvel" />
                     </SelectTrigger>
                     <SelectContent>
                       {properties.map((property) => (
@@ -1569,7 +1569,7 @@ export function Agreements() {
                 {/* General Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Propriedade</Label>
+                    <Label className="text-muted-foreground">Imóvel</Label>
                     <p className="font-medium">{agreementDetail.property?.name || agreementDetail.property?.address}</p>
                   </div>
                   {agreementDetail.contract && (

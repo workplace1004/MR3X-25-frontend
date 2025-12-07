@@ -150,7 +150,7 @@ export function Audit() {
                 <SelectContent>
                   <SelectItem value="all">Todas as entidades</SelectItem>
                   <SelectItem value="USER">Usuarios</SelectItem>
-                  <SelectItem value="PROPERTY">Propriedades</SelectItem>
+                  <SelectItem value="PROPERTY">Imóveis</SelectItem>
                   <SelectItem value="CONTRACT">Contratos</SelectItem>
                   <SelectItem value="PAYMENT">Pagamentos</SelectItem>
                   <SelectItem value="AGENCY">Agencias</SelectItem>

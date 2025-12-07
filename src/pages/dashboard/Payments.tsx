@@ -401,7 +401,7 @@ export function Payments() {
                           </h3>
                           <p className="text-sm text-muted-foreground break-words">
                             <Building2 className="w-3 h-3 inline mr-1" />
-                            {payment.property?.name || payment.property?.address || 'Propriedade'}
+                            {payment.property?.name || payment.property?.address || 'Imóvel'}
                           </p>
                           <p className="text-sm text-muted-foreground break-words">
                             <User className="w-3 h-3 inline mr-1" />
@@ -489,7 +489,7 @@ export function Payments() {
             <form className="space-y-4" onSubmit={handleCreatePayment}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="propertyId">Propriedade</Label>
+                  <Label htmlFor="propertyId">Imóvel</Label>
                   <select
                     id="propertyId"
                     name="propertyId"
@@ -498,7 +498,7 @@ export function Payments() {
                     className="w-full p-2 border border-input rounded-md"
                     required
                   >
-                    <option value="">Selecione uma propriedade</option>
+                    <option value="">Selecione um imóvel</option>
                     {properties.map((property) => (
                       <option key={property.id} value={property.id}>
                         {property.name || property.address}
@@ -594,7 +594,7 @@ export function Payments() {
             <form className="space-y-4" onSubmit={handleUpdatePayment}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="edit-propertyId">Propriedade</Label>
+                  <Label htmlFor="edit-propertyId">Imóvel</Label>
                   <select
                     id="edit-propertyId"
                     name="propertyId"
@@ -603,7 +603,7 @@ export function Payments() {
                     className="w-full p-2 border border-input rounded-md"
                     required
                   >
-                    <option value="">Selecione uma propriedade</option>
+                    <option value="">Selecione um imóvel</option>
                     {properties.map((property) => (
                       <option key={property.id} value={property.id}>
                         {property.name || property.address}
@@ -699,7 +699,7 @@ export function Payments() {
             {paymentDetail ? (
               <div className="space-y-2">
                 <div><b>Valor:</b> {formatCurrency(Number(paymentDetail.amount || paymentDetail.valorPago))}</div>
-                <div><b>Propriedade:</b> {paymentDetail.property?.name || paymentDetail.property?.address || '-'}</div>
+                <div><b>Imóvel:</b> {paymentDetail.property?.name || paymentDetail.property?.address || '-'}</div>
                 <div><b>Inquilino:</b> {paymentDetail.user?.name || paymentDetail.tenantUser?.name || '-'}</div>
                 <div><b>Data do pagamento:</b> {formatDate(paymentDetail.paymentDate || paymentDetail.dataPagamento)}</div>
                 <div><b>Tipo de pagamento:</b> {getPaymentTypeBadge(paymentDetail.paymentType || paymentDetail.tipo)}</div>

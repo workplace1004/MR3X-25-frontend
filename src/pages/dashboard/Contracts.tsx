@@ -610,7 +610,7 @@ export function Contracts() {
                 <table className="w-full">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-4 font-semibold">Propriedade</th>
+                      <th className="text-left p-4 font-semibold">Imóvel</th>
                       <th className="text-left p-4 font-semibold">Inquilino</th>
                       <th className="text-left p-4 font-semibold">Período</th>
                       <th className="text-left p-4 font-semibold">Valor Mensal</th>
@@ -622,7 +622,7 @@ export function Contracts() {
                     {contracts.map((contract: any) => (
                       <tr key={contract.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                         <td className="p-4">
-                          <div className="font-medium">{contract.property?.name || contract.property?.address || 'Sem propriedade'}</div>
+                          <div className="font-medium">{contract.property?.name || contract.property?.address || 'Sem imóvel'}</div>
                           <div className="text-sm text-muted-foreground">{contract.property?.neighborhood || ''}</div>
                         </td>
                         <td className="p-4">
@@ -697,7 +697,7 @@ export function Contracts() {
                   <div key={contract.id} className="border-b border-border last:border-b-0 p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{contract.property?.name || contract.property?.address || 'Propriedade'}</h3>
+                        <h3 className="font-semibold text-lg">{contract.property?.name || contract.property?.address || 'Imóvel'}</h3>
                         <p className="text-sm text-muted-foreground">{contract.tenantUser?.name || contract.tenant || 'Sem inquilino'}</p>
                       </div>
                       {getStatusBadge(contract.status)}
@@ -774,7 +774,7 @@ export function Contracts() {
                       <div className="flex-1 flex flex-col justify-between p-4">
                         <div>
                           <h3 className="text-lg font-bold break-words">
-                            {contract.property?.name || contract.property?.address || 'Propriedade'}
+                            {contract.property?.name || contract.property?.address || 'Imóvel'}
                           </h3>
                           <p className="text-sm text-muted-foreground break-words">
                             <User className="w-3 h-3 inline mr-1" />
@@ -939,7 +939,7 @@ export function Contracts() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="propertyId">Propriedade</Label>
+                  <Label htmlFor="propertyId">Imóvel</Label>
                   <select
                     id="propertyId"
                     name="propertyId"
@@ -948,7 +948,7 @@ export function Contracts() {
                     className="w-full p-2 border border-input rounded-md"
                     required
                   >
-                    <option value="">Selecione uma propriedade</option>
+                    <option value="">Selecione um imóvel</option>
                     {properties.map((property) => {
                       const propId = property.id?.toString() || String(property.id);
                       return (
@@ -965,7 +965,7 @@ export function Contracts() {
                   </select>
                   {properties.some(p => p.isFrozen) && (
                     <p className="text-xs text-amber-600 mt-1">
-                      Propriedades congeladas não podem ter novos contratos. Faça upgrade do plano para desbloquear.
+                      Imóveis congelados não podem ter novos contratos. Faça upgrade do plano para desbloquear.
                     </p>
                   )}
                 </div>
@@ -1203,7 +1203,7 @@ export function Contracts() {
             <form className="space-y-4" onSubmit={handleUpdateContract}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="edit-propertyId">Propriedade</Label>
+                  <Label htmlFor="edit-propertyId">Imóvel</Label>
                   <select
                     id="edit-propertyId"
                     name="propertyId"
@@ -1212,7 +1212,7 @@ export function Contracts() {
                     className="w-full p-2 border border-input rounded-md"
                     required
                   >
-                    <option value="">Selecione uma propriedade</option>
+                    <option value="">Selecione um imóvel</option>
                     {properties.map((property) => {
                       const propId = property.id?.toString() || String(property.id);
                       return (
@@ -1391,7 +1391,7 @@ export function Contracts() {
             </DialogHeader>
             {contractDetail ? (
               <div className="space-y-2">
-                <div><b>Propriedade:</b> {contractDetail.property?.name || contractDetail.property?.address || '-'}</div>
+                <div><b>Imóvel:</b> {contractDetail.property?.name || contractDetail.property?.address || '-'}</div>
                 <div><b>Inquilino:</b> {contractDetail.tenantUser?.name || contractDetail.tenant || '-'}</div>
                 <div><b>Data de início:</b> {formatDate(contractDetail.startDate)}</div>
                 <div><b>Data de término:</b> {formatDate(contractDetail.endDate)}</div>

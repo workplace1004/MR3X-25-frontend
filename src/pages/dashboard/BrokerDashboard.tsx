@@ -154,7 +154,7 @@ export function BrokerDashboard() {
           </h1>
         </div>
         <p className="text-amber-100">
-          Gerencie suas propriedades, contratos e acompanhe o desempenho dos imóveis sob sua responsabilidade.
+          Gerencie seus imóveis, contratos e acompanhe o desempenho dos imóveis sob sua responsabilidade.
         </p>
       </div>
 
