@@ -1081,7 +1081,7 @@ export function Inspections() {
                       <div>
                         <Label className="text-xs">Cômodo</Label>
                         <Select
-                          value={item.room || 'custom'}
+                          value={defaultRooms.includes(item.room) ? item.room : 'custom'}
                           onValueChange={(value) => updateInspectionItem(index, 'room', value === 'custom' ? '' : value)}
                         >
                           <SelectTrigger className="h-8">
@@ -1106,7 +1106,7 @@ export function Inspections() {
                       <div>
                         <Label className="text-xs">Item</Label>
                         <Select
-                          value={item.item || 'custom'}
+                          value={defaultItems.includes(item.item) ? item.item : 'custom'}
                           onValueChange={(value) => updateInspectionItem(index, 'item', value === 'custom' ? '' : value)}
                         >
                           <SelectTrigger className="h-8">

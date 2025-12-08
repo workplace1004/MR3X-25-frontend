@@ -40,7 +40,7 @@ const baseNavigation = [
   { name: 'Faturamento', href: '/dashboard/billing', icon: Receipt, perm: 'billing:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
   { name: 'Comunicação', href: '/dashboard/communications', icon: Mail, perm: undefined, roles: ['CEO', 'ADMIN'] },
   { name: 'Centro Técnico', href: '/dashboard/integrations', icon: Wrench, perm: 'integrations:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
-  { name: 'Uditorias', href: '/dashboard/audit', icon: ShieldCheck, perm: 'audit:read', roles: ['CEO', 'ADMIN'] },
+  { name: 'Auditorias', href: '/dashboard/audit', icon: ShieldCheck, perm: 'audit:read', roles: ['CEO', 'ADMIN'] },
   { name: 'Documentos', href: '/dashboard/documents', icon: FileDown, perm: 'documents:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
   { name: 'Configuracoes', href: '/dashboard/settings', icon: Settings, perm: 'settings:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
   { name: 'Chat', href: '/dashboard/chat', icon: MessageSquare, perm: 'chat:read' },
@@ -133,7 +133,7 @@ export function DashboardLayout() {
      */
 
     // CEO: Root profile - Limited menu access for governance oversight
-    // Only sees: Painel, Usuários, Agências, Planos, Faturamento, Centro Técnico, Uditorias, Configuracoes, Chat, Notificacoes, Alterar Senha
+    // Only sees: Painel, Usuários, Agências, Planos, Faturamento, Centro Técnico, Auditorias, Configuracoes, Chat, Notificacoes, Alterar Senha
     if (user?.role === 'CEO') {
       const allowedForCEO = [
         '/dashboard',              // Painel
@@ -142,7 +142,7 @@ export function DashboardLayout() {
         '/dashboard/plans',        // Planos
         '/dashboard/billing',      // Faturamento
         '/dashboard/integrations', // Centro Técnico
-        '/dashboard/audit',        // Uditorias
+        '/dashboard/audit',        // Auditorias
         '/dashboard/settings',     // Configuracoes
         '/dashboard/chat',         // Chat
         '/dashboard/notifications', // Notificacoes
