@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { dashboardAPI } from '../../api';
@@ -28,20 +28,19 @@ const COLORS = {
 // Chart wrapper to prevent -1 dimension errors
 function ChartContainer({ children, height = 280 }: { children: React.ReactNode; height?: number }) {
   const [isMounted, setIsMounted] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 100);
+    const timer = setTimeout(() => setIsMounted(true), 200);
     return () => clearTimeout(timer);
   }, []);
 
   if (!isMounted) {
-    return <div style={{ height }} className="flex items-center justify-center text-muted-foreground">Carregando...</div>;
+    return <div style={{ height: `${height}px`, width: '100%' }} className="flex items-center justify-center text-muted-foreground">Carregando...</div>;
   }
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height, minHeight: height }}>
-      <ResponsiveContainer width="100%" height="100%" minHeight={height}>
+    <div style={{ width: '100%', height: `${height}px` }}>
+      <ResponsiveContainer width="100%" height={height}>
         {children}
       </ResponsiveContainer>
     </div>
