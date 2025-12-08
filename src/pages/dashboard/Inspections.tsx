@@ -20,6 +20,10 @@ import {
   FileText,
   PenTool,
   Filter,
+  Upload,
+  Image,
+  Video,
+  X,
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -61,9 +65,16 @@ interface InspectionItem {
   condition: 'OK' | 'DANIFICADO' | 'AUSENTE' | 'REPARAR';
   description?: string;
   photos?: string[];
+  videos?: string[];
   needsRepair?: boolean;
   repairCost?: number;
   responsible?: 'INQUILINO' | 'PROPRIETARIO' | 'AGENCIA';
+}
+
+interface FilePreview {
+  file: File;
+  preview: string;
+  type: 'image' | 'video';
 }
 
 interface Inspection {
@@ -146,6 +157,8 @@ export function Inspections() {
   });
 
   const [inspectionItems, setInspectionItems] = useState<InspectionItem[]>([]);
+  const [itemFilePreviews, setItemFilePreviews] = useState<Map<number, FilePreview[]>>(new Map());
+  const [uploadingItems, setUploadingItems] = useState<Set<number>>(new Set());
 
   // Other states
   const [selectedInspection, setSelectedInspection] = useState<Inspection | null>(null);
@@ -228,6 +241,12 @@ export function Inspections() {
     setInspectionDetail(null);
     setInspectionItems([]);
     setRejectionReason('');
+    // Clear file previews and revoke URLs
+    itemFilePreviews.forEach(files => {
+      files.forEach(f => URL.revokeObjectURL(f.preview));
+    });
+    setItemFilePreviews(new Map());
+    setUploadingItems(new Set());
   };
 
   // Mutations
@@ -421,6 +440,74 @@ export function Inspections() {
     const updated = [...inspectionItems];
     updated[index] = { ...updated[index], [field]: value };
     setInspectionItems(updated);
+  };
+
+  // File upload handlers for inspection items
+  const handleFileSelect = async (index: number, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const newPreviews: FilePreview[] = [];
+    const maxFileSize = 50 * 1024 * 1024; // 50MB max
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      // Validate file size
+      if (file.size > maxFileSize) {
+        toast.error(`Arquivo ${file.name} excede o tamanho máximo de 50MB`);
+        continue;
+      }
+
+      // Determine file type
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      if (!isImage && !isVideo) {
+        toast.error(`Arquivo ${file.name} não é uma imagem ou vídeo válido`);
+        continue;
+      }
+
+      // Create preview URL
+      const preview = URL.createObjectURL(file);
+      newPreviews.push({
+        file,
+        preview,
+        type: isImage ? 'image' : 'video',
+      });
+    }
+
+    if (newPreviews.length > 0) {
+      setItemFilePreviews(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(index) || [];
+        newMap.set(index, [...existing, ...newPreviews]);
+        return newMap;
+      });
+    }
+  };
+
+  const removeFilePreview = (itemIndex: number, fileIndex: number) => {
+    setItemFilePreviews(prev => {
+      const newMap = new Map(prev);
+      const files = newMap.get(itemIndex) || [];
+
+      // Revoke the object URL to free memory
+      if (files[fileIndex]) {
+        URL.revokeObjectURL(files[fileIndex].preview);
+      }
+
+      const updated = files.filter((_, i) => i !== fileIndex);
+      if (updated.length === 0) {
+        newMap.delete(itemIndex);
+      } else {
+        newMap.set(itemIndex, updated);
+      }
+      return newMap;
+    });
+  };
+
+  const getItemFilePreviews = (index: number): FilePreview[] => {
+    return itemFilePreviews.get(index) || [];
   };
 
   // Status badge
@@ -777,7 +864,7 @@ export function Inspections() {
                           <h3 className="font-semibold line-clamp-1">
                             {inspection.property?.name || inspection.property?.address || 'Imóvel'}
                           </h3>
-                          <p className="text-sm text-muted-foreground">{getTypeBadge(inspection.type)}</p>
+                          <div className="text-sm text-muted-foreground">{getTypeBadge(inspection.type)}</div>
                         </div>
                       </div>
                       <DropdownMenu>
@@ -1085,6 +1172,70 @@ export function Inspections() {
                         onChange={(e) => updateInspectionItem(index, 'description', e.target.value)}
                       />
                     </div>
+
+                    {/* File Upload Section */}
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <Label className="text-xs flex items-center gap-2 mb-2">
+                        <Image className="w-3 h-3" />
+                        <Video className="w-3 h-3" />
+                        Fotos e Vídeos
+                      </Label>
+
+                      {/* Upload Button */}
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                          <Upload className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Adicionar arquivos</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*,video/*"
+                            className="hidden"
+                            onChange={(e) => handleFileSelect(index, e.target.files)}
+                          />
+                        </label>
+                        <span className="text-xs text-muted-foreground">
+                          Imagens e vídeos (máx. 50MB cada)
+                        </span>
+                      </div>
+
+                      {/* File Previews */}
+                      {getItemFilePreviews(index).length > 0 && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {getItemFilePreviews(index).map((filePreview, fileIndex) => (
+                            <div key={fileIndex} className="relative group">
+                              {filePreview.type === 'image' ? (
+                                <img
+                                  src={filePreview.preview}
+                                  alt={`Preview ${fileIndex + 1}`}
+                                  className="w-full h-20 object-cover rounded-lg border border-border"
+                                />
+                              ) : (
+                                <div className="w-full h-20 bg-muted rounded-lg border border-border flex items-center justify-center">
+                                  <Video className="w-8 h-8 text-muted-foreground" />
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeFilePreview(index, fileIndex)}
+                                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                              <div className="absolute bottom-1 left-1">
+                                <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                                  {filePreview.type === 'image' ? (
+                                    <><Image className="w-2 h-2 mr-1" />Foto</>
+                                  ) : (
+                                    <><Video className="w-2 h-2 mr-1" />Vídeo</>
+                                  )}
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
 
@@ -1257,6 +1408,70 @@ export function Inspections() {
                           onChange={(e) => updateInspectionItem(index, 'description', e.target.value)}
                         />
                       </div>
+
+                      {/* File Upload Section */}
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <Label className="text-xs flex items-center gap-2 mb-2">
+                          <Image className="w-3 h-3" />
+                          <Video className="w-3 h-3" />
+                          Fotos e Vídeos
+                        </Label>
+
+                        {/* Upload Button */}
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Adicionar arquivos</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*,video/*"
+                              className="hidden"
+                              onChange={(e) => handleFileSelect(index, e.target.files)}
+                            />
+                          </label>
+                          <span className="text-xs text-muted-foreground">
+                            Imagens e vídeos (máx. 50MB cada)
+                          </span>
+                        </div>
+
+                        {/* File Previews */}
+                        {getItemFilePreviews(index).length > 0 && (
+                          <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {getItemFilePreviews(index).map((filePreview, fileIndex) => (
+                              <div key={fileIndex} className="relative group">
+                                {filePreview.type === 'image' ? (
+                                  <img
+                                    src={filePreview.preview}
+                                    alt={`Preview ${fileIndex + 1}`}
+                                    className="w-full h-20 object-cover rounded-lg border border-border"
+                                  />
+                                ) : (
+                                  <div className="w-full h-20 bg-muted rounded-lg border border-border flex items-center justify-center">
+                                    <Video className="w-8 h-8 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => removeFilePreview(index, fileIndex)}
+                                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                                <div className="absolute bottom-1 left-1">
+                                  <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                                    {filePreview.type === 'image' ? (
+                                      <><Image className="w-2 h-2 mr-1" />Foto</>
+                                    ) : (
+                                      <><Video className="w-2 h-2 mr-1" />Vídeo</>
+                                    )}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1290,7 +1505,7 @@ export function Inspections() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Tipo</Label>
-                    <p>{getTypeBadge(inspectionDetail.type)}</p>
+                    <div>{getTypeBadge(inspectionDetail.type)}</div>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Data</Label>
@@ -1298,7 +1513,7 @@ export function Inspections() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Status</Label>
-                    <p>{getStatusBadge(inspectionDetail.status)}</p>
+                    <div>{getStatusBadge(inspectionDetail.status)}</div>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Vistoriador</Label>

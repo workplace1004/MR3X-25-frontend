@@ -294,7 +294,7 @@ const AnalysisDetailModal = ({ analysis, open, onClose }: { analysis: AnalysisRe
                 <FileText className="w-5 h-5 text-amber-600" />
                 {getStatusIcon(analysis.summary.protestStatus)}
               </div>
-              <p className="text-sm font-medium mt-2">Protestos</p>
+              <p className="text-sm font-medium mt-2">Protesto</p>
               <p className="text-xs text-muted-foreground">{analysis.summary.protestStatus}</p>
             </Card>
             <Card className="p-4">
@@ -412,7 +412,7 @@ const AnalysisDetailModal = ({ analysis, open, onClose }: { analysis: AnalysisRe
               )}
               {analysis.background.hasProtests && (
                 <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Protestos ({analysis.background.protestRecords.length})</p>
+                  <p className="text-sm font-medium mb-2">Protesto ({analysis.background.protestRecords.length})</p>
                   <p className="text-lg font-bold text-orange-600">
                     Total: {formatCurrency(analysis.background.totalProtestValue)}
                   </p>
