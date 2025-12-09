@@ -232,17 +232,18 @@ export function Tenants() {
   const handleProceedToRegistration = () => {
     if (!analysisResult) return
 
-    // Extract phone and birthDate from basicData
-    const phone = analysisResult.basicData?.phone || ''
-    let birthDate = ''
-    if (analysisResult.basicData?.birthDate) {
-      let rawDate = String(analysisResult.basicData.birthDate).trim()
+    // Extract data from basicData
+    const basicData = analysisResult.basicData || {}
+    const phone = basicData.phone || ''
 
+    // Parse birthDate
+    let birthDate = ''
+    if (basicData.birthDate) {
+      let rawDate = String(basicData.birthDate).trim()
       // If it contains 'T' (ISO format like 1996-05-24T00:00:00), extract just the date part
       if (rawDate.includes('T')) {
         rawDate = rawDate.split('T')[0]
       }
-
       // Check if already in yyyy-MM-dd format - use directly to avoid timezone issues
       if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
         birthDate = rawDate
@@ -257,6 +258,25 @@ export function Tenants() {
       }
     }
 
+    // Parse address - may contain neighborhood in format "STREET, NUMBER - NEIGHBORHOOD"
+    let address = ''
+    let neighborhood = ''
+    if (basicData.address) {
+      const addressParts = basicData.address.split(' - ')
+      if (addressParts.length >= 2) {
+        address = addressParts[0].trim()
+        neighborhood = addressParts.slice(1).join(' - ').trim()
+      } else {
+        address = basicData.address
+      }
+    }
+
+    // Format CEP
+    let cep = basicData.zipCode || ''
+    if (cep && !cep.includes('-') && cep.length === 8) {
+      cep = `${cep.slice(0, 5)}-${cep.slice(5)}`
+    }
+
     setNewTenant({
       document: analysisResult.document || '',
       name: analysisResult.name || '',
@@ -264,11 +284,11 @@ export function Tenants() {
       email: '',
       password: '',
       birthDate: birthDate,
-      cep: '',
-      address: '',
-      neighborhood: '',
-      city: '',
-      state: '',
+      cep: cep,
+      address: address,
+      neighborhood: neighborhood,
+      city: basicData.city || '',
+      state: basicData.state || '',
       agencyId: '',
       brokerId: '',
     })
