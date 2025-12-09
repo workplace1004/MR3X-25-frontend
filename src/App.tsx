@@ -70,6 +70,7 @@ import {
   ManagerSettings,
 } from './pages/dashboard/platform-manager';
 import { Inspections } from './pages/dashboard/Inspections';
+import ExtrajudicialNotifications from './pages/dashboard/ExtrajudicialNotifications';
 import { Agreements } from './pages/dashboard/Agreements';
 import { Invoices } from './pages/dashboard/Invoices';
 import { Audit } from './pages/dashboard/Audit';
@@ -149,6 +150,8 @@ function App() {
               <Route path="agreements/new" element={<PlaceholderPage title="Novo Acordo" />} />
               <Route path="agreements/:id" element={<PlaceholderPage title="Detalhes do Acordo" />} />
               <Route path="agreements/:id/edit" element={<PlaceholderPage title="Editar Acordo" />} />
+
+              <Route path="extrajudicial-notifications" element={<ExtrajudicialNotifications />} />
 
               <Route path="invoices" element={<Invoices />} />
               <Route path="invoices/:id" element={<PlaceholderPage title="Detalhes da Fatura" />} />

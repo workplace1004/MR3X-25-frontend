@@ -1330,7 +1330,7 @@ export function Agreements() {
                 <h4 className="font-medium mb-3">Datas (Opcional)</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <Label htmlFor="effectiveDate">Data de Vigencia</Label>
+                    <Label htmlFor="effectiveDate" truncate>Data de Vigencia</Label>
                     <Input
                       id="effectiveDate"
                       type="date"
@@ -1339,7 +1339,7 @@ export function Agreements() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="expirationDate">Data de Expiracao</Label>
+                    <Label htmlFor="expirationDate" truncate>Data de Expiracao</Label>
                     <Input
                       id="expirationDate"
                       type="date"
@@ -1348,7 +1348,7 @@ export function Agreements() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="newDueDate">Nova Data de Vencimento</Label>
+                    <Label htmlFor="newDueDate" truncate>Nova Data de Vencimento</Label>
                     <Input
                       id="newDueDate"
                       type="date"
@@ -1357,7 +1357,7 @@ export function Agreements() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="moveOutDate">Data de Saida</Label>
+                    <Label htmlFor="moveOutDate" truncate>Data de Saida</Label>
                     <Input
                       id="moveOutDate"
                       type="date"

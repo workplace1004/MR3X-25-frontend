@@ -815,6 +815,28 @@ export const inspectionsAPI = {
     return response.data;
   },
 
+  // Electronic signature with geolocation
+  signInspectionWithGeo: async (id: string, signerType: 'tenant' | 'owner' | 'agency' | 'inspector', data: {
+    signature: string;
+    geoLat: number;
+    geoLng: number;
+    geoConsent: boolean;
+    legalDeclarationAccepted?: boolean;
+  }) => {
+    const response = await apiClient.post(`/inspections/${id}/sign/${signerType}`, data);
+    return response.data;
+  },
+
+  getSignatureStatus: async (id: string) => {
+    const response = await apiClient.get(`/inspections/${id}/signature-status`);
+    return response.data;
+  },
+
+  finalizeInspection: async (id: string) => {
+    const response = await apiClient.post(`/inspections/${id}/finalize`);
+    return response.data;
+  },
+
   approveInspection: async (id: string) => {
     const response = await apiClient.patch(`/inspections/${id}/approve`);
     return response.data;
@@ -835,6 +857,57 @@ export const inspectionsAPI = {
     return response.data;
   },
 
+  // PDF Generation
+  downloadProvisionalPdf: async (id: string) => {
+    const response = await apiClient.get(`/inspections/${id}/pdf/provisional`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadFinalPdf: async (id: string) => {
+    const response = await apiClient.get(`/inspections/${id}/pdf/final`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadStoredPdf: async (id: string, type: 'provisional' | 'final') => {
+    const response = await apiClient.get(`/inspections/${id}/pdf/download/${type}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  // Signature Links
+  createSignatureLinks: async (id: string, parties: Array<{
+    signerType: 'tenant' | 'owner' | 'agency' | 'inspector';
+    email: string;
+    name?: string;
+  }>, expiresInHours?: number) => {
+    const response = await apiClient.post(`/inspections/${id}/signature-links`, {
+      parties,
+      expiresInHours,
+    });
+    return response.data;
+  },
+
+  getSignatureLinks: async (id: string) => {
+    const response = await apiClient.get(`/inspections/${id}/signature-links`);
+    return response.data;
+  },
+
+  revokeSignatureLinks: async (id: string) => {
+    const response = await apiClient.delete(`/inspections/${id}/signature-links`);
+    return response.data;
+  },
+
+  getAuditLog: async (id: string) => {
+    const response = await apiClient.get(`/inspections/${id}/audit-log`);
+    return response.data;
+  },
+
+  // Templates
   getTemplates: async (params?: { type?: string; isDefault?: boolean }) => {
     const qs = new URLSearchParams();
     if (params) {
@@ -866,6 +939,246 @@ export const inspectionsAPI = {
 
   deleteTemplate: async (id: string) => {
     const response = await apiClient.delete(`/inspections/templates/${id}`);
+    return response.data;
+  },
+
+  // Media upload
+  uploadMedia: async (id: string, files: File[], room?: string) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    if (room) formData.append('room', room);
+    const response = await apiClient.post(`/inspections/${id}/media`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  getMedia: async (id: string) => {
+    const response = await apiClient.get(`/inspections/${id}/media`);
+    return response.data;
+  },
+
+  deleteMedia: async (inspectionId: string, mediaId: string) => {
+    const response = await apiClient.delete(`/inspections/${inspectionId}/media/${mediaId}`);
+    return response.data;
+  },
+};
+
+// Extrajudicial Notifications API (Notificacao Extrajudicial)
+export const extrajudicialNotificationsAPI = {
+  getNotifications: async (params?: {
+    propertyId?: string;
+    contractId?: string;
+    creditorId?: string;
+    debtorId?: string;
+    type?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    skip?: number;
+    take?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          qs.append(k, String(v));
+        }
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/extrajudicial-notifications${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getNotificationById: async (id: string) => {
+    const response = await apiClient.get(`/extrajudicial-notifications/${id}`);
+    return response.data;
+  },
+
+  getNotificationByToken: async (token: string) => {
+    const response = await apiClient.get(`/extrajudicial-notifications/token/${token}`);
+    return response.data;
+  },
+
+  createNotification: async (notification: {
+    propertyId: string;
+    contractId?: string;
+    agreementId?: string;
+    inspectionId?: string;
+    type: string;
+    priority?: string;
+    creditorId: string;
+    creditorName: string;
+    creditorDocument: string;
+    creditorAddress?: string;
+    creditorEmail?: string;
+    creditorPhone?: string;
+    debtorId: string;
+    debtorName: string;
+    debtorDocument: string;
+    debtorAddress?: string;
+    debtorEmail?: string;
+    debtorPhone?: string;
+    title: string;
+    subject: string;
+    description: string;
+    legalBasis: string;
+    demandedAction: string;
+    principalAmount?: number;
+    fineAmount?: number;
+    interestAmount?: number;
+    correctionAmount?: number;
+    lawyerFees?: number;
+    totalAmount: number;
+    deadlineDays: number;
+    gracePeriodDays?: number;
+    consequencesText?: string;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/extrajudicial-notifications', notification);
+    return response.data;
+  },
+
+  updateNotification: async (id: string, notification: any) => {
+    const response = await apiClient.put(`/extrajudicial-notifications/${id}`, notification);
+    return response.data;
+  },
+
+  deleteNotification: async (id: string) => {
+    const response = await apiClient.delete(`/extrajudicial-notifications/${id}`);
+    return response.data;
+  },
+
+  // Workflow Actions
+  sendNotification: async (id: string, sentVia?: 'EMAIL' | 'WHATSAPP' | 'REGISTERED_MAIL' | 'IN_PERSON') => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/send`, { sentVia });
+    return response.data;
+  },
+
+  markAsViewed: async (id: string) => {
+    const response = await apiClient.patch(`/extrajudicial-notifications/${id}/view`);
+    return response.data;
+  },
+
+  signNotification: async (id: string, data: {
+    creditorSignature?: string;
+    debtorSignature?: string;
+    witness1Signature?: string;
+    witness1Name?: string;
+    witness1Document?: string;
+    witness2Signature?: string;
+    witness2Name?: string;
+    witness2Document?: string;
+    geoLat?: number;
+    geoLng?: number;
+  }) => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/sign`, data);
+    return response.data;
+  },
+
+  respondToNotification: async (id: string, data: {
+    responseText?: string;
+    accepted?: boolean;
+  }) => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/respond`, data);
+    return response.data;
+  },
+
+  resolveNotification: async (id: string, data: {
+    resolutionMethod?: string;
+    resolutionNotes?: string;
+  }) => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/resolve`, data);
+    return response.data;
+  },
+
+  forwardToJudicial: async (id: string, data: {
+    judicialProcessNumber?: string;
+    judicialCourt?: string;
+    judicialNotes?: string;
+  }) => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/forward-judicial`, data);
+    return response.data;
+  },
+
+  cancelNotification: async (id: string, reason?: string) => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/cancel`, { reason });
+    return response.data;
+  },
+
+  // PDF Generation
+  downloadProvisionalPdf: async (id: string) => {
+    const response = await apiClient.get(`/extrajudicial-notifications/${id}/pdf/provisional`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadFinalPdf: async (id: string) => {
+    const response = await apiClient.get(`/extrajudicial-notifications/${id}/pdf/final`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadStoredPdf: async (id: string, type: 'provisional' | 'final') => {
+    const response = await apiClient.get(`/extrajudicial-notifications/${id}/pdf/download/${type}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  finalizeNotification: async (id: string) => {
+    const response = await apiClient.post(`/extrajudicial-notifications/${id}/finalize`);
+    return response.data;
+  },
+
+  // Verification
+  verifyHash: async (id: string) => {
+    const response = await apiClient.get(`/extrajudicial-notifications/${id}/verify`);
+    return response.data;
+  },
+
+  getAuditLog: async (id: string) => {
+    const response = await apiClient.get(`/extrajudicial-notifications/${id}/audit-log`);
+    return response.data;
+  },
+
+  getStatistics: async () => {
+    const response = await apiClient.get('/extrajudicial-notifications/statistics');
+    return response.data;
+  },
+};
+
+// Public Verification API for Inspections and Notifications
+export const verificationAPI = {
+  verifyInspection: async (token: string) => {
+    const response = await apiClient.get(`/verify/inspection/${token}`);
+    return response.data;
+  },
+
+  verifyNotification: async (token: string) => {
+    const response = await apiClient.get(`/verify/notification/${token}`);
+    return response.data;
+  },
+
+  downloadInspectionPdfByToken: async (token: string) => {
+    const response = await apiClient.get(`/verify/inspection/${token}/pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadNotificationPdfByToken: async (token: string) => {
+    const response = await apiClient.get(`/verify/notification/${token}/pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  getNotificationStatus: async (token: string) => {
+    const response = await apiClient.get(`/verify/notification/${token}/status`);
     return response.data;
   },
 };
