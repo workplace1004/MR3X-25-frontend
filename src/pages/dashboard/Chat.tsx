@@ -13,7 +13,7 @@ import { Card, CardContent } from '../../components/ui/card'
 interface Chat {
   id: string
   name: string
-  unread: number
+  unreadCount: number
   participantId: string
 }
 
@@ -135,6 +135,7 @@ export function Chat() {
     mutationFn: (chatId: string) => chatAPI.markAsRead(chatId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chats'] })
+      queryClient.invalidateQueries({ queryKey: ['chats-unread'] }) // Update sidebar badge
     },
   })
 
@@ -177,11 +178,11 @@ export function Chat() {
     setSelectedChat(chat)
     if (isMobile) setMobileShowList(false)
 
-    if (chat.unread && chat.unread > 0) {
+    if (chat.unreadCount && chat.unreadCount > 0) {
       try {
         await markAsReadMutation.mutateAsync(chat.id)
       } catch (error) {
-        
+
       }
     }
   }
@@ -258,9 +259,9 @@ export function Chat() {
                               {chat.name}
                             </span>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              {typeof chat.unread === 'number' && chat.unread > 0 && (
+                              {typeof chat.unreadCount === 'number' && chat.unreadCount > 0 && (
                                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold">
-                                  {chat.unread}
+                                  {chat.unreadCount}
                                 </span>
                               )}
                               {canDeleteChat && (
@@ -367,9 +368,9 @@ export function Chat() {
                               {chat.name}
                             </span>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              {typeof chat.unread === 'number' && chat.unread > 0 && (
+                              {typeof chat.unreadCount === 'number' && chat.unreadCount > 0 && (
                                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold">
-                                  {chat.unread}
+                                  {chat.unreadCount}
                                 </span>
                               )}
                               {canDeleteChat && (

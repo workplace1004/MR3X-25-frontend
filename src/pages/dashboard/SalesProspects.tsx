@@ -27,89 +27,6 @@ interface Prospect {
   estimatedValue: number;
 }
 
-const mockProspects: Prospect[] = [
-  {
-    id: '1',
-    name: 'Imobiliária Centro',
-    contactName: 'João Silva',
-    contactEmail: 'joao@imobcentro.com',
-    contactPhone: '(11) 99999-1234',
-    address: 'Rua das Flores, 123',
-    city: 'São Paulo',
-    state: 'SP',
-    status: 'negotiating',
-    notes: 'Interessado no plano Premium',
-    lastContactAt: '2024-12-01T10:30:00Z',
-    createdAt: '2024-11-15T08:00:00Z',
-    source: 'Indicação',
-    estimatedValue: 25000,
-  },
-  {
-    id: '2',
-    name: 'Imóveis Premium',
-    contactName: 'Maria Santos',
-    contactEmail: 'maria@imoveispremium.com',
-    contactPhone: '(11) 98888-5678',
-    address: 'Av. Paulista, 1000',
-    city: 'São Paulo',
-    state: 'SP',
-    status: 'interested',
-    notes: 'Aguardando proposta formal',
-    lastContactAt: '2024-11-30T14:00:00Z',
-    createdAt: '2024-11-10T09:00:00Z',
-    source: 'Site',
-    estimatedValue: 18000,
-  },
-  {
-    id: '3',
-    name: 'Casa & Lar Imóveis',
-    contactName: 'Pedro Costa',
-    contactEmail: 'pedro@casaelar.com',
-    contactPhone: '(21) 97777-9012',
-    address: 'Rua Copacabana, 500',
-    city: 'Rio de Janeiro',
-    state: 'RJ',
-    status: 'contacted',
-    notes: 'Retornar na próxima semana',
-    lastContactAt: '2024-11-29T16:00:00Z',
-    createdAt: '2024-11-20T11:00:00Z',
-    source: 'LinkedIn',
-    estimatedValue: 12000,
-  },
-  {
-    id: '4',
-    name: 'Invest Imóveis',
-    contactName: 'Ana Oliveira',
-    contactEmail: 'ana@investimoveis.com',
-    contactPhone: '(31) 96666-3456',
-    address: 'Rua da Bahia, 200',
-    city: 'Belo Horizonte',
-    state: 'MG',
-    status: 'new',
-    notes: '',
-    lastContactAt: '',
-    createdAt: '2024-11-28T15:00:00Z',
-    source: 'Cold Call',
-    estimatedValue: 30000,
-  },
-  {
-    id: '5',
-    name: 'Realty Plus',
-    contactName: 'Carlos Mendes',
-    contactEmail: 'carlos@realtyplus.com',
-    contactPhone: '(41) 95555-7890',
-    address: 'Rua XV de Novembro, 800',
-    city: 'Curitiba',
-    state: 'PR',
-    status: 'converted',
-    notes: 'Cliente ativo - Plano Business',
-    lastContactAt: '2024-11-25T10:00:00Z',
-    createdAt: '2024-10-01T08:00:00Z',
-    source: 'Evento',
-    estimatedValue: 20000,
-  },
-];
-
 const statusConfig = {
   new: { label: 'Novo', color: 'bg-gray-100 text-gray-800', icon: Clock },
   contacted: { label: 'Contatado', color: 'bg-blue-100 text-blue-800', icon: Phone },
@@ -127,15 +44,11 @@ export function SalesProspects() {
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const { data: prospects = mockProspects, isLoading } = useQuery({
+  const { data: prospects = [], isLoading } = useQuery({
     queryKey: ['sales-prospects'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/prospects');
-        return response.data;
-      } catch {
-        return mockProspects;
-      }
+      const response = await apiClient.get('/sales-rep/prospects');
+      return response.data || [];
     },
   });
 

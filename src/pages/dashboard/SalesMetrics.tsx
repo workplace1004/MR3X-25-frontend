@@ -14,95 +14,49 @@ import {
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-const mockMetrics = {
-  
-  totalLeads: 45,
-  leadsThisMonth: 15,
-  leadsLastMonth: 12,
-  leadsGrowth: 25,
-
-  totalConversions: 18,
-  conversionsThisMonth: 5,
-  conversionsLastMonth: 4,
-  conversionsGrowth: 25,
-
-  conversionRate: 40,
-  conversionRateLastMonth: 33.3,
-  conversionRateGrowth: 20.1,
-
-  totalRevenue: 285000,
-  revenueThisMonth: 75000,
-  revenueLastMonth: 62000,
-  revenueGrowth: 20.9,
-
-  expectedRevenue: 125000,
-  avgTicket: 15833,
-  avgTicketLastMonth: 15500,
-  avgTicketGrowth: 2.1,
-
-  avgDealCycle: 18, 
-  avgDealCycleLastMonth: 22,
-  avgDealCycleGrowth: -18.2,
-
-  monthlyPerformance: [
-    { month: 'Jul', leads: 10, conversions: 3, revenue: 45000 },
-    { month: 'Ago', leads: 12, conversions: 4, revenue: 52000 },
-    { month: 'Set', leads: 11, conversions: 3, revenue: 48000 },
-    { month: 'Out', leads: 14, conversions: 5, revenue: 68000 },
-    { month: 'Nov', leads: 12, conversions: 4, revenue: 62000 },
-    { month: 'Dez', leads: 15, conversions: 5, revenue: 75000 },
-  ],
-
-  funnelMetrics: [
-    { stage: 'Prospecção', count: 45, conversion: 100 },
-    { stage: 'Qualificação', count: 32, conversion: 71 },
-    { stage: 'Proposta', count: 24, conversion: 53 },
-    { stage: 'Negociação', count: 20, conversion: 44 },
-    { stage: 'Fechamento', count: 18, conversion: 40 },
-  ],
-
-  revenueBySource: [
-    { name: 'Indicação', value: 95000, color: '#10B981' },
-    { name: 'Site', value: 68000, color: '#3B82F6' },
-    { name: 'LinkedIn', value: 52000, color: '#F59E0B' },
-    { name: 'Eventos', value: 45000, color: '#8B5CF6' },
-    { name: 'Cold Call', value: 25000, color: '#EF4444' },
-  ],
-
-  planDistribution: [
-    { name: 'Starter', value: 4, revenue: 32000, color: '#94A3B8' },
-    { name: 'Business', value: 8, revenue: 120000, color: '#3B82F6' },
-    { name: 'Premium', value: 4, revenue: 100000, color: '#8B5CF6' },
-    { name: 'Enterprise', value: 2, revenue: 100000, color: '#10B981' },
-  ],
-
-  weeklyActivity: [
-    { day: 'Seg', calls: 15, meetings: 3, proposals: 2 },
-    { day: 'Ter', calls: 18, meetings: 4, proposals: 3 },
-    { day: 'Qua', calls: 12, meetings: 2, proposals: 1 },
-    { day: 'Qui', calls: 20, meetings: 5, proposals: 4 },
-    { day: 'Sex', calls: 14, meetings: 3, proposals: 2 },
-  ],
-
-  monthlyGoal: 80000,
-  yearlyGoal: 800000,
-  yearlyAchieved: 350000,
+const emptyMetrics = {
+  totalLeads: 0,
+  leadsThisMonth: 0,
+  leadsLastMonth: 0,
+  leadsGrowth: 0,
+  totalConversions: 0,
+  conversionsThisMonth: 0,
+  conversionsLastMonth: 0,
+  conversionsGrowth: 0,
+  conversionRate: 0,
+  conversionRateLastMonth: 0,
+  conversionRateGrowth: 0,
+  totalRevenue: 0,
+  revenueThisMonth: 0,
+  revenueLastMonth: 0,
+  revenueGrowth: 0,
+  expectedRevenue: 0,
+  avgTicket: 0,
+  avgTicketLastMonth: 0,
+  avgTicketGrowth: 0,
+  avgDealCycle: 0,
+  avgDealCycleLastMonth: 0,
+  avgDealCycleGrowth: 0,
+  monthlyPerformance: [],
+  funnelMetrics: [],
+  revenueBySource: [],
+  planDistribution: [],
+  weeklyActivity: [],
+  monthlyGoal: 0,
+  yearlyGoal: 0,
+  yearlyAchieved: 0,
 };
 
 export function SalesMetrics() {
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['sales-metrics'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/metrics');
-        return response.data;
-      } catch {
-        return mockMetrics;
-      }
+      const response = await apiClient.get('/sales-rep/metrics');
+      return response.data || emptyMetrics;
     },
   });
 
-  const data = metrics || mockMetrics;
+  const data = metrics || emptyMetrics;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);

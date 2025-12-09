@@ -26,95 +26,18 @@ interface Commission {
   paymentMonth: string;
 }
 
-const mockCommissions: Commission[] = [
-  {
-    id: '1',
-    agencyName: 'Realty Plus',
-    planType: 'Business',
-    dealValue: 15300,
-    commissionRate: 10,
-    commissionValue: 1530,
-    status: 'paid',
-    closedAt: '2024-11-15T10:00:00Z',
-    paidAt: '2024-11-30T00:00:00Z',
-    paymentMonth: '2024-11',
-  },
-  {
-    id: '2',
-    agencyName: 'Imóveis Premium',
-    planType: 'Premium',
-    dealValue: 27000,
-    commissionRate: 12,
-    commissionValue: 3240,
-    status: 'paid',
-    closedAt: '2024-11-20T14:00:00Z',
-    paidAt: '2024-11-30T00:00:00Z',
-    paymentMonth: '2024-11',
-  },
-  {
-    id: '3',
-    agencyName: 'Imobiliária Centro',
-    planType: 'Premium',
-    dealValue: 25000,
-    commissionRate: 12,
-    commissionValue: 3000,
-    status: 'pending',
-    closedAt: '2024-12-01T09:00:00Z',
-    paidAt: null,
-    paymentMonth: '2024-12',
-  },
-  {
-    id: '4',
-    agencyName: 'Casa & Lar',
-    planType: 'Starter',
-    dealValue: 9600,
-    commissionRate: 8,
-    commissionValue: 768,
-    status: 'processing',
-    closedAt: '2024-11-25T16:00:00Z',
-    paidAt: null,
-    paymentMonth: '2024-12',
-  },
-  {
-    id: '5',
-    agencyName: 'Urban Imóveis',
-    planType: 'Business',
-    dealValue: 18000,
-    commissionRate: 10,
-    commissionValue: 1800,
-    status: 'paid',
-    closedAt: '2024-10-10T11:00:00Z',
-    paidAt: '2024-10-31T00:00:00Z',
-    paymentMonth: '2024-10',
-  },
-];
-
-const mockSummary = {
-  totalEarned: 45680,
-  totalPending: 3768,
-  totalProcessing: 768,
-  totalPaid: 41144,
-  thisMonth: 3768,
-  lastMonth: 6570,
-  avgCommission: 2284,
-  totalDeals: 20,
-  commissionRate: 10.5,
-
-  monthlyCommissions: [
-    { month: 'Jul', paid: 3200, pending: 0 },
-    { month: 'Ago', paid: 4100, pending: 0 },
-    { month: 'Set', paid: 3800, pending: 0 },
-    { month: 'Out', paid: 5200, pending: 0 },
-    { month: 'Nov', paid: 6570, pending: 0 },
-    { month: 'Dez', paid: 0, pending: 3768 },
-  ],
-
-  byPlan: [
-    { name: 'Starter', value: 4560, color: '#94A3B8' },
-    { name: 'Business', value: 15300, color: '#3B82F6' },
-    { name: 'Premium', value: 18720, color: '#8B5CF6' },
-    { name: 'Enterprise', value: 7100, color: '#10B981' },
-  ],
+const emptySummary = {
+  totalEarned: 0,
+  totalPending: 0,
+  totalProcessing: 0,
+  totalPaid: 0,
+  thisMonth: 0,
+  lastMonth: 0,
+  avgCommission: 0,
+  totalDeals: 0,
+  commissionRate: 0,
+  monthlyCommissions: [],
+  byPlan: [],
 };
 
 const statusConfig = {
@@ -129,27 +52,19 @@ export function SalesCommissions() {
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  const { data: commissions = mockCommissions, isLoading: loadingCommissions } = useQuery({
+  const { data: commissions = [], isLoading: loadingCommissions } = useQuery({
     queryKey: ['sales-commissions'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/commissions');
-        return response.data;
-      } catch {
-        return mockCommissions;
-      }
+      const response = await apiClient.get('/sales-rep/commissions');
+      return response.data || [];
     },
   });
 
-  const { data: summary = mockSummary, isLoading: loadingSummary } = useQuery({
+  const { data: summary = emptySummary, isLoading: loadingSummary } = useQuery({
     queryKey: ['sales-commissions-summary'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/commissions/summary');
-        return response.data;
-      } catch {
-        return mockSummary;
-      }
+      const response = await apiClient.get('/sales-rep/commissions/summary');
+      return response.data || emptySummary;
     },
   });
 

@@ -23,121 +23,6 @@ interface PipelineItem {
   nextActionDate: string;
 }
 
-const mockPipelineItems: PipelineItem[] = [
-  {
-    id: '1',
-    prospectName: 'Imobiliária Centro',
-    contactName: 'João Silva',
-    contactEmail: 'joao@imobcentro.com',
-    contactPhone: '(11) 99999-1234',
-    stage: 'negotiation',
-    value: 25000,
-    probability: 80,
-    daysInStage: 5,
-    lastActivity: 'Reunião de negociação',
-    nextAction: 'Enviar contrato',
-    nextActionDate: '2024-12-05',
-  },
-  {
-    id: '2',
-    prospectName: 'Imóveis Premium',
-    contactName: 'Maria Santos',
-    contactEmail: 'maria@imoveispremium.com',
-    contactPhone: '(11) 98888-5678',
-    stage: 'proposal_sent',
-    value: 18000,
-    probability: 60,
-    daysInStage: 3,
-    lastActivity: 'Proposta enviada',
-    nextAction: 'Follow-up por telefone',
-    nextActionDate: '2024-12-03',
-  },
-  {
-    id: '3',
-    prospectName: 'Casa & Lar Imóveis',
-    contactName: 'Pedro Costa',
-    contactEmail: 'pedro@casaelar.com',
-    contactPhone: '(21) 97777-9012',
-    stage: 'qualification',
-    value: 12000,
-    probability: 40,
-    daysInStage: 7,
-    lastActivity: 'Ligação de qualificação',
-    nextAction: 'Enviar material informativo',
-    nextActionDate: '2024-12-02',
-  },
-  {
-    id: '4',
-    prospectName: 'Invest Imóveis',
-    contactName: 'Ana Oliveira',
-    contactEmail: 'ana@investimoveis.com',
-    contactPhone: '(31) 96666-3456',
-    stage: 'prospecting',
-    value: 30000,
-    probability: 20,
-    daysInStage: 2,
-    lastActivity: 'Lead recebido',
-    nextAction: 'Primeiro contato',
-    nextActionDate: '2024-12-01',
-  },
-  {
-    id: '5',
-    prospectName: 'Realty Plus',
-    contactName: 'Carlos Mendes',
-    contactEmail: 'carlos@realtyplus.com',
-    contactPhone: '(41) 95555-7890',
-    stage: 'closed_won',
-    value: 20000,
-    probability: 100,
-    daysInStage: 0,
-    lastActivity: 'Contrato assinado',
-    nextAction: 'Onboarding',
-    nextActionDate: '2024-12-01',
-  },
-  {
-    id: '6',
-    prospectName: 'Nova Vida Imóveis',
-    contactName: 'Fernanda Lima',
-    contactEmail: 'fernanda@novavida.com',
-    contactPhone: '(51) 94444-1111',
-    stage: 'prospecting',
-    value: 15000,
-    probability: 15,
-    daysInStage: 1,
-    lastActivity: 'Indicação recebida',
-    nextAction: 'Ligar para apresentação',
-    nextActionDate: '2024-12-02',
-  },
-  {
-    id: '7',
-    prospectName: 'Urban Imóveis',
-    contactName: 'Ricardo Gomes',
-    contactEmail: 'ricardo@urban.com',
-    contactPhone: '(61) 93333-2222',
-    stage: 'qualification',
-    value: 22000,
-    probability: 35,
-    daysInStage: 4,
-    lastActivity: 'Demo agendada',
-    nextAction: 'Realizar demonstração',
-    nextActionDate: '2024-12-04',
-  },
-  {
-    id: '8',
-    prospectName: 'Premier Realty',
-    contactName: 'Lucia Santos',
-    contactEmail: 'lucia@premier.com',
-    contactPhone: '(71) 92222-3333',
-    stage: 'closed_lost',
-    value: 28000,
-    probability: 0,
-    daysInStage: 0,
-    lastActivity: 'Negociação encerrada',
-    nextAction: '-',
-    nextActionDate: '',
-  },
-];
-
 const stageConfig = {
   prospecting: { label: 'Prospecção', color: 'bg-blue-500', bgLight: 'bg-blue-50', textColor: 'text-blue-700' },
   qualification: { label: 'Qualificação', color: 'bg-yellow-500', bgLight: 'bg-yellow-50', textColor: 'text-yellow-700' },
@@ -162,15 +47,11 @@ export function SalesPipeline() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [draggedItem, setDraggedItem] = useState<PipelineItem | null>(null);
 
-  const { data: pipelineItems = mockPipelineItems, isLoading } = useQuery({
+  const { data: pipelineItems = [], isLoading } = useQuery({
     queryKey: ['sales-pipeline'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/pipeline');
-        return response.data;
-      } catch {
-        return mockPipelineItems;
-      }
+      const response = await apiClient.get('/sales-rep/pipeline');
+      return response.data || [];
     },
   });
 

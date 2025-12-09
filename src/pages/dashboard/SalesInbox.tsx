@@ -46,108 +46,6 @@ interface Notification {
   link?: string;
 }
 
-const mockMessages: Message[] = [
-  {
-    id: '1',
-    senderId: 'admin1',
-    senderName: 'Carlos Admin',
-    senderRole: 'ADMIN',
-    recipientId: 'rep1',
-    subject: 'Parabéns pela venda!',
-    content: 'Olá! Parabéns pela conversão do cliente Realty Plus. Excelente trabalho! Continue assim.',
-    isRead: true,
-    isStarred: true,
-    createdAt: '2024-12-01T10:30:00Z',
-    readAt: '2024-12-01T11:00:00Z',
-  },
-  {
-    id: '2',
-    senderId: 'manager1',
-    senderName: 'Ana Manager',
-    senderRole: 'PLATFORM_MANAGER',
-    recipientId: 'rep1',
-    subject: 'Novo lead qualificado',
-    content: 'Temos um novo lead muito promissor: Invest Imóveis. Já fiz o primeiro contato e eles estão interessados no plano Enterprise. Pode dar seguimento?',
-    isRead: false,
-    isStarred: false,
-    createdAt: '2024-12-01T14:00:00Z',
-    readAt: null,
-  },
-  {
-    id: '3',
-    senderId: 'admin2',
-    senderName: 'Roberto Diretor',
-    senderRole: 'CEO',
-    recipientId: 'rep1',
-    subject: 'Reunião de resultados - Dezembro',
-    content: 'Olá! Gostaria de marcar uma reunião para discutir os resultados do mês e as metas para 2025. Podemos agendar para a próxima semana?',
-    isRead: false,
-    isStarred: false,
-    createdAt: '2024-11-30T16:00:00Z',
-    readAt: null,
-  },
-  {
-    id: '4',
-    senderId: 'manager2',
-    senderName: 'Pedro Support',
-    senderRole: 'PLATFORM_MANAGER',
-    recipientId: 'rep1',
-    subject: 'Material de vendas atualizado',
-    content: 'Oi! Atualizamos o deck de vendas com as novas funcionalidades da plataforma. Está disponível na pasta compartilhada. Qualquer dúvida me avisa.',
-    isRead: true,
-    isStarred: false,
-    createdAt: '2024-11-29T09:00:00Z',
-    readAt: '2024-11-29T10:00:00Z',
-  },
-];
-
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'lead',
-    title: 'Novo lead atribuído',
-    message: 'Um novo prospect foi atribuído a você: Urban Imóveis',
-    isRead: false,
-    createdAt: '2024-12-01T15:00:00Z',
-    link: '/dashboard/sales-prospects',
-  },
-  {
-    id: '2',
-    type: 'proposal',
-    title: 'Proposta visualizada',
-    message: 'Imobiliária Centro visualizou sua proposta',
-    isRead: false,
-    createdAt: '2024-12-01T14:30:00Z',
-    link: '/dashboard/sales-proposals',
-  },
-  {
-    id: '3',
-    type: 'commission',
-    title: 'Comissão processada',
-    message: 'Sua comissão de R$ 1.530,00 foi processada e será paga em 30/12',
-    isRead: true,
-    createdAt: '2024-11-30T18:00:00Z',
-    link: '/dashboard/sales-commissions',
-  },
-  {
-    id: '4',
-    type: 'system',
-    title: 'Meta mensal atingida!',
-    message: 'Parabéns! Você atingiu 93% da meta mensal.',
-    isRead: true,
-    createdAt: '2024-11-28T10:00:00Z',
-  },
-  {
-    id: '5',
-    type: 'lead',
-    title: 'Lead movido para negociação',
-    message: 'Imóveis Premium avançou para fase de negociação',
-    isRead: true,
-    createdAt: '2024-11-27T14:00:00Z',
-    link: '/dashboard/sales-pipeline',
-  },
-];
-
 export function SalesInbox() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -162,27 +60,19 @@ export function SalesInbox() {
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
 
-  const { data: fetchedMessages = mockMessages, isLoading: loadingMessages } = useQuery({
+  const { data: fetchedMessages = [], isLoading: loadingMessages } = useQuery({
     queryKey: ['sales-messages'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/messages');
-        return response.data;
-      } catch {
-        return mockMessages;
-      }
+      const response = await apiClient.get('/sales-rep/messages');
+      return response.data || [];
     },
   });
 
-  const { data: fetchedNotifications = mockNotifications, isLoading: loadingNotifications } = useQuery({
+  const { data: fetchedNotifications = [], isLoading: loadingNotifications } = useQuery({
     queryKey: ['sales-notifications'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/notifications');
-        return response.data;
-      } catch {
-        return mockNotifications;
-      }
+      const response = await apiClient.get('/sales-rep/notifications');
+      return response.data || [];
     },
   });
 

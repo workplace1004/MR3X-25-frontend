@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Home, Building2, Users, FileText, DollarSign, MessageSquare, Bell,
   LogOut, Menu, X, BarChart3, User, Shield, Building, Briefcase,
@@ -10,6 +11,7 @@ import {
   Database, GitCompare, Headphones, UserSearch
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { chatAPI, notificationsAPI } from '../api';
 
 const baseNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, perm: undefined },
@@ -88,6 +90,31 @@ export function DashboardLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, loading, isAuthenticated, logout, hasPermission } = useAuth();
+
+  // Fetch unread chat count
+  const { data: chatsData } = useQuery({
+    queryKey: ['chats-unread'],
+    queryFn: () => chatAPI.getChats(),
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Fetch unread notifications count
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications-unread'],
+    queryFn: () => notificationsAPI.getNotifications(),
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Calculate unread counts
+  const unreadChatsCount = Array.isArray(chatsData)
+    ? chatsData.reduce((sum: number, chat: any) => sum + (chat.unreadCount || 0), 0)
+    : 0;
+
+  const unreadNotificationsCount = Array.isArray(notificationsData)
+    ? notificationsData.filter((n: any) => !n.read).length
+    : (notificationsData?.data ? notificationsData.data.filter((n: any) => !n.read).length : 0);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -456,12 +483,20 @@ export function DashboardLayout() {
             )}
           </div>
 
-          {}
+          {/* Navigation */}
           <nav className="flex-1 p-3 lg:p-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = item.href === '/dashboard'
                 ? location.pathname === '/dashboard'
                 : location.pathname?.startsWith(item.href);
+
+              // Determine badge count for this item
+              let badgeCount = 0;
+              if (item.href === '/dashboard/chat') {
+                badgeCount = unreadChatsCount;
+              } else if (item.href === '/dashboard/notifications') {
+                badgeCount = unreadNotificationsCount;
+              }
 
               return (
                 <Link
@@ -473,8 +508,17 @@ export function DashboardLayout() {
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
-                  <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
-                  <span>{item.name}</span>
+                  <div className="relative">
+                    <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </div>
+                  <span className="flex-1">{item.name}</span>
+                  {badgeCount > 0 && (
+                    <span className={`min-w-[20px] h-[20px] flex items-center justify-center text-[11px] font-bold rounded-full px-1 ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                      {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

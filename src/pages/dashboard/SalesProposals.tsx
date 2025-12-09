@@ -36,109 +36,6 @@ interface ProposalItem {
   unitPrice: number;
 }
 
-const mockProposals: Proposal[] = [
-  {
-    id: '1',
-    prospectId: '1',
-    prospectName: 'Imobiliária Centro',
-    title: 'Proposta Plano Premium - Imobiliária Centro',
-    planType: 'premium',
-    value: 2500,
-    discount: 10,
-    finalValue: 2250,
-    status: 'viewed',
-    validUntil: '2024-12-15T23:59:59Z',
-    sentAt: '2024-11-28T10:00:00Z',
-    viewedAt: '2024-11-29T14:30:00Z',
-    respondedAt: null,
-    notes: 'Desconto especial para primeiros clientes',
-    createdAt: '2024-11-28T09:00:00Z',
-    items: [
-      { name: 'Plano Premium Mensal', description: 'Acesso completo à plataforma', quantity: 1, unitPrice: 2500 },
-    ],
-  },
-  {
-    id: '2',
-    prospectId: '2',
-    prospectName: 'Imóveis Premium',
-    title: 'Proposta Plano Business - Imóveis Premium',
-    planType: 'business',
-    value: 1500,
-    discount: 0,
-    finalValue: 1500,
-    status: 'sent',
-    validUntil: '2024-12-20T23:59:59Z',
-    sentAt: '2024-11-30T16:00:00Z',
-    viewedAt: null,
-    respondedAt: null,
-    notes: '',
-    createdAt: '2024-11-30T15:30:00Z',
-    items: [
-      { name: 'Plano Business Mensal', description: 'Funcionalidades avançadas', quantity: 1, unitPrice: 1500 },
-    ],
-  },
-  {
-    id: '3',
-    prospectId: '5',
-    prospectName: 'Realty Plus',
-    title: 'Proposta Plano Business - Realty Plus',
-    planType: 'business',
-    value: 1500,
-    discount: 15,
-    finalValue: 1275,
-    status: 'accepted',
-    validUntil: '2024-11-20T23:59:59Z',
-    sentAt: '2024-11-10T09:00:00Z',
-    viewedAt: '2024-11-10T14:00:00Z',
-    respondedAt: '2024-11-15T11:00:00Z',
-    notes: 'Cliente fechou contrato anual',
-    createdAt: '2024-11-10T08:00:00Z',
-    items: [
-      { name: 'Plano Business Anual', description: 'Funcionalidades avançadas', quantity: 12, unitPrice: 1275 },
-    ],
-  },
-  {
-    id: '4',
-    prospectId: '3',
-    prospectName: 'Casa & Lar Imóveis',
-    title: 'Proposta Plano Starter - Casa & Lar',
-    planType: 'starter',
-    value: 800,
-    discount: 0,
-    finalValue: 800,
-    status: 'draft',
-    validUntil: '2024-12-31T23:59:59Z',
-    sentAt: null,
-    viewedAt: null,
-    respondedAt: null,
-    notes: 'Aguardando aprovação interna',
-    createdAt: '2024-12-01T10:00:00Z',
-    items: [
-      { name: 'Plano Starter Mensal', description: 'Funcionalidades básicas', quantity: 1, unitPrice: 800 },
-    ],
-  },
-  {
-    id: '5',
-    prospectId: '4',
-    prospectName: 'Invest Imóveis',
-    title: 'Proposta Plano Enterprise - Invest Imóveis',
-    planType: 'enterprise',
-    value: 5000,
-    discount: 20,
-    finalValue: 4000,
-    status: 'rejected',
-    validUntil: '2024-11-25T23:59:59Z',
-    sentAt: '2024-11-15T10:00:00Z',
-    viewedAt: '2024-11-16T09:00:00Z',
-    respondedAt: '2024-11-20T16:00:00Z',
-    notes: 'Cliente optou por solução interna',
-    createdAt: '2024-11-15T09:00:00Z',
-    items: [
-      { name: 'Plano Enterprise Mensal', description: 'Acesso ilimitado + suporte dedicado', quantity: 1, unitPrice: 5000 },
-    ],
-  },
-];
-
 const statusConfig = {
   draft: { label: 'Rascunho', color: 'bg-gray-100 text-gray-800', icon: Edit },
   sent: { label: 'Enviada', color: 'bg-blue-100 text-blue-800', icon: Send },
@@ -163,15 +60,11 @@ export function SalesProposals() {
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const { data: proposals = mockProposals, isLoading } = useQuery({
+  const { data: proposals = [], isLoading } = useQuery({
     queryKey: ['sales-proposals'],
     queryFn: async () => {
-      try {
-        const response = await apiClient.get('/sales-rep/proposals');
-        return response.data;
-      } catch {
-        return mockProposals;
-      }
+      const response = await apiClient.get('/sales-rep/proposals');
+      return response.data || [];
     },
   });
 
