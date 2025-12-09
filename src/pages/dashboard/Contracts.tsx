@@ -594,6 +594,9 @@ export function Contracts() {
                       <tr key={contract.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                         <td className="p-4">
                           <div className="font-medium">{contract.property?.name || contract.property?.address || 'Sem imóvel'}</div>
+                          {contract.contractToken && (
+                            <div className="text-[10px] text-muted-foreground font-mono">{contract.contractToken}</div>
+                          )}
                           <div className="text-sm text-muted-foreground">{contract.property?.neighborhood || ''}</div>
                         </td>
                         <td className="p-4">
@@ -669,6 +672,9 @@ export function Contracts() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg">{contract.property?.name || contract.property?.address || 'Imóvel'}</h3>
+                        {contract.contractToken && (
+                          <p className="text-[10px] text-muted-foreground font-mono">{contract.contractToken}</p>
+                        )}
                         <p className="text-sm text-muted-foreground">{contract.tenantUser?.name || contract.tenant || 'Sem inquilino'}</p>
                       </div>
                       {getStatusBadge(contract.status)}
@@ -747,6 +753,9 @@ export function Contracts() {
                           <h3 className="text-lg font-bold break-words">
                             {contract.property?.name || contract.property?.address || 'Imóvel'}
                           </h3>
+                          {contract.contractToken && (
+                            <p className="text-[10px] text-muted-foreground font-mono">{contract.contractToken}</p>
+                          )}
                           <p className="text-sm text-muted-foreground break-words">
                             <User className="w-3 h-3 inline mr-1" />
                             {contract.tenantUser?.name || contract.tenant || 'Sem inquilino'}

@@ -432,6 +432,9 @@ export function Owners() {
                       <tr key={owner.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                         <td className="p-4">
                           <div className="font-medium">{owner.name || 'Sem nome'}</div>
+                          {owner.token && (
+                            <div className="text-[10px] text-muted-foreground font-mono">{owner.token}</div>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="text-muted-foreground">{owner.phone || '-'}</div>
@@ -479,6 +482,9 @@ export function Owners() {
                     <div className="flex items-start justify-between mb-3 min-w-0 gap-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg truncate">{owner.name || 'Sem nome'}</h3>
+                        {owner.token && (
+                          <p className="text-[10px] text-muted-foreground font-mono">{owner.token}</p>
+                        )}
                         <p className="text-sm text-muted-foreground truncate">{owner.email || '-'}</p>
                       </div>
                       <Badge className="bg-purple-500 text-white text-xs flex-shrink-0">Imóvel</Badge>
@@ -513,6 +519,9 @@ export function Owners() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold truncate">{owner.name || 'Sem nome'}</h3>
+                        {owner.token && (
+                          <p className="text-[10px] text-muted-foreground font-mono">{owner.token}</p>
+                        )}
                         <p className="text-sm text-muted-foreground truncate">{owner.email}</p>
                       </div>
                       <DropdownMenu>
@@ -799,6 +808,12 @@ export function Owners() {
                       <label className="text-sm font-medium text-muted-foreground">Nome</label>
                       <div className="text-base">{ownerDetail.name || '-'}</div>
                     </div>
+                    {ownerDetail.token && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Token</label>
+                        <div className="text-sm font-mono bg-muted px-2 py-1 rounded inline-block">{ownerDetail.token}</div>
+                      </div>
+                    )}
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Telefone</label>
                       <div className="text-base">{ownerDetail.phone || '-'}</div>

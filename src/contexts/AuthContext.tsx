@@ -266,7 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = localStorage.getItem('accessToken');
         if (token && !storeUser) {
-          
+          // Token exists but user not loaded - will be handled by API interceptor
         }
       } catch (error) {
         console.error('Auth initialization error:', error);

@@ -469,61 +469,64 @@ export function Invoices() {
         )}
 
         {}
-        <div className="flex flex-wrap gap-4 p-4 bg-card border border-border rounded-lg">
+        <div className="flex flex-col gap-3 p-3 sm:p-4 bg-card border border-border rounded-lg">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros:</span>
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="RENT">Aluguel</SelectItem>
-              <SelectItem value="CONDOMINIUM">Condominio</SelectItem>
-              <SelectItem value="EXTRA">Extra</SelectItem>
-              <SelectItem value="FINE">Multa</SelectItem>
-              <SelectItem value="PENALTY">Penalidade</SelectItem>
-              <SelectItem value="OTHER">Outro</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="PENDING">Pendente</SelectItem>
-              <SelectItem value="PAID">Pago</SelectItem>
-              <SelectItem value="OVERDUE">Vencido</SelectItem>
-              <SelectItem value="CANCELED">Cancelado</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterProperty} onValueChange={setFilterProperty}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Imóvel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos imóveis</SelectItem>
-              {properties.map((property) => (
-                <SelectItem key={property.id} value={property.id?.toString()}>
-                  {property.name || property.address}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            type="month"
-            value={filterMonth}
-            onChange={(e) => setFilterMonth(e.target.value)}
-            className="w-[180px]"
-            placeholder="Mes de referencia"
-          />
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="RENT">Aluguel</SelectItem>
+                <SelectItem value="CONDOMINIUM">Condominio</SelectItem>
+                <SelectItem value="EXTRA">Extra</SelectItem>
+                <SelectItem value="FINE">Multa</SelectItem>
+                <SelectItem value="PENALTY">Penalidade</SelectItem>
+                <SelectItem value="OTHER">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="PENDING">Pendente</SelectItem>
+                <SelectItem value="PAID">Pago</SelectItem>
+                <SelectItem value="OVERDUE">Vencido</SelectItem>
+                <SelectItem value="CANCELED">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterProperty} onValueChange={setFilterProperty}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Imóvel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos imóveis</SelectItem>
+                {properties.map((property) => (
+                  <SelectItem key={property.id} value={property.id?.toString()}>
+                    {property.name || property.address}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="flex h-10 w-full sm:w-[150px] rounded-md border border-input bg-background pl-3 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              placeholder="Mes de referencia"
+            />
+          </div>
           {((filterType && filterType !== 'all') || (filterStatus && filterStatus !== 'all') || (filterProperty && filterProperty !== 'all') || filterMonth) && (
             <Button
               variant="ghost"
               size="sm"
+              className="w-full sm:w-auto self-start"
               onClick={() => {
                 setFilterType('');
                 setFilterStatus('');

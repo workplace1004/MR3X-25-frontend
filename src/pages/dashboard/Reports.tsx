@@ -17,43 +17,36 @@ export default function Reports() {
   const canViewUsers = hasPermission('users:read')
   const canViewPayments = hasPermission('payments:read')
 
-  if (!canViewReports) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-muted-foreground">Access Denied</h2>
-          <p className="text-muted-foreground">You do not have permission to view reports.</p>
-        </div>
-      </div>
-    )
-  }
-
+  // All hooks must be called before any conditional returns
   const currentYear = new Date().getFullYear()
   const [year, setYear] = useState<number>(currentYear)
   const [loading, setLoading] = useState<boolean>(false)
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Array<{ month: string; total: number }>>([])
   const [error, setError] = useState<string | null>(null)
-  const [properties, setProperties] = useState<any[]>([])
-  const [tenants, setTenants] = useState<any[]>([])
-  const [payments, setPayments] = useState<any[]>([])
+  const [properties, setProperties] = useState<Array<{ id: string; name?: string; address?: string }>>([])
+  const [tenants, setTenants] = useState<Array<{ id: string; name: string }>>([])
+  const [payments, setPayments] = useState<Array<{ propertyId?: string; tenantId?: string; amount?: number; valorPago?: number; paymentType?: string; tipo?: string }>>([])
+  const [reportType, setReportType] = useState<'monthly' | 'property' | 'tenant'>('monthly')
 
-  const ensureArray = (data: any): any[] => {
-    if (!data) return []
-    if (Array.isArray(data)) return data
-    if (data.data && Array.isArray(data.data)) return data.data
-    if (data.items && Array.isArray(data.items)) return data.items
+  const ensureArray = <T,>(input: T | T[] | { data?: T[]; items?: T[] } | null | undefined): T[] => {
+    if (!input) return []
+    if (Array.isArray(input)) return input
+    if (typeof input === 'object' && input !== null) {
+      if ('data' in input && Array.isArray(input.data)) return input.data
+      if ('items' in input && Array.isArray(input.items)) return input.items
+    }
     return []
   }
-  const [reportType, setReportType] = useState<'monthly' | 'property' | 'tenant'>('monthly')
 
   const years = useMemo(() => {
     return Array.from({ length: 5 }).map((_, idx) => currentYear - idx)
   }, [currentYear])
 
   useEffect(() => {
+    if (!canViewReports) return
+
     const loadData = async () => {
       try {
-        
         if (reportType === 'property' && canViewProperties && properties.length === 0) {
           const propertiesData = await propertiesAPI.getProperties()
           setProperties(ensureArray(propertiesData))
@@ -68,22 +61,24 @@ export default function Reports() {
           const paymentsData = await paymentsAPI.getPayments()
           setPayments(ensureArray(paymentsData))
         }
-      } catch (error) {
-        console.error('Error loading data:', error)
+      } catch (err) {
+        console.error('Error loading data:', err)
       }
     }
     loadData()
-  }, [reportType, canViewProperties, canViewUsers, canViewPayments])
+  }, [reportType, canViewProperties, canViewUsers, canViewPayments, canViewReports, properties.length, tenants.length, payments.length])
 
   useEffect(() => {
+    if (!canViewReports) return
+
     const fetchReport = async () => {
       setLoading(true)
       setError(null)
       try {
         const response = await paymentsAPI.getAnnualReport(year)
-        const backendData: any[] = Array.isArray(response) ? response : (response?.data || [])
+        const backendData = Array.isArray(response) ? response : (response?.data || [])
 
-        const monthToIndex = (m: any): number => {
+        const monthToIndex = (m: string | number | undefined): number => {
           if (typeof m === 'number') return Math.min(Math.max(m, 1), 12)
           if (typeof m === 'string') {
             const map: Record<string, number> = {
@@ -107,7 +102,7 @@ export default function Reports() {
         }
 
         const totalsByMonth: Record<number, number> = {}
-        backendData.forEach((item: any) => {
+        backendData.forEach((item: { month?: string | number; mes?: string | number; value?: number; total?: number; totalPaid?: number; amount?: number; valor?: number }) => {
           const idx = monthToIndex(item.month ?? item.mes)
           const value: number = Number(
             item.value ?? item.total ?? item.totalPaid ?? item.amount ?? item.valor ?? 0
@@ -138,7 +133,7 @@ export default function Reports() {
         }))
 
         setData(chartData)
-      } catch (e) {
+      } catch {
         setError('Não foi possível carregar o relatório.')
         setData([])
         toast.error('Erro ao carregar relatório')
@@ -148,7 +143,7 @@ export default function Reports() {
     }
 
     fetchReport()
-  }, [year])
+  }, [year, canViewReports])
 
   const totalAno = useMemo(() => data.reduce((acc, cur) => acc + (Number(cur.total) || 0), 0), [data])
 
@@ -165,7 +160,7 @@ export default function Reports() {
       const propertyPayments = payments.filter(p => p.propertyId === property.id)
       const totalRevenue = propertyPayments.reduce((sum, p) => sum + Number(p.amount || p.valorPago || 0), 0)
       return {
-        name: property.name || property.address,
+        name: property.name || property.address || '',
         revenue: totalRevenue,
         payments: propertyPayments.length
       }

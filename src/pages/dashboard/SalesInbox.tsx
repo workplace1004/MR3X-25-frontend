@@ -98,7 +98,7 @@ export function SalesInbox() {
       await apiClient.patch(`/sales-rep/messages/${id}/read`);
       queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
-      
+      // Silent fail - optimistic update already applied
     }
   };
 
@@ -117,7 +117,7 @@ export function SalesInbox() {
       await apiClient.patch(`/sales-rep/messages/${id}/star`);
       queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
-      
+      // Silent fail - optimistic update already applied
     }
   };
 
@@ -146,7 +146,7 @@ export function SalesInbox() {
       await apiClient.delete(`/sales-rep/messages/${messageToDelete}`);
       queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
-      
+      // Silent fail - optimistic update already applied
     }
   };
 
@@ -186,7 +186,7 @@ export function SalesInbox() {
       });
       queryClient.invalidateQueries({ queryKey: ['sales-messages'] });
     } catch {
-      
+      // Silent fail - optimistic update already applied
     }
   };
 

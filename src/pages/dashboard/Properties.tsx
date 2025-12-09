@@ -332,8 +332,8 @@ export function Properties() {
           state: data?.state || prev.state,
           neighborhood: data?.neighborhood || prev.neighborhood,
         }));
-      } catch (error) {
-        
+      } catch {
+        // Silent fail - CEP lookup failure is not critical
       }
     }
   };
@@ -362,8 +362,8 @@ export function Properties() {
             state: data?.state || prev.state,
             neighborhood: data?.neighborhood || prev.neighborhood,
           }));
-        } catch (error) {
-          
+        } catch {
+          // Silent fail - CEP lookup failure is not critical
         }
       }
     }
@@ -1147,6 +1147,9 @@ export function Properties() {
                       <div className="flex-1 flex flex-col justify-between p-4 min-w-0 overflow-hidden">
                         <div className="min-w-0 space-y-1">
                           <h3 className="text-lg font-bold truncate" title={property.name}>{property.name}</h3>
+                          {property.token && (
+                            <p className="text-[10px] text-muted-foreground font-mono">{property.token}</p>
+                          )}
                           <p className="text-sm font-semibold text-gray-700 truncate" title={property.address}>
                             {property.address}
                           </p>
@@ -1667,6 +1670,9 @@ export function Properties() {
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold mb-2">Detalhes</h3>
                   <div><b>Nome:</b> {propertyDetail.name || '-'}</div>
+                  {propertyDetail.token && (
+                    <div><b>Token:</b> <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{propertyDetail.token}</span></div>
+                  )}
                   <div><b>CEP:</b> {propertyDetail.cep || '-'}</div>
                   <div><b>Endereço:</b> {propertyDetail.address || '-'}</div>
                   <div><b>Bairro:</b> {propertyDetail.neighborhood || '-'}</div>

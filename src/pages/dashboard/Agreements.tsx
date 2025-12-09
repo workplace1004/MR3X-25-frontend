@@ -879,50 +879,53 @@ export function Agreements() {
         </div>
 
         {}
-        <div className="flex flex-wrap gap-4 p-4 bg-card border border-border rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 p-3 sm:p-4 bg-card border border-border rounded-lg">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros:</span>
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              {agreementTypes.map(t => (
-                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              {agreementStatuses.map(s => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterProperty} onValueChange={setFilterProperty}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Imóvel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos imóveis</SelectItem>
-              {properties.map((property) => (
-                <SelectItem key={property.id} value={property.id?.toString()}>
-                  {property.name || property.address}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-4 flex-1">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                {agreementTypes.map(t => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                {agreementStatuses.map(s => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterProperty} onValueChange={setFilterProperty}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Imóvel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos imóveis</SelectItem>
+                {properties.map((property) => (
+                  <SelectItem key={property.id} value={property.id?.toString()}>
+                    {property.name || property.address}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {(filterType || filterStatus || filterProperty) && (
             <Button
               variant="ghost"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setFilterType('');
                 setFilterStatus('');
@@ -996,38 +999,17 @@ export function Agreements() {
               {}
               <div className="md:hidden">
                 {agreements.map((agreement: Agreement) => (
-                  <div key={agreement.id} className="border-b border-border last:border-b-0 p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{agreement.title}</h3>
-                        <p className="text-sm text-muted-foreground">{agreement.property?.name || agreement.property?.address}</p>
+                  <div key={agreement.id} className="border-b border-border last:border-b-0 p-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">{agreement.title}</h3>
+                        {agreement.agreementToken && (
+                          <p className="text-xs text-muted-foreground font-mono">{agreement.agreementToken}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {agreement.property?.name || agreement.property?.address}
+                        </p>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        {getTypeBadge(agreement.type)}
-                        {getStatusBadge(agreement.status)}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1 mb-4 text-sm text-muted-foreground">
-                      {agreement.negotiatedAmount && (
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4" />
-                          <span>{formatCurrency(parseFloat(agreement.negotiatedAmount))}</span>
-                        </div>
-                      )}
-                      {agreement.tenant?.name && (
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          <span>{agreement.tenant.name}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 flex-wrap">
-                      <Button size="sm" variant="outline" onClick={() => handleViewAgreement(agreement)}>
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver
-                      </Button>
                       <AgreementActionsDropdown
                         agreement={agreement}
                         onView={() => handleViewAgreement(agreement)}
@@ -1039,6 +1021,35 @@ export function Agreements() {
                         onReject={() => handleReject(agreement)}
                         onCancel={() => handleCancel(agreement)}
                       />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                        {agreementTypes.find(t => t.value === agreement.type)?.label || agreement.type}
+                      </span>
+                      {getStatusBadge(agreement.status)}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                      {agreement.negotiatedAmount && (
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3" />
+                          <span className="font-medium">{formatCurrency(parseFloat(agreement.negotiatedAmount))}</span>
+                        </div>
+                      )}
+                      {agreement.tenant?.name && (
+                        <div className="flex items-center gap-1 truncate">
+                          <User className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{agreement.tenant.name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 mt-3 pt-2 border-t border-border">
+                      <Button size="sm" variant="outline" className="flex-1 text-xs h-8" onClick={() => handleViewAgreement(agreement)}>
+                        <Eye className="w-3 h-3 mr-1" />
+                        Ver detalhes
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -1134,12 +1145,12 @@ export function Agreements() {
 
         {}
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Novo Acordo</DialogTitle>
-              <DialogDescription>Preencha os dados para criar um novo acordo</DialogDescription>
+              <DialogTitle className="text-base sm:text-lg">Novo Acordo</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">Preencha os dados para criar um novo acordo</DialogDescription>
             </DialogHeader>
-            <form className="space-y-4" onSubmit={handleCreateAgreement}>
+            <form className="space-y-3 sm:space-y-4" onSubmit={handleCreateAgreement}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="propertyId">Imóvel *</Label>
@@ -1252,71 +1263,77 @@ export function Agreements() {
               </div>
 
               {}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Valores Financeiros (Opcional)</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="border-t pt-3 sm:pt-4">
+                <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Valores Financeiros (Opcional)</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                   <div>
-                    <Label htmlFor="originalAmount">Valor Original</Label>
+                    <Label htmlFor="originalAmount" className="text-xs sm:text-sm" truncate>Valor Original</Label>
                     <Input
                       id="originalAmount"
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={newAgreement.originalAmount}
                       onChange={(e) => setNewAgreement({ ...newAgreement, originalAmount: e.target.value })}
                       placeholder="0.00"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="negotiatedAmount">Valor Negociado</Label>
+                    <Label htmlFor="negotiatedAmount" className="text-xs sm:text-sm" truncate>Valor Negociado</Label>
                     <Input
                       id="negotiatedAmount"
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={newAgreement.negotiatedAmount}
                       onChange={(e) => setNewAgreement({ ...newAgreement, negotiatedAmount: e.target.value })}
                       placeholder="0.00"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="fineAmount">Multa</Label>
+                    <Label htmlFor="fineAmount" className="text-xs sm:text-sm">Multa</Label>
                     <Input
                       id="fineAmount"
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={newAgreement.fineAmount}
                       onChange={(e) => setNewAgreement({ ...newAgreement, fineAmount: e.target.value })}
                       placeholder="0.00"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="discountAmount">Desconto</Label>
+                    <Label htmlFor="discountAmount" className="text-xs sm:text-sm">Desconto</Label>
                     <Input
                       id="discountAmount"
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={newAgreement.discountAmount}
                       onChange={(e) => setNewAgreement({ ...newAgreement, discountAmount: e.target.value })}
                       placeholder="0.00"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2 sm:mt-3">
                   <div>
-                    <Label htmlFor="installments">Parcelas</Label>
+                    <Label htmlFor="installments" className="text-xs sm:text-sm">Parcelas</Label>
                     <Input
                       id="installments"
                       type="number"
+                      className="text-sm"
                       value={newAgreement.installments}
                       onChange={(e) => setNewAgreement({ ...newAgreement, installments: e.target.value })}
                       placeholder="1"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="installmentValue">Valor da Parcela</Label>
+                    <Label htmlFor="installmentValue" className="text-xs sm:text-sm" truncate>Valor da Parcela</Label>
                     <Input
                       id="installmentValue"
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={newAgreement.installmentValue}
                       onChange={(e) => setNewAgreement({ ...newAgreement, installmentValue: e.target.value })}
                       placeholder="0.00"
@@ -1326,41 +1343,45 @@ export function Agreements() {
               </div>
 
               {}
-              <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">Datas (Opcional)</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="border-t pt-3 sm:pt-4">
+                <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Datas (Opcional)</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                   <div>
-                    <Label htmlFor="effectiveDate" truncate>Data de Vigencia</Label>
+                    <Label htmlFor="effectiveDate" className="text-xs sm:text-sm" truncate>Data de Vigencia</Label>
                     <Input
                       id="effectiveDate"
                       type="date"
+                      className="text-sm"
                       value={newAgreement.effectiveDate}
                       onChange={(e) => setNewAgreement({ ...newAgreement, effectiveDate: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="expirationDate" truncate>Data de Expiracao</Label>
+                    <Label htmlFor="expirationDate" className="text-xs sm:text-sm" truncate>Data de Expiracao</Label>
                     <Input
                       id="expirationDate"
                       type="date"
+                      className="text-sm"
                       value={newAgreement.expirationDate}
                       onChange={(e) => setNewAgreement({ ...newAgreement, expirationDate: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="newDueDate" truncate>Nova Data de Vencimento</Label>
+                    <Label htmlFor="newDueDate" className="text-xs sm:text-sm" truncate>Nova Data Venc.</Label>
                     <Input
                       id="newDueDate"
                       type="date"
+                      className="text-sm"
                       value={newAgreement.newDueDate}
                       onChange={(e) => setNewAgreement({ ...newAgreement, newDueDate: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="moveOutDate" truncate>Data de Saida</Label>
+                    <Label htmlFor="moveOutDate" className="text-xs sm:text-sm" truncate>Data de Saida</Label>
                     <Input
                       id="moveOutDate"
                       type="date"
+                      className="text-sm"
                       value={newAgreement.moveOutDate}
                       onChange={(e) => setNewAgreement({ ...newAgreement, moveOutDate: e.target.value })}
                     />
@@ -1369,9 +1390,10 @@ export function Agreements() {
               </div>
 
               <div>
-                <Label htmlFor="notes">Observacoes Internas</Label>
+                <Label htmlFor="notes" className="text-xs sm:text-sm">Observacoes Internas</Label>
                 <Textarea
                   id="notes"
+                  className="text-sm"
                   value={newAgreement.notes}
                   onChange={(e) => setNewAgreement({ ...newAgreement, notes: e.target.value })}
                   placeholder="Notas internas..."
@@ -1379,11 +1401,11 @@ export function Agreements() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)} disabled={creating}>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 sm:pt-4">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowCreateModal(false)} disabled={creating}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white" disabled={creating || !newAgreement.propertyId || !newAgreement.title}>
+                <Button type="submit" className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white" disabled={creating || !newAgreement.propertyId || !newAgreement.title}>
                   {creating ? 'Criando...' : 'Criar Acordo'}
                 </Button>
               </div>
@@ -1393,19 +1415,19 @@ export function Agreements() {
 
         {}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Editar Acordo</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg">Editar Acordo</DialogTitle>
             </DialogHeader>
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
-              <form className="space-y-4" onSubmit={handleUpdateAgreement}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form className="space-y-3 sm:space-y-4" onSubmit={handleUpdateAgreement}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <Label>Tipo</Label>
+                    <Label className="text-xs sm:text-sm">Tipo</Label>
                     <Select
                       value={editForm.type}
                       onValueChange={(value) => setEditForm({ ...editForm, type: value })}
@@ -1421,7 +1443,7 @@ export function Agreements() {
                     </Select>
                   </div>
                   <div>
-                    <Label>Status</Label>
+                    <Label className="text-xs sm:text-sm">Status</Label>
                     <Select
                       value={editForm.status}
                       onValueChange={(value) => setEditForm({ ...editForm, status: value })}
@@ -1439,8 +1461,9 @@ export function Agreements() {
                 </div>
 
                 <div>
-                  <Label>Titulo</Label>
+                  <Label className="text-xs sm:text-sm">Titulo</Label>
                   <Input
+                    className="text-sm"
                     value={editForm.title}
                     onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                     required
@@ -1448,8 +1471,9 @@ export function Agreements() {
                 </div>
 
                 <div>
-                  <Label>Descricao</Label>
+                  <Label className="text-xs sm:text-sm">Descricao</Label>
                   <Textarea
+                    className="text-sm"
                     value={editForm.description}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     rows={2}
@@ -1457,8 +1481,9 @@ export function Agreements() {
                 </div>
 
                 <div>
-                  <Label>Conteudo/Termos</Label>
+                  <Label className="text-xs sm:text-sm">Conteudo/Termos</Label>
                   <Textarea
+                    className="text-sm"
                     value={editForm.content}
                     onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
                     rows={4}
@@ -1466,39 +1491,43 @@ export function Agreements() {
                 </div>
 
                 {}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                   <div>
-                    <Label>Valor Original</Label>
+                    <Label className="text-xs sm:text-sm" truncate>Valor Original</Label>
                     <Input
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={editForm.originalAmount}
                       onChange={(e) => setEditForm({ ...editForm, originalAmount: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>Valor Negociado</Label>
+                    <Label className="text-xs sm:text-sm" truncate>Valor Negociado</Label>
                     <Input
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={editForm.negotiatedAmount}
                       onChange={(e) => setEditForm({ ...editForm, negotiatedAmount: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>Multa</Label>
+                    <Label className="text-xs sm:text-sm">Multa</Label>
                     <Input
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={editForm.fineAmount}
                       onChange={(e) => setEditForm({ ...editForm, fineAmount: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>Desconto</Label>
+                    <Label className="text-xs sm:text-sm">Desconto</Label>
                     <Input
                       type="number"
                       step="0.01"
+                      className="text-sm"
                       value={editForm.discountAmount}
                       onChange={(e) => setEditForm({ ...editForm, discountAmount: e.target.value })}
                     />
@@ -1506,19 +1535,20 @@ export function Agreements() {
                 </div>
 
                 <div>
-                  <Label>Observacoes</Label>
+                  <Label className="text-xs sm:text-sm">Observacoes</Label>
                   <Textarea
+                    className="text-sm"
                     value={editForm.notes}
                     onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                     rows={2}
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} disabled={updating}>
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 sm:pt-4">
+                  <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowEditModal(false)} disabled={updating}>
                     Cancelar
                   </Button>
-                  <Button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white" disabled={updating}>
+                  <Button type="submit" className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white" disabled={updating}>
                     {updating ? 'Salvando...' : 'Salvar Alteracoes'}
                   </Button>
                 </div>
@@ -1529,50 +1559,50 @@ export function Agreements() {
 
         {}
         <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Detalhes do Acordo</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg">Detalhes do Acordo</DialogTitle>
             </DialogHeader>
             {agreementDetail && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">{agreementDetail.title}</h3>
-                    <p className="text-sm text-muted-foreground">{agreementDetail.agreementToken}</p>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold">{agreementDetail.title}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground font-mono">{agreementDetail.agreementToken}</p>
                   </div>
-                  <div className="flex flex-col gap-1 items-end">
+                  <div className="flex flex-wrap gap-1 sm:flex-col sm:items-end">
                     {getTypeBadge(agreementDetail.type)}
                     {getStatusBadge(agreementDetail.status)}
                   </div>
                 </div>
 
                 {}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Imóvel</Label>
-                    <p className="font-medium">{agreementDetail.property?.name || agreementDetail.property?.address}</p>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Imóvel</Label>
+                    <p className="text-sm sm:text-base font-medium">{agreementDetail.property?.name || agreementDetail.property?.address}</p>
                   </div>
                   {agreementDetail.contract && (
                     <div>
-                      <Label className="text-muted-foreground">Contrato</Label>
-                      <p className="font-medium">
+                      <Label className="text-xs sm:text-sm text-muted-foreground">Contrato</Label>
+                      <p className="text-sm sm:text-base font-medium">
                         {agreementDetail.contract.tenantUser?.name} - {formatDate(agreementDetail.contract.startDate)}
                       </p>
                     </div>
                   )}
                   {agreementDetail.tenant && (
                     <div>
-                      <Label className="text-muted-foreground">Inquilino</Label>
-                      <p className="font-medium">{agreementDetail.tenant.name}</p>
-                      <p className="text-sm text-muted-foreground">{agreementDetail.tenant.email}</p>
+                      <Label className="text-xs sm:text-sm text-muted-foreground">Inquilino</Label>
+                      <p className="text-sm sm:text-base font-medium">{agreementDetail.tenant.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{agreementDetail.tenant.email}</p>
                     </div>
                   )}
                   {agreementDetail.owner && (
                     <div>
-                      <Label className="text-muted-foreground">Proprietario</Label>
-                      <p className="font-medium">{agreementDetail.owner.name}</p>
-                      <p className="text-sm text-muted-foreground">{agreementDetail.owner.email}</p>
+                      <Label className="text-xs sm:text-sm text-muted-foreground">Proprietario</Label>
+                      <p className="text-sm sm:text-base font-medium">{agreementDetail.owner.name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{agreementDetail.owner.email}</p>
                     </div>
                   )}
                 </div>
@@ -1580,53 +1610,53 @@ export function Agreements() {
                 {}
                 {agreementDetail.description && (
                   <div>
-                    <Label className="text-muted-foreground">Descricao</Label>
-                    <p className="mt-1">{agreementDetail.description}</p>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Descricao</Label>
+                    <p className="mt-1 text-sm sm:text-base">{agreementDetail.description}</p>
                   </div>
                 )}
 
                 {}
                 {agreementDetail.content && (
                   <div>
-                    <Label className="text-muted-foreground">Termos do Acordo</Label>
-                    <div className="mt-1 p-3 bg-muted rounded-lg whitespace-pre-wrap">{agreementDetail.content}</div>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Termos do Acordo</Label>
+                    <div className="mt-1 p-2 sm:p-3 bg-muted rounded-lg whitespace-pre-wrap text-xs sm:text-sm">{agreementDetail.content}</div>
                   </div>
                 )}
 
                 {}
                 {(agreementDetail.originalAmount || agreementDetail.negotiatedAmount) && (
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium mb-3">Informacoes Financeiras</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border-t pt-3 sm:pt-4">
+                    <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Informacoes Financeiras</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                       {agreementDetail.originalAmount && (
                         <div>
-                          <Label className="text-muted-foreground">Valor Original</Label>
-                          <p className="font-medium">{formatCurrency(parseFloat(agreementDetail.originalAmount))}</p>
+                          <Label className="text-[10px] sm:text-xs text-muted-foreground">Valor Original</Label>
+                          <p className="text-xs sm:text-sm font-medium">{formatCurrency(parseFloat(agreementDetail.originalAmount))}</p>
                         </div>
                       )}
                       {agreementDetail.negotiatedAmount && (
                         <div>
-                          <Label className="text-muted-foreground">Valor Negociado</Label>
-                          <p className="font-medium text-green-600">{formatCurrency(parseFloat(agreementDetail.negotiatedAmount))}</p>
+                          <Label className="text-[10px] sm:text-xs text-muted-foreground">Valor Negociado</Label>
+                          <p className="text-xs sm:text-sm font-medium text-green-600">{formatCurrency(parseFloat(agreementDetail.negotiatedAmount))}</p>
                         </div>
                       )}
                       {agreementDetail.fineAmount && (
                         <div>
-                          <Label className="text-muted-foreground">Multa</Label>
-                          <p className="font-medium text-red-600">{formatCurrency(parseFloat(agreementDetail.fineAmount))}</p>
+                          <Label className="text-[10px] sm:text-xs text-muted-foreground">Multa</Label>
+                          <p className="text-xs sm:text-sm font-medium text-red-600">{formatCurrency(parseFloat(agreementDetail.fineAmount))}</p>
                         </div>
                       )}
                       {agreementDetail.discountAmount && (
                         <div>
-                          <Label className="text-muted-foreground">Desconto</Label>
-                          <p className="font-medium text-blue-600">{formatCurrency(parseFloat(agreementDetail.discountAmount))}</p>
+                          <Label className="text-[10px] sm:text-xs text-muted-foreground">Desconto</Label>
+                          <p className="text-xs sm:text-sm font-medium text-blue-600">{formatCurrency(parseFloat(agreementDetail.discountAmount))}</p>
                         </div>
                       )}
                     </div>
                     {agreementDetail.installments && (
-                      <div className="mt-3">
-                        <Label className="text-muted-foreground">Parcelamento</Label>
-                        <p className="font-medium">
+                      <div className="mt-2 sm:mt-3">
+                        <Label className="text-[10px] sm:text-xs text-muted-foreground">Parcelamento</Label>
+                        <p className="text-xs sm:text-sm font-medium">
                           {agreementDetail.installments}x de {agreementDetail.installmentValue ? formatCurrency(parseFloat(agreementDetail.installmentValue)) : '-'}
                         </p>
                       </div>
@@ -1635,34 +1665,34 @@ export function Agreements() {
                 )}
 
                 {}
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Assinaturas</h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-3 border rounded-lg text-center">
-                      <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                      <Label className="text-xs text-muted-foreground">Inquilino</Label>
+                <div className="border-t pt-3 sm:pt-4">
+                  <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Assinaturas</h4>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                    <div className="p-2 sm:p-3 border rounded-lg text-center">
+                      <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                      <Label className="text-[10px] sm:text-xs text-muted-foreground block">Inquilino</Label>
                       {agreementDetail.tenantSignedAt ? (
-                        <p className="text-xs text-green-600">Assinado em {formatDate(agreementDetail.tenantSignedAt)}</p>
+                        <p className="text-[10px] sm:text-xs text-green-600">Assinado {formatDate(agreementDetail.tenantSignedAt)}</p>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Pendente</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                       )}
                     </div>
-                    <div className="p-3 border rounded-lg text-center">
-                      <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                      <Label className="text-xs text-muted-foreground">Proprietario</Label>
+                    <div className="p-2 sm:p-3 border rounded-lg text-center">
+                      <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                      <Label className="text-[10px] sm:text-xs text-muted-foreground block">Proprietario</Label>
                       {agreementDetail.ownerSignedAt ? (
-                        <p className="text-xs text-green-600">Assinado em {formatDate(agreementDetail.ownerSignedAt)}</p>
+                        <p className="text-[10px] sm:text-xs text-green-600">Assinado {formatDate(agreementDetail.ownerSignedAt)}</p>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Pendente</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                       )}
                     </div>
-                    <div className="p-3 border rounded-lg text-center">
-                      <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                      <Label className="text-xs text-muted-foreground">Agencia</Label>
+                    <div className="p-2 sm:p-3 border rounded-lg text-center">
+                      <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                      <Label className="text-[10px] sm:text-xs text-muted-foreground block">Agencia</Label>
                       {agreementDetail.agencySignedAt ? (
-                        <p className="text-xs text-green-600">Assinado em {formatDate(agreementDetail.agencySignedAt)}</p>
+                        <p className="text-[10px] sm:text-xs text-green-600">Assinado {formatDate(agreementDetail.agencySignedAt)}</p>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Pendente</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                       )}
                     </div>
                   </div>
@@ -1670,24 +1700,24 @@ export function Agreements() {
 
                 {}
                 {agreementDetail.asaasPaymentLink && (
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium mb-2">Link de Pagamento</h4>
+                  <div className="border-t pt-3 sm:pt-4">
+                    <h4 className="text-sm sm:text-base font-medium mb-2">Link de Pagamento</h4>
                     <a
                       href={agreementDetail.asaasPaymentLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
+                      className="text-xs sm:text-sm text-blue-600 hover:underline break-all"
                     >
                       {agreementDetail.asaasPaymentLink}
                     </a>
                     {agreementDetail.paymentStatus && (
-                      <p className="text-sm text-muted-foreground mt-1">Status: {agreementDetail.paymentStatus}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">Status: {agreementDetail.paymentStatus}</p>
                     )}
                   </div>
                 )}
 
                 {}
-                <div className="border-t pt-4 text-sm text-muted-foreground">
+                <div className="border-t pt-3 sm:pt-4 text-xs sm:text-sm text-muted-foreground">
                   <p>Criado por: {agreementDetail.createdByUser?.name || agreementDetail.createdByUser?.email}</p>
                   <p>Data de criacao: {formatDate(agreementDetail.createdAt || '')}</p>
                   {agreementDetail.approvedBy && (

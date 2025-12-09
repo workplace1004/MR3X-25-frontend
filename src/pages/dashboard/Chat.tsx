@@ -181,8 +181,8 @@ export function Chat() {
     if (chat.unreadCount && chat.unreadCount > 0) {
       try {
         await markAsReadMutation.mutateAsync(chat.id)
-      } catch (error) {
-
+      } catch {
+        // Silent fail - mark as read is not critical
       }
     }
   }

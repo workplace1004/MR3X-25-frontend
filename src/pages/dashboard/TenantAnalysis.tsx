@@ -315,42 +315,42 @@ const AnalysisDetailModal = ({
       return (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="w-5 h-5" />
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <User className="w-4 h-4 sm:w-5 sm:h-5" />
               Dados Básicos do CPF
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Nome</p>
-                <p className="font-medium">{data.name || '-'}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Nome</p>
+                <p className="font-medium text-sm sm:text-base">{data.name || '-'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant={data.status === 'REGULAR' ? 'default' : 'destructive'}>
+                <p className="text-xs sm:text-sm text-muted-foreground">Status</p>
+                <Badge variant={data.status === 'REGULAR' ? 'default' : 'destructive'} className="text-xs">
                   {data.status || '-'}
                 </Badge>
               </div>
-              <div className="col-span-2">
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-4 h-4" /> Endereço
+              <div className="col-span-1 sm:col-span-2">
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> Endereço
                 </p>
-                <p className="font-medium">
+                <p className="font-medium text-xs sm:text-sm">
                   {data.address ? `${data.address}, ${data.city || ''} - ${data.state || ''} ${data.zipCode ? `CEP: ${data.zipCode}` : ''}` : '-'}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Phone className="w-4 h-4" /> Telefone
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                  <Phone className="w-3 h-3 sm:w-4 sm:h-4" /> Telefone
                 </p>
-                <p className="font-medium">{data.phone || '-'}</p>
+                <p className="font-medium text-sm sm:text-base">{data.phone || '-'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-4 h-4" /> Data de Nascimento
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4" /> Data de Nascimento
                 </p>
-                <p className="font-medium">{data.birthDate ? data.birthDate.split('T')[0] : '-'}</p>
+                <p className="font-medium text-sm sm:text-base">{data.birthDate ? data.birthDate.split('T')[0] : '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -361,36 +361,36 @@ const AnalysisDetailModal = ({
       return (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
               Dados Básicos do CNPJ
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Razão Social</p>
-                <p className="font-medium">{data.companyName || '-'}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="col-span-1 sm:col-span-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">Razão Social</p>
+                <p className="font-medium text-sm sm:text-base break-words">{data.companyName || '-'}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant={data.status === 'ATIVA' ? 'default' : 'destructive'}>
+                <p className="text-xs sm:text-sm text-muted-foreground">Status</p>
+                <Badge variant={data.status === 'ATIVA' ? 'default' : 'destructive'} className="text-xs">
                   {data.status || '-'}
                 </Badge>
               </div>
-              <div className="col-span-2">
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-4 h-4" /> Endereço
+              <div className="col-span-1 sm:col-span-2">
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> Endereço
                 </p>
-                <p className="font-medium">
+                <p className="font-medium text-xs sm:text-sm">
                   {data.address ? `${data.address}, ${data.city || ''} - ${data.state || ''} ${data.zipCode ? `CEP: ${data.zipCode}` : ''}` : '-'}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Phone className="w-4 h-4" /> Telefone
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                  <Phone className="w-3 h-3 sm:w-4 sm:h-4" /> Telefone
                 </p>
-                <p className="font-medium">{data.phone || '-'}</p>
+                <p className="font-medium text-sm sm:text-base">{data.phone || '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -401,36 +401,38 @@ const AnalysisDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserSearch className="w-5 h-5" />
-            Análise de Inquilino - {analysis.name || analysis.document}
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <UserSearch className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="truncate">Análise - {analysis.name || formatCPFCNPJ(analysis.document)}</span>
           </DialogTitle>
           {analysis.token && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <Hash className="w-4 h-4" />
-              <span className="font-mono">{analysis.token}</span>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mt-1">
+              <Hash className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="font-mono truncate">{analysis.token}</span>
             </div>
           )}
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Basic Data Card */}
           {renderBasicData()}
 
           {/* Risk Score */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Score de Risco</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Score de Risco</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <RiskGauge score={analysis.riskScore} level={analysis.riskLevel} />
-                <div className="text-right space-y-2">
-                  {getRiskBadge(analysis.riskLevel)}
-                  {getRecommendationBadge(analysis.recommendation)}
-                  <p className="text-sm text-muted-foreground mt-2">
+                <div className="text-center sm:text-right space-y-2">
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-end">
+                    {getRiskBadge(analysis.riskLevel)}
+                    {getRecommendationBadge(analysis.recommendation)}
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                     {analysis.recommendationNotes}
                   </p>
                 </div>
@@ -438,140 +440,155 @@ const AnalysisDetailModal = ({
             </CardContent>
           </Card>
 
-          {}
-          <div className="grid grid-cols-5 gap-4">
-            <Card className="p-4">
+          {/* Summary Cards - Mobile Responsive */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
+            <Card className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
-                <DollarSign className="w-5 h-5 text-blue-600" />
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                 {getStatusIcon(analysis.summary.financialStatus)}
               </div>
-              <p className="text-sm font-medium mt-2">Financeiro</p>
-              <p className="text-xs text-muted-foreground">{analysis.summary.financialStatus}</p>
+              <p className="text-xs sm:text-sm font-medium mt-1 sm:mt-2">Financeiro</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{analysis.summary.financialStatus}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
-                <Shield className="w-5 h-5 text-purple-600" />
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 {getStatusIcon(analysis.summary.criminalStatus)}
               </div>
-              <p className="text-sm font-medium mt-2">Criminal</p>
-              <p className="text-xs text-muted-foreground">{analysis.summary.criminalStatus}</p>
+              <p className="text-xs sm:text-sm font-medium mt-1 sm:mt-2">Criminal</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{analysis.summary.criminalStatus}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
-                <Scale className="w-5 h-5 text-orange-600" />
+                <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                 {getStatusIcon(analysis.summary.judicialStatus)}
               </div>
-              <p className="text-sm font-medium mt-2">Judicial</p>
-              <p className="text-xs text-muted-foreground">{analysis.summary.judicialStatus}</p>
+              <p className="text-xs sm:text-sm font-medium mt-1 sm:mt-2">Judicial</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{analysis.summary.judicialStatus}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
-                <FileText className="w-5 h-5 text-amber-600" />
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
                 {getStatusIcon(analysis.summary.protestStatus)}
               </div>
-              <p className="text-sm font-medium mt-2">Protesto</p>
-              <p className="text-xs text-muted-foreground">{analysis.summary.protestStatus}</p>
+              <p className="text-xs sm:text-sm font-medium mt-1 sm:mt-2">Protesto</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{analysis.summary.protestStatus}</p>
             </Card>
-            <Card className="p-4">
+            <Card className="p-2 sm:p-4 col-span-2 sm:col-span-1">
               <div className="flex items-center justify-between">
-                <Fingerprint className="w-5 h-5 text-green-600" />
+                <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                 {getStatusIcon(analysis.summary.documentStatus)}
               </div>
-              <p className="text-sm font-medium mt-2">Documento</p>
-              <p className="text-xs text-muted-foreground">{analysis.summary.documentStatus}</p>
+              <p className="text-xs sm:text-sm font-medium mt-1 sm:mt-2">Documento</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{analysis.summary.documentStatus}</p>
             </Card>
           </div>
 
-          {}
+          {/* Financial Analysis */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
                 Análise Financeira
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Score de Crédito</p>
-                  <p className="text-2xl font-bold">{analysis.financial.creditScore || 'N/A'}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Score de Crédito</p>
+                  <p className="text-lg sm:text-2xl font-bold">{analysis.financial.creditScore || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Dívidas Totais</p>
-                  <p className="text-2xl font-bold">{formatCurrency(analysis.financial.totalDebts)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Dívidas Totais</p>
+                  <p className="text-sm sm:text-2xl font-bold">{formatCurrency(analysis.financial.totalDebts)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Dívidas Ativas</p>
-                  <p className="text-2xl font-bold">{analysis.financial.activeDebts}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Dívidas Ativas</p>
+                  <p className="text-lg sm:text-2xl font-bold">{analysis.financial.activeDebts}</p>
                 </div>
               </div>
               {analysis.financial.debtDetails.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Detalhes das Dívidas:</p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Credor</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Dias em Atraso</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {analysis.financial.debtDetails.map((debt, i) => (
-                        <TableRow key={i}>
-                          <TableCell>{debt.creditor}</TableCell>
-                          <TableCell>{formatCurrency(debt.amount)}</TableCell>
-                          <TableCell>{debt.daysOverdue} dias</TableCell>
+                  <p className="text-xs sm:text-sm font-medium mb-2">Detalhes das Dívidas:</p>
+                  {/* Desktop Table */}
+                  <div className="hidden sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Credor</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Dias em Atraso</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {analysis.financial.debtDetails.map((debt, i) => (
+                          <TableRow key={i}>
+                            <TableCell>{debt.creditor}</TableCell>
+                            <TableCell>{formatCurrency(debt.amount)}</TableCell>
+                            <TableCell>{debt.daysOverdue} dias</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {/* Mobile Cards */}
+                  <div className="sm:hidden space-y-2">
+                    {analysis.financial.debtDetails.map((debt, i) => (
+                      <div key={i} className="p-2 border rounded text-xs">
+                        <p className="font-medium truncate">{debt.creditor}</p>
+                        <div className="flex justify-between mt-1">
+                          <span>{formatCurrency(debt.amount)}</span>
+                          <span className="text-muted-foreground">{debt.daysOverdue} dias</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {}
+          {/* Background Check */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="w-5 h-5" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
                 Verificação de Antecedentes
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Registros Criminais</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">Registros Criminais</p>
                   {analysis.background.hasCriminalRecords ? (
                     <div className="space-y-2">
                       {analysis.background.criminalRecords.map((record, i) => (
                         <div key={i} className="p-2 bg-red-50 rounded border border-red-200">
-                          <p className="font-medium text-red-700">{record.type}</p>
-                          <p className="text-sm text-red-600">{record.description}</p>
+                          <p className="font-medium text-red-700 text-xs sm:text-sm">{record.type}</p>
+                          <p className="text-xs text-red-600">{record.description}</p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-green-600 flex items-center gap-1">
+                    <p className="text-green-600 flex items-center gap-1 text-xs sm:text-sm">
                       <CheckCircle className="w-4 h-4" /> Nenhum registro encontrado
                     </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Ações Judiciais</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">Ações Judiciais</p>
                   {analysis.background.hasJudicialRecords ? (
                     <div className="space-y-2">
                       {analysis.background.judicialRecords.map((record, i) => (
                         <div key={i} className={`p-2 rounded border ${record.isEviction ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
-                          <p className="font-medium">{record.type}</p>
-                          <p className="text-sm text-muted-foreground">{record.court}</p>
-                          <p className="text-xs">{record.processNumber}</p>
+                          <p className="font-medium text-xs sm:text-sm">{record.type}</p>
+                          <p className="text-xs text-muted-foreground">{record.court}</p>
+                          <p className="text-[10px] sm:text-xs truncate">{record.processNumber}</p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-green-600 flex items-center gap-1">
+                    <p className="text-green-600 flex items-center gap-1 text-xs sm:text-sm">
                       <CheckCircle className="w-4 h-4" /> Nenhum registro encontrado
                     </p>
                   )}
@@ -659,54 +676,54 @@ const AnalysisDetailModal = ({
             </CardContent>
           </Card>
 
-          {}
+          {/* Document Validation */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Fingerprint className="w-5 h-5" />
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5" />
                 Validação de Documento
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="flex items-center gap-2">
                   {analysis.documentValidation.documentValid ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-600" />
+                    <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
                   )}
-                  <span>Documento Válido</span>
+                  <span className="text-xs sm:text-sm">Documento Válido</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {analysis.documentValidation.documentActive ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-600" />
+                    <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
                   )}
-                  <span>Documento Ativo</span>
+                  <span className="text-xs sm:text-sm">Documento Ativo</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {analysis.documentValidation.documentOwnerMatch ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-600" />
+                    <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
                   )}
-                  <span>Titularidade OK</span>
+                  <span className="text-xs sm:text-sm">Titularidade OK</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {!analysis.documentValidation.hasFraudAlerts ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
                   ) : (
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
                   )}
-                  <span>Sem Alertas de Fraude</span>
+                  <span className="text-xs sm:text-sm">Sem Fraude</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {}
-          <div className="text-sm text-muted-foreground flex justify-between">
+          {/* Footer */}
+          <div className="text-xs sm:text-sm text-muted-foreground flex flex-col sm:flex-row justify-between gap-1">
             <span>Análise realizada em: {formatDate(analysis.analyzedAt)}</span>
             {analysis.validUntil && (
               <span>Válida até: {formatDate(analysis.validUntil)}</span>
@@ -884,61 +901,61 @@ export function TenantAnalysis() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Mobile Responsive */}
       {stats && (
-        <div className="grid grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="pt-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
+          <Card className="col-span-2 sm:col-span-1">
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total de Análises</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total de Análises</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
                 </div>
-                <FileText className="w-8 h-8 text-muted-foreground" />
+                <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Baixo Risco</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.byRiskLevel?.LOW || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Baixo Risco</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.byRiskLevel?.LOW || 0}</p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-green-600" />
+                <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Risco Moderado</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.byRiskLevel?.MEDIUM || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">Risco Modera.</p>
+                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.byRiskLevel?.MEDIUM || 0}</p>
                 </div>
-                <Shield className="w-8 h-8 text-yellow-600" />
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Alto Risco</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.byRiskLevel?.HIGH || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Alto Risco</p>
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600">{stats.byRiskLevel?.HIGH || 0}</p>
                 </div>
-                <TrendingDown className="w-8 h-8 text-orange-600" />
+                <TrendingDown className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:pt-6 sm:px-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Risco Crítico</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.byRiskLevel?.CRITICAL || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Risco Crítico</p>
+                  <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.byRiskLevel?.CRITICAL || 0}</p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+                <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
@@ -948,20 +965,21 @@ export function TenantAnalysis() {
       {/* New Analysis Form - Only visible if user can create */}
       {permissions.canCreate ? (
         <Card>
-          <CardHeader>
-            <CardTitle>Nova Análise</CardTitle>
-            <CardDescription>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl">Nova Análise</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Digite o CPF ou CNPJ do candidato para realizar uma análise completa
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAnalyzeClick} className="flex gap-4">
+            <form onSubmit={handleAnalyzeClick} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <Input
                   placeholder="CPF ou CNPJ"
                   value={document}
                   onChange={(e) => setDocument(formatCPFCNPJ(e.target.value))}
                   maxLength={18}
+                  className="text-sm sm:text-base"
                 />
               </div>
               <div className="flex-1">
@@ -969,18 +987,19 @@ export function TenantAnalysis() {
                   placeholder="Nome (opcional)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="text-sm sm:text-base"
                 />
               </div>
-              <Button type="submit" disabled={analyzeMutation.isPending}>
+              <Button type="submit" disabled={analyzeMutation.isPending} className="w-full sm:w-auto">
                 {analyzeMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Analisando...
+                    <span className="sm:inline">Analisando...</span>
                   </>
                 ) : (
                   <>
                     <Search className="w-4 h-4 mr-2" />
-                    Analisar
+                    <span>Analisar</span>
                   </>
                 )}
               </Button>
@@ -996,18 +1015,18 @@ export function TenantAnalysis() {
         </Alert>
       )}
 
-      {}
+      {/* History Section */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Histórico de Análises</CardTitle>
-            <div className="flex gap-2">
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">Histórico de Análises</CardTitle>
+            <div className="flex flex-wrap gap-2">
               <Select
                 value={filters.riskLevel || 'all'}
                 onValueChange={(value) => setFilters({ ...filters, riskLevel: value === 'all' ? '' : value, page: 1 })}
               >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Nível de Risco" />
+                <SelectTrigger className="w-[120px] sm:w-[150px] text-xs sm:text-sm">
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
@@ -1021,8 +1040,8 @@ export function TenantAnalysis() {
                 value={filters.status || 'all'}
                 onValueChange={(value) => setFilters({ ...filters, status: value === 'all' ? '' : value, page: 1 })}
               >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Status" />
+                <SelectTrigger className="w-[120px] sm:w-[150px] text-xs sm:text-sm">
+                  <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
@@ -1048,59 +1067,112 @@ export function TenantAnalysis() {
             </div>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Token</TableHead>
-                    <TableHead>Documento</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Nível de Risco</TableHead>
-                    <TableHead>Recomendação</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {history?.data?.map((item: HistoryItem) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-mono text-xs">{item.token || '-'}</TableCell>
-                      <TableCell className="font-mono">{item.document}</TableCell>
-                      <TableCell>{item.name || '-'}</TableCell>
-                      <TableCell>
-                        <span className="font-bold">{item.riskScore}</span>
-                        <span className="text-muted-foreground">/1000</span>
-                      </TableCell>
-                      <TableCell>{getRiskBadge(item.riskLevel)}</TableCell>
-                      <TableCell>{getRecommendationBadge(item.recommendation)}</TableCell>
-                      <TableCell>{item.analyzedAt ? formatDate(item.analyzedAt) : '-'}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewAnalysis(item.id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {(!history?.data || history.data.length === 0) && (
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        Nenhuma análise encontrada
-                      </TableCell>
+                      <TableHead>Token</TableHead>
+                      <TableHead>Documento</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Score</TableHead>
+                      <TableHead>Nível de Risco</TableHead>
+                      <TableHead>Recomendação</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {history?.data?.map((item: HistoryItem) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-mono text-xs">{item.token || '-'}</TableCell>
+                        <TableCell className="font-mono">{formatCPFCNPJ(item.document)}</TableCell>
+                        <TableCell>{item.name || '-'}</TableCell>
+                        <TableCell>
+                          <span className="font-bold">{item.riskScore}</span>
+                          <span className="text-muted-foreground">/1000</span>
+                        </TableCell>
+                        <TableCell>{getRiskBadge(item.riskLevel)}</TableCell>
+                        <TableCell>{getRecommendationBadge(item.recommendation)}</TableCell>
+                        <TableCell>{item.analyzedAt ? formatDate(item.analyzedAt) : '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewAnalysis(item.id)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(!history?.data || history.data.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          Nenhuma análise encontrada
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-              {}
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {history?.data?.map((item: HistoryItem) => (
+                  <Card key={item.id} className="p-3 border shadow-sm">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{item.name || 'Sem nome'}</p>
+                        <p className="text-xs font-mono text-muted-foreground">{formatCPFCNPJ(item.document)}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewAnalysis(item.id)}
+                        className="shrink-0"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    {item.token && (
+                      <p className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded mb-2 truncate">
+                        {item.token}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold">{item.riskScore}</span>
+                        <span className="text-xs text-muted-foreground">/1000</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 justify-end">
+                        {getRiskBadge(item.riskLevel)}
+                        {getRecommendationBadge(item.recommendation)}
+                      </div>
+                    </div>
+
+                    {item.analyzedAt && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {formatDate(item.analyzedAt)}
+                      </p>
+                    )}
+                  </Card>
+                ))}
+                {(!history?.data || history.data.length === 0) && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma análise encontrada
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination */}
               {history && history.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                     Mostrando {((filters.page - 1) * filters.limit) + 1} a{' '}
-                    {Math.min(filters.page * filters.limit, history.total)} de {history.total} resultados
+                    {Math.min(filters.page * filters.limit, history.total)} de {history.total}
                   </p>
                   <div className="flex gap-2">
                     <Button

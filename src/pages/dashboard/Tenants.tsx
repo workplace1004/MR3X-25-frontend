@@ -161,6 +161,30 @@ export function Tenants() {
     }
   }, [])
 
+  // All hooks must be called before any conditional returns
+  const isAdminOrCeo = user?.role === 'CEO' || user?.role === 'ADMIN'
+  const canLinkBrokers = user?.role === 'AGENCY_MANAGER' || user?.role === 'AGENCY_ADMIN'
+
+  const { data: tenants, isLoading } = useQuery({
+    queryKey: ['tenants', user?.id, user?.agencyId],
+    queryFn: () => usersAPI.getTenants(),
+    enabled: canViewUsers,
+    staleTime: 0,
+  })
+
+  const { data: agencies } = useQuery({
+    queryKey: ['agencies'],
+    queryFn: () => agenciesAPI.getAgencies(),
+    enabled: isAdminOrCeo,
+  })
+
+  const { data: _brokers } = useQuery({
+    queryKey: ['brokers'],
+    queryFn: () => usersAPI.getBrokers(),
+    enabled: canLinkBrokers,
+  })
+
+  // Permission check after all hooks
   if (!canViewUsers) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -171,27 +195,6 @@ export function Tenants() {
       </div>
     )
   }
-
-  const { data: tenants, isLoading } = useQuery({
-    queryKey: ['tenants', user?.id, user?.agencyId],
-    queryFn: () => usersAPI.getTenants(),
-    enabled: canViewUsers,
-    staleTime: 0,
-  })
-
-  const isAdminOrCeo = user?.role === 'CEO' || user?.role === 'ADMIN'
-  const { data: agencies } = useQuery({
-    queryKey: ['agencies'],
-    queryFn: () => agenciesAPI.getAgencies(),
-    enabled: isAdminOrCeo,
-  })
-
-  const canLinkBrokers = user?.role === 'AGENCY_MANAGER' || user?.role === 'AGENCY_ADMIN'
-  const { data: _brokers } = useQuery({
-    queryKey: ['brokers'],
-    queryFn: () => usersAPI.getBrokers(),
-    enabled: canLinkBrokers,
-  })
 
   const closeAllModals = () => {
     setShowCreateModal(false)
@@ -598,6 +601,9 @@ export function Tenants() {
                       <tr key={tenant.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                         <td className="p-4">
                           <div className="font-medium">{tenant.name || 'Sem nome'}</div>
+                          {tenant.token && (
+                            <div className="text-[10px] text-muted-foreground font-mono">{tenant.token}</div>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="text-muted-foreground">{tenant.phone || '-'}</div>
@@ -663,6 +669,9 @@ export function Tenants() {
                     <div className="flex items-start justify-between mb-3 min-w-0 gap-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg truncate">{tenant.name || 'Sem nome'}</h3>
+                        {tenant.token && (
+                          <p className="text-[10px] text-muted-foreground font-mono">{tenant.token}</p>
+                        )}
                         <p className="text-sm text-muted-foreground truncate">{tenant.email || '-'}</p>
                       </div>
                       <Badge className="bg-green-500 text-white text-xs flex-shrink-0">Ativo</Badge>
@@ -718,6 +727,9 @@ export function Tenants() {
                         <div className="flex-1 flex flex-col justify-between p-4 min-w-0 overflow-hidden">
                           <div className="min-w-0 space-y-1">
                             <h3 className="text-lg font-bold truncate" title={tenant.name || 'Sem nome'}>{tenant.name || 'Sem nome'}</h3>
+                            {tenant.token && (
+                              <p className="text-[10px] text-muted-foreground font-mono">{tenant.token}</p>
+                            )}
                             <p className="text-sm text-muted-foreground truncate" title={tenant.email}>
                               {tenant.email}
                             </p>
@@ -1239,6 +1251,12 @@ export function Tenants() {
                       <label className="text-sm font-medium text-muted-foreground">Nome</label>
                       <div className="text-base">{tenantDetail.name || '-'}</div>
                     </div>
+                    {tenantDetail.token && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Token</label>
+                        <div className="text-sm font-mono bg-muted px-2 py-1 rounded inline-block">{tenantDetail.token}</div>
+                      </div>
+                    )}
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Telefone</label>
                       <div className="text-base">{tenantDetail.phone || '-'}</div>

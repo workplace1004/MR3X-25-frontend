@@ -631,63 +631,70 @@ export function Inspections() {
           </div>
         </div>
 
-        {}
-        <div className="flex flex-wrap gap-4 p-4 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-2">
+        {/* Filters - Mobile Responsive */}
+        <div className="p-3 sm:p-4 bg-card border border-border rounded-lg space-y-3 sm:space-y-0">
+          <div className="flex items-center gap-2 mb-2 sm:mb-0 sm:hidden">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filtros:</span>
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="ENTRY">Entrada</SelectItem>
-              <SelectItem value="EXIT">Saída</SelectItem>
-              <SelectItem value="PERIODIC">Periódica</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="RASCUNHO">Rascunho</SelectItem>
-              <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
-              <SelectItem value="AGUARDANDO_ASSINATURA">Aguardando Assinatura</SelectItem>
-              <SelectItem value="CONCLUIDA">Concluída</SelectItem>
-              <SelectItem value="APROVADA">Aprovada</SelectItem>
-              <SelectItem value="REJEITADA">Rejeitada</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterProperty} onValueChange={setFilterProperty}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Imóvel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos imóveis</SelectItem>
-              {properties.map((property) => (
-                <SelectItem key={property.id} value={property.id?.toString()}>
-                  {property.name || property.address}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {(filterType && filterType !== 'all') || (filterStatus && filterStatus !== 'all') || (filterProperty && filterProperty !== 'all') ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setFilterType('');
-                setFilterStatus('');
-                setFilterProperty('');
-              }}
-            >
-              Limpar filtros
-            </Button>
-          ) : null}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 sm:items-center">
+            <div className="hidden sm:flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Filtros:</span>
+            </div>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-[150px] text-sm">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="ENTRY">Entrada</SelectItem>
+                <SelectItem value="EXIT">Saída</SelectItem>
+                <SelectItem value="PERIODIC">Periódica</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-[180px] text-sm">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="RASCUNHO">Rascunho</SelectItem>
+                <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
+                <SelectItem value="AGUARDANDO_ASSINATURA">Aguard. Assinatura</SelectItem>
+                <SelectItem value="CONCLUIDA">Concluída</SelectItem>
+                <SelectItem value="APROVADA">Aprovada</SelectItem>
+                <SelectItem value="REJEITADA">Rejeitada</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterProperty} onValueChange={setFilterProperty}>
+              <SelectTrigger className="w-full sm:w-[200px] text-sm">
+                <SelectValue placeholder="Imóvel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos imóveis</SelectItem>
+                {properties.map((property) => (
+                  <SelectItem key={property.id} value={property.id?.toString()}>
+                    {property.name || property.address}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(filterType && filterType !== 'all') || (filterStatus && filterStatus !== 'all') || (filterProperty && filterProperty !== 'all') ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFilterType('');
+                  setFilterStatus('');
+                  setFilterProperty('');
+                }}
+                className="w-full sm:w-auto"
+              >
+                Limpar filtros
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {}
@@ -802,48 +809,53 @@ export function Inspections() {
                 </table>
               </div>
 
-              {}
-              <div className="md:hidden">
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-border">
                 {inspections.map((inspection: Inspection) => (
-                  <div key={inspection.id} className="border-b border-border last:border-b-0 p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{inspection.property?.name || inspection.property?.address || 'Imóvel'}</h3>
-                        <p className="text-sm text-muted-foreground">{inspection.inspector?.name || 'Sem vistoriador'}</p>
+                  <div key={inspection.id} className="p-3 sm:p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">{inspection.property?.name || inspection.property?.address || 'Imóvel'}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{inspection.inspector?.name || 'Sem vistoriador'}</p>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 shrink-0">
                         {getTypeBadge(inspection.type)}
                         {getStatusBadge(inspection.status)}
                       </div>
                     </div>
 
-                    <div className="space-y-1 mb-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(inspection.date)}</span>
-                      </div>
+                    {/* Token display if exists */}
+                    {inspection.token && (
+                      <p className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded mb-2 truncate">
+                        {inspection.token}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatDate(inspection.date)}</span>
                     </div>
 
                     <div className="flex gap-2 flex-wrap">
-                      <Button size="sm" variant="outline" onClick={() => handleViewInspection(inspection)}>
-                        <Eye className="w-4 h-4 mr-1" />
+                      <Button size="sm" variant="outline" onClick={() => handleViewInspection(inspection)} className="text-xs h-8">
+                        <Eye className="w-3 h-3 mr-1" />
                         Ver
                       </Button>
                       {canUpdateInspections && inspection.status !== 'APROVADA' && !inspection.hasSignatures && (
-                        <Button size="sm" variant="outline" onClick={() => handleEditInspection(inspection)}>
-                          <Edit className="w-4 h-4 mr-1" />
+                        <Button size="sm" variant="outline" onClick={() => handleEditInspection(inspection)} className="text-xs h-8">
+                          <Edit className="w-3 h-3 mr-1" />
                           Editar
                         </Button>
                       )}
                       {inspection.hasSignatures && inspection.status !== 'APROVADA' && (
-                        <Button size="sm" variant="outline" disabled className="text-gray-400">
-                          <Lock className="w-4 h-4 mr-1" />
+                        <Button size="sm" variant="outline" disabled className="text-gray-400 text-xs h-8">
+                          <Lock className="w-3 h-3 mr-1" />
                           Bloqueado
                         </Button>
                       )}
                       {canDeleteInspections && inspection.status !== 'APROVADA' && !inspection.hasSignatures && (
-                        <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDeleteInspection(inspection)}>
-                          <Trash2 className="w-4 h-4" />
+                        <Button size="sm" variant="outline" className="text-red-600 text-xs h-8" onClick={() => handleDeleteInspection(inspection)}>
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       )}
                     </div>
@@ -1497,34 +1509,32 @@ export function Inspections() {
           </DialogContent>
         </Dialog>
 
-        {/* Detail Modal */}
+        {/* Detail Modal - Mobile Responsive */}
         <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle>Detalhes da Vistoria</DialogTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.print()}
-                    className="flex items-center gap-1"
-                  >
-                    <Printer className="w-4 h-4" />
-                    Imprimir
-                  </Button>
-                </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <DialogTitle className="text-base sm:text-lg">Detalhes da Vistoria</DialogTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1 w-fit"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span className="hidden sm:inline">Imprimir</span>
+                </Button>
               </div>
             </DialogHeader>
             {inspectionDetail && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Token Display */}
                 {inspectionDetail.token && (
-                  <div className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-xs text-orange-700">TOKEN DE VERIFICAÇÃO</Label>
-                        <p className="font-mono text-lg font-bold text-orange-800">{inspectionDetail.token}</p>
+                  <div className="p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-[10px] sm:text-xs text-orange-700">TOKEN DE VERIFICAÇÃO</Label>
+                        <p className="font-mono text-sm sm:text-lg font-bold text-orange-800 truncate">{inspectionDetail.token}</p>
                       </div>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -1535,7 +1545,7 @@ export function Inspections() {
                               navigator.clipboard.writeText(inspectionDetail.token || '');
                               toast.success('Token copiado para a área de transferência');
                             }}
-                            className="text-orange-700 hover:text-orange-800"
+                            className="text-orange-700 hover:text-orange-800 shrink-0"
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
@@ -1544,40 +1554,40 @@ export function Inspections() {
                       </Tooltip>
                     </div>
                     {inspectionDetail.hasSignatures && (
-                      <div className="flex items-center gap-2 mt-2 text-xs text-orange-700">
-                        <Lock className="w-3 h-3" />
-                        <span>Documento bloqueado para edição (possui assinaturas)</span>
+                      <div className="flex items-center gap-2 mt-2 text-[10px] sm:text-xs text-orange-700">
+                        <Lock className="w-3 h-3 shrink-0" />
+                        <span>Documento bloqueado (possui assinaturas)</span>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Basic Info */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Basic Info - Mobile Responsive Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Imóvel</Label>
-                    <p className="font-medium">{inspectionDetail.property?.name || inspectionDetail.property?.address}</p>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Imóvel</Label>
+                    <p className="font-medium text-sm sm:text-base truncate">{inspectionDetail.property?.name || inspectionDetail.property?.address}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Tipo</Label>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Tipo</Label>
                     <div>{getTypeBadge(inspectionDetail.type)}</div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Data</Label>
-                    <p className="font-medium">{formatDate(inspectionDetail.date)}</p>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Data</Label>
+                    <p className="font-medium text-sm sm:text-base">{formatDate(inspectionDetail.date)}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Status</Label>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Status</Label>
                     <div>{getStatusBadge(inspectionDetail.status)}</div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Vistoriador</Label>
-                    <p className="font-medium">{inspectionDetail.inspector?.name || 'Não atribuído'}</p>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Vistoriador</Label>
+                    <p className="font-medium text-sm sm:text-base">{inspectionDetail.inspector?.name || 'Não atribuído'}</p>
                   </div>
                   {inspectionDetail.scheduledDate && (
                     <div>
-                      <Label className="text-muted-foreground">Data Agendada</Label>
-                      <p className="font-medium">{formatDate(inspectionDetail.scheduledDate)}</p>
+                      <Label className="text-xs sm:text-sm text-muted-foreground">Data Agendada</Label>
+                      <p className="font-medium text-sm sm:text-base">{formatDate(inspectionDetail.scheduledDate)}</p>
                     </div>
                   )}
                 </div>
@@ -1585,8 +1595,8 @@ export function Inspections() {
                 {/* Notes */}
                 {inspectionDetail.notes && (
                   <div>
-                    <Label className="text-muted-foreground">Observações</Label>
-                    <p className="mt-1 p-3 bg-muted rounded-lg">{inspectionDetail.notes}</p>
+                    <Label className="text-xs sm:text-sm text-muted-foreground">Observações</Label>
+                    <p className="mt-1 p-2 sm:p-3 bg-muted rounded-lg text-xs sm:text-sm">{inspectionDetail.notes}</p>
                   </div>
                 )}
 
@@ -1631,62 +1641,62 @@ export function Inspections() {
                   }
                 })()}
 
-                {}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-3 border rounded-lg text-center">
-                    <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Inquilino</Label>
+                {/* Signatures - Mobile Responsive */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  <div className="p-2 sm:p-3 border rounded-lg text-center">
+                    <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">Inquilino</Label>
                     {inspectionDetail.tenantSignedAt ? (
-                      <p className="text-xs text-green-600">Assinado em {formatDate(inspectionDetail.tenantSignedAt)}</p>
+                      <p className="text-[10px] sm:text-xs text-green-600">Assinado</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Pendente</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                     )}
                   </div>
-                  <div className="p-3 border rounded-lg text-center">
-                    <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Imóvel</Label>
+                  <div className="p-2 sm:p-3 border rounded-lg text-center">
+                    <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">Proprietário</Label>
                     {inspectionDetail.ownerSignedAt ? (
-                      <p className="text-xs text-green-600">Assinado em {formatDate(inspectionDetail.ownerSignedAt)}</p>
+                      <p className="text-[10px] sm:text-xs text-green-600">Assinado</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Pendente</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                     )}
                   </div>
-                  <div className="p-3 border rounded-lg text-center">
-                    <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Agência</Label>
+                  <div className="p-2 sm:p-3 border rounded-lg text-center">
+                    <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">Agência</Label>
                     {inspectionDetail.agencySignedAt ? (
-                      <p className="text-xs text-green-600">Assinado em {formatDate(inspectionDetail.agencySignedAt)}</p>
+                      <p className="text-[10px] sm:text-xs text-green-600">Assinado</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Pendente</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                     )}
                   </div>
-                  <div className="p-3 border rounded-lg text-center">
-                    <PenTool className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Vistoriador</Label>
+                  <div className="p-2 sm:p-3 border rounded-lg text-center">
+                    <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">Vistoriador</Label>
                     {inspectionDetail.inspectorSignedAt ? (
-                      <p className="text-xs text-green-600">Assinado em {formatDate(inspectionDetail.inspectorSignedAt)}</p>
+                      <p className="text-[10px] sm:text-xs text-green-600">Assinado</p>
                     ) : (
-                      <p className="text-xs text-muted-foreground">Pendente</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                     )}
                   </div>
                 </div>
 
-                {/* Inspection Items with Photos */}
+                {/* Inspection Items with Photos - Mobile Responsive */}
                 {inspectionDetail.items && inspectionDetail.items.length > 0 && (
                   <div>
-                    <Label className="text-muted-foreground mb-2 block">Itens da Vistoria ({inspectionDetail.items.length})</Label>
-                    <div className="space-y-4">
+                    <Label className="text-xs sm:text-sm text-muted-foreground mb-2 block">Itens da Vistoria ({inspectionDetail.items.length})</Label>
+                    <div className="space-y-3 sm:space-y-4">
                       {inspectionDetail.items.map((item: InspectionItem, index: number) => (
-                        <div key={index} className="p-4 border rounded-lg space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-medium">{item.room} - {item.item}</p>
-                              {item.description && <p className="text-sm text-muted-foreground mt-1">{item.description}</p>}
+                        <div key={index} className="p-3 sm:p-4 border rounded-lg space-y-2 sm:space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm sm:text-base">{item.room} - {item.item}</p>
+                              {item.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1">{item.description}</p>}
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               {getConditionBadge(item.condition)}
                               {item.responsible && (
-                                <Badge variant="outline">{item.responsible}</Badge>
+                                <Badge variant="outline" className="text-xs">{item.responsible}</Badge>
                               )}
                             </div>
                           </div>
