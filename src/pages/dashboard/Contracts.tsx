@@ -18,8 +18,10 @@ import {
   User,
   Clock,
   List,
-  Grid3X3
+  Grid3X3,
+  Printer
 } from 'lucide-react';
+import html2pdf from 'html2pdf.js';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
@@ -118,6 +120,91 @@ export function Contracts() {
     const random1 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     const random2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     return `MR3X-${templateType || 'CTR'}-${year}-${random1}-${random2}`;
+  };
+
+  // Handle contract preview PDF download
+  const handleDownloadPreviewPDF = () => {
+    const element = document.getElementById('contract-preview-content');
+    if (!element) {
+      toast.error('Erro ao gerar PDF');
+      return;
+    }
+
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename: `contrato-previa-${previewToken || 'draft'}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      toast.success('PDF baixado com sucesso!');
+    }).catch(() => {
+      toast.error('Erro ao gerar PDF');
+    });
+  };
+
+  // Handle contract preview print
+  const handlePrintPreview = () => {
+    const element = document.getElementById('contract-preview-content');
+    if (!element) {
+      toast.error('Erro ao imprimir');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Erro ao abrir janela de impressão. Verifique se pop-ups estão permitidos.');
+      return;
+    }
+
+    const styles = `
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .prose { max-width: 100%; }
+        .font-bold { font-weight: bold; }
+        .font-semibold { font-weight: 600; }
+        .my-1 { margin: 4px 0; }
+        .my-2 { margin: 8px 0; }
+        .bg-muted { background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .font-mono { font-family: monospace; }
+        .border { border: 1px solid #e5e5e5; }
+        .rounded-lg { border-radius: 8px; }
+        .p-4, .p-6 { padding: 16px; }
+        .mb-2 { margin-bottom: 8px; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .gap-4 { gap: 16px; }
+        @media print {
+          body { margin: 0; padding: 10mm; }
+        }
+      </style>
+    `;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Prévia do Contrato - ${previewToken || 'Draft'}</title>
+          ${styles}
+        </head>
+        <body>
+          ${element.innerHTML}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
   };
 
   if (!canViewContracts) {
@@ -320,9 +407,224 @@ export function Contracts() {
 
   const handleViewContract = async (contract: any) => {
     closeAllModals();
-    setSelectedContract(contract);
-    setContractDetail(contract);
-    setShowDetailModal(true);
+    setLoading(true);
+
+    try {
+      // Get full contract details
+      const fullContract = await contractsAPI.getContractById(contract.id.toString());
+
+      if (!fullContract) {
+        toast.error('Contrato não encontrado');
+        return;
+      }
+
+      setSelectedContract(fullContract);
+      setContractDetail(fullContract);
+
+      // Try to generate preview if template exists
+      if (fullContract.templateId && templates && templates.length > 0) {
+        const template = templates.find((t: any) => t.id?.toString() === fullContract.templateId?.toString());
+
+        if (template) {
+          // Generate preview for existing contract
+          generateContractPreview(template, fullContract);
+          setShowPreviewModal(true);
+        } else {
+          // Template not found, show simple detail modal
+          setShowDetailModal(true);
+        }
+      } else {
+        // No template, show simple detail modal
+        setShowDetailModal(true);
+      }
+    } catch (error: any) {
+      console.error('Error loading contract:', error);
+      toast.error(error?.message || 'Erro ao carregar contrato');
+      // Fallback to simple detail modal
+      setContractDetail(contract);
+      setShowDetailModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate preview for an existing contract (different from newContract preview)
+  const generateContractPreview = (template: any, contractData: any) => {
+    if (!template || !contractData) return;
+
+    // Get related data
+    const contractProperty = contractData.property || properties.find((p: any) =>
+      p.id?.toString() === contractData.propertyId?.toString()
+    );
+    const contractTenant = contractData.tenantUser || tenants.find((t: any) =>
+      t.id?.toString() === contractData.tenantId?.toString()
+    );
+    const contractOwner = contractData.ownerUser || contractProperty?.owner || {};
+
+    const calculateMonths = (start: string, end: string) => {
+      if (!start || !end) return '';
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+      return months.toString();
+    };
+
+    let content = template.content;
+
+    // Format address helper
+    const formatAddress = (obj: any) => {
+      if (!obj) return '';
+      const parts = [obj.address, obj.number, obj.complement, obj.neighborhood, obj.city, obj.state, obj.cep, obj.zipCode].filter(Boolean);
+      return parts.join(', ');
+    };
+
+    // Format CPF/CNPJ helper
+    const formatDocument = (doc: string | null | undefined) => {
+      if (!doc) return '';
+      const cleaned = doc.replace(/\D/g, '');
+      if (cleaned.length === 11) {
+        return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      } else if (cleaned.length === 14) {
+        return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+      return doc;
+    };
+
+    // Helper functions for contract data
+    const getIndexName = (index: string): string => {
+      const names: Record<string, string> = {
+        'IGPM': 'IGP-M (Índice Geral de Preços - Mercado)',
+        'IPCA': 'IPCA (Índice Nacional de Preços ao Consumidor Amplo)',
+        'INPC': 'INPC (Índice Nacional de Preços ao Consumidor)',
+        'IGP-DI': 'IGP-DI (Índice Geral de Preços - Disponibilidade Interna)',
+      };
+      return names[index] || index || 'IGP-M';
+    };
+
+    const getGuaranteeTypeName = (type: string): string => {
+      const names: Record<string, string> = {
+        'CAUCAO': 'Caução em dinheiro',
+        'FIADOR': 'Fiador',
+        'SEGURO': 'Seguro-fiança',
+        'TITULO': 'Título de capitalização',
+        'NENHUMA': 'Sem garantia',
+      };
+      return names[type] || type || '';
+    };
+
+    const formatDateExtensive = (dateStr: string): string => {
+      const months = [
+        'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+      ];
+      try {
+        const date = new Date(dateStr);
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day} de ${month} de ${year}`;
+      } catch {
+        return '';
+      }
+    };
+
+    const replacements: Record<string, string> = {
+      // Corretor/Broker
+      NOME_CORRETOR: agencyData?.name || user?.name || '',
+      CRECI_CORRETOR: contractData.creci || agencyData?.creci || '',
+
+      // Locador (Owner) - PF
+      NOME_LOCADOR: contractOwner?.name || '',
+      CPF_LOCADOR: formatDocument(contractOwner?.document) || '',
+      ENDERECO_LOCADOR: formatAddress(contractOwner) || '',
+      EMAIL_LOCADOR: contractOwner?.email || '',
+      TELEFONE_LOCADOR: contractOwner?.phone || contractOwner?.mobilePhone || '',
+
+      // Locador (Owner) - PJ
+      RAZAO_SOCIAL_LOCADOR: contractOwner?.companyName || contractOwner?.name || '',
+      CNPJ_LOCADOR: formatDocument(contractOwner?.cnpj || contractOwner?.document) || '',
+      REPRESENTANTE_LOCADOR: contractOwner?.representativeName || contractOwner?.name || '',
+      CPF_REPRESENTANTE_LOCADOR: formatDocument(contractOwner?.representativeDocument || contractOwner?.document) || '',
+      CARGO_LOCADOR: contractOwner?.representativePosition || '',
+
+      // Locatário (Tenant) - PF
+      NOME_LOCATARIO: contractTenant?.name || '',
+      CPF_LOCATARIO: formatDocument(contractTenant?.document) || '',
+      ENDERECO_LOCATARIO: formatAddress(contractTenant) || '',
+      EMAIL_LOCATARIO: contractTenant?.email || '',
+      TELEFONE_LOCATARIO: contractTenant?.phone || contractTenant?.mobilePhone || '',
+
+      // Locatário (Tenant) - PJ
+      RAZAO_SOCIAL_LOCATARIO: contractTenant?.companyName || contractTenant?.name || '',
+      CNPJ_LOCATARIO: formatDocument(contractTenant?.cnpj || contractTenant?.document) || '',
+      REPRESENTANTE_LOCATARIO: contractTenant?.representativeName || contractTenant?.name || '',
+      CPF_REPRESENTANTE_LOCATARIO: formatDocument(contractTenant?.representativeDocument || contractTenant?.document) || '',
+      CARGO_LOCATARIO: contractTenant?.representativePosition || '',
+
+      // Imóvel (Property)
+      ENDERECO_IMOVEL: formatAddress(contractProperty) || contractProperty?.address || '',
+      DESCRICAO_IMOVEL: contractProperty?.description || contractProperty?.name || '',
+      MATRICULA: contractProperty?.registrationNumber || '',
+
+      // Imobiliária (Agency)
+      RAZAO_SOCIAL_IMOBILIARIA: agencyData?.name || contractData.agency?.name || '',
+      CNPJ_IMOBILIARIA: formatDocument(agencyData?.cnpj || contractData.agency?.cnpj) || '',
+      NUMERO_CRECI: agencyData?.creci || contractData.creci || '',
+      ENDERECO_IMOBILIARIA: formatAddress(agencyData || contractData.agency) || '',
+      EMAIL_IMOBILIARIA: agencyData?.email || contractData.agency?.email || '',
+      TELEFONE_IMOBILIARIA: agencyData?.phone || contractData.agency?.phone || '',
+      REPRESENTANTE_IMOBILIARIA: agencyData?.representativeName || '',
+      CPF_REPRESENTANTE_IMOBILIARIA: formatDocument(agencyData?.representativeDocument) || '',
+
+      // Contrato (Contract)
+      PRAZO_MESES: calculateMonths(contractData.startDate, contractData.endDate),
+      DATA_INICIO: contractData.startDate ? new Date(contractData.startDate).toLocaleDateString('pt-BR') : '',
+      DATA_FIM: contractData.endDate ? new Date(contractData.endDate).toLocaleDateString('pt-BR') : '',
+      VALOR_ALUGUEL: contractData.monthlyRent ? `R$ ${parseFloat(contractData.monthlyRent).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
+      DIA_VENCIMENTO: contractData.dueDay?.toString() || '5',
+      DEPOSITO_CAUCAO: contractData.deposit ? `R$ ${parseFloat(contractData.deposit).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
+
+      // Índice de Reajuste
+      INDICE_REAJUSTE: getIndexName(contractData.readjustmentIndex || 'IGPM'),
+
+      // Tipo de Garantia
+      TIPO_GARANTIA: getGuaranteeTypeName(contractData.guaranteeType || ''),
+
+      // Multas e Juros
+      MULTA_ATRASO: `${contractData.lateFeePercent || '10'}%`,
+      JUROS_MORA: `${contractData.interestRatePercent || '1'}%`,
+      PERCENTUAL_MULTA_ATRASO: contractData.lateFeePercent?.toString() || '10',
+      PERCENTUAL_JUROS_MORA: contractData.interestRatePercent?.toString() || '1',
+
+      // Multa por Rescisão
+      MULTA_RESCISAO: contractData.earlyTerminationPenaltyPercent
+        ? `${contractData.earlyTerminationPenaltyPercent}% do valor restante`
+        : '3 meses de aluguel',
+      MESES_MULTA_RESCISAO: '3',
+
+      // Características do Imóvel
+      CARACTERISTICAS_IMOVEL: contractData.propertyCharacteristics || '',
+      DESCRICAO_VISTORIA: contractData.propertyCharacteristics || '',
+
+      // Localização e Jurisdição
+      COMARCA: contractData.jurisdiction || contractProperty?.city || '',
+      FORO: contractData.jurisdiction || contractProperty?.city || '',
+      CIDADE: contractProperty?.city || '',
+
+      // Datas
+      DATA_CONTRATO: contractData.createdAt ? new Date(contractData.createdAt).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+      DATA_ASSINATURA: contractData.tenantSignedAt ? new Date(contractData.tenantSignedAt).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+      DATA_ACEITE: new Date().toLocaleDateString('pt-BR'),
+      DATA_EXTENSO: formatDateExtensive(contractData.createdAt || new Date().toISOString()),
+    };
+
+    for (const [key, value] of Object.entries(replacements)) {
+      content = content.replace(new RegExp(`\\[${key}\\]`, 'g'), value || '');
+    }
+
+    // Use the contract's actual token
+    setPreviewToken(contractData.contractToken || '');
+    setPreviewContent(content);
   };
 
   const handleEditContract = async (contract: any) => {
@@ -1539,7 +1841,7 @@ export function Contracts() {
               <DialogDescription>Visualize como ficará o contrato com as informações preenchidas.</DialogDescription>
             </DialogHeader>
             {previewContent ? (
-              <div className="space-y-4">
+              <div id="contract-preview-content" className="space-y-4">
                 {}
                 <div className="bg-muted p-4 rounded-lg border">
                   <h3 className="font-semibold mb-2">Informações de Segurança</h3>
@@ -1550,12 +1852,12 @@ export function Contracts() {
                     </div>
                     <div>
                       <span className="font-medium">CRECI:</span>{' '}
-                      <span className={!newContract.creci ? 'text-red-500 font-semibold' : ''}>
-                        {newContract.creci || '⚠️ OBRIGATÓRIO'}
+                      <span className={!(selectedContract?.creci || newContract.creci || agencyData?.creci) ? 'text-red-500 font-semibold' : ''}>
+                        {selectedContract?.creci || newContract.creci || agencyData?.creci || '⚠️ OBRIGATÓRIO'}
                       </span>
                     </div>
                   </div>
-                  {!newContract.creci && (
+                  {!(selectedContract?.creci || newContract.creci || agencyData?.creci) && (
                     <p className="text-red-500 text-xs mt-2">
                       * O CRECI do corretor é obrigatório por lei para validade do contrato
                     </p>
@@ -1607,7 +1909,15 @@ export function Contracts() {
                 Selecione um modelo de contrato e preencha os dados para visualizar a prévia
               </p>
             )}
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleDownloadPreviewPDF} disabled={!previewContent}>
+                <Download className="w-4 h-4 mr-2" />
+                Baixar PDF
+              </Button>
+              <Button variant="outline" onClick={handlePrintPreview} disabled={!previewContent}>
+                <Printer className="w-4 h-4 mr-2" />
+                Imprimir
+              </Button>
               <Button variant="outline" onClick={() => setShowPreviewModal(false)}>
                 Fechar
               </Button>
