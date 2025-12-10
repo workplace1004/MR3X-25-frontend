@@ -266,6 +266,37 @@ export function Contracts() {
     }
   }, [agencyData?.creci]);
 
+  // Regenerate preview when form fields change and a template is selected
+  useEffect(() => {
+    if (selectedTemplate) {
+      generatePreview(selectedTemplate);
+    }
+  }, [
+    selectedTemplate,
+    newContract.propertyId,
+    newContract.tenantId,
+    newContract.startDate,
+    newContract.endDate,
+    newContract.monthlyRent,
+    newContract.deposit,
+    newContract.dueDay,
+    newContract.creci,
+    newContract.readjustmentIndex,
+    newContract.customReadjustmentIndex,
+    newContract.guaranteeType,
+    newContract.latePaymentPenaltyPercent,
+    newContract.monthlyInterestPercent,
+    newContract.earlyTerminationPenaltyMonths,
+    newContract.earlyTerminationFixedValue,
+    newContract.useFixedTerminationValue,
+    newContract.propertyCharacteristics,
+    newContract.jurisdiction,
+    newContract.contractDate,
+    properties,
+    tenants,
+    agencyData
+  ]);
+
   const closeAllModals = () => {
     setShowCreateModal(false);
     setShowEditModal(false);
@@ -942,22 +973,26 @@ export function Contracts() {
           return pId === vId;
         });
         if (selectedProperty) {
-          
+
           if (selectedProperty.monthlyRent) {
             updated.monthlyRent = selectedProperty.monthlyRent.toString();
           }
-          
+
           if (selectedProperty.dueDay) {
             updated.dueDay = selectedProperty.dueDay.toString();
           }
-          
+
           if (selectedProperty.tenantId) {
             const tenantIdStr = selectedProperty.tenantId?.toString() || String(selectedProperty.tenantId);
             updated.tenantId = tenantIdStr;
           }
-          
+
           if (selectedProperty.deposit) {
             updated.deposit = selectedProperty.deposit.toString();
+          }
+
+          if (selectedProperty.city) {
+            updated.jurisdiction = selectedProperty.city;
           }
         }
       }
@@ -1468,7 +1503,21 @@ export function Contracts() {
                   <Label htmlFor="propertyId">Imóvel</Label>
                   <Select
                     value={newContract.propertyId}
-                    onValueChange={(value) => setNewContract(prev => ({ ...prev, propertyId: value }))}
+                    onValueChange={(value) => {
+                      const selectedProperty = properties.find(p => {
+                        const pId = p.id?.toString() || String(p.id);
+                        return pId === value;
+                      });
+                      setNewContract(prev => ({
+                        ...prev,
+                        propertyId: value,
+                        ...(selectedProperty?.monthlyRent && { monthlyRent: selectedProperty.monthlyRent.toString() }),
+                        ...(selectedProperty?.dueDay && { dueDay: selectedProperty.dueDay.toString() }),
+                        ...(selectedProperty?.tenantId && { tenantId: selectedProperty.tenantId.toString() }),
+                        ...(selectedProperty?.deposit && { deposit: selectedProperty.deposit.toString() }),
+                        ...(selectedProperty?.city && { jurisdiction: selectedProperty.city }),
+                      }));
+                    }}
                   >
                     <SelectTrigger className="[&>span]:text-left [&>span]:truncate">
                       <SelectValue placeholder="Selecione um imóvel" />
@@ -1781,31 +1830,6 @@ export function Contracts() {
                   placeholder="Descreva as condições e características do imóvel conforme vistoria: estado de conservação, instalações, equipamentos, mobília, etc."
                 />
                 <p className="text-xs text-muted-foreground mt-1">Dados da vistoria do imóvel que serão incluídos no contrato</p>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Observações Adicionais</Label>
-                <Input
-                  id="description"
-                  name="description"
-                  value={newContract.description}
-                  onChange={handleInputChange}
-                  placeholder="Descrição do contrato"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pdf">Upload PDF do Contrato (opcional)</Label>
-                <Input
-                  id="pdf"
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                  className="cursor-pointer"
-                />
-                {pdfFile && (
-                  <p className="text-sm text-green-600 mt-1">✓ {pdfFile.name}</p>
-                )}
               </div>
 
               <div className="flex justify-between gap-2">
