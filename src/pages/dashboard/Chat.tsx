@@ -246,7 +246,7 @@ export function Chat() {
                       chats?.map((chat: any) => (
                         <div
                           key={chat.id}
-                          className={`mb-2 mx-2 cursor-pointer border rounded-lg ${
+                          className={`mt-2 mx-2 cursor-pointer border rounded-lg ${
                             selectedChat?.id === chat.id ? 'border-primary' : 'border-border'
                           }`}
                         >
