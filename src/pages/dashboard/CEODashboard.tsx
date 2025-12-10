@@ -451,7 +451,7 @@ export function CEODashboard() {
               {dashboard.topAgencies.map((agency: any) => (
                 <div
                   key={agency.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-lg gap-3"
                 >
                   <div>
                     <p className="font-medium">{agency.name}</p>
@@ -459,18 +459,18 @@ export function CEODashboard() {
                       Plano: <span className="capitalize">{agency.plan}</span>
                     </p>
                   </div>
-                  <div className="flex gap-6 text-sm">
+                  <div className="flex gap-4 sm:gap-6 text-sm">
                     <div className="text-center">
                       <p className="font-semibold text-blue-600">{agency.propertyCount}</p>
-                      <p className="text-muted-foreground">Imóveis</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Imóveis</p>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold text-cyan-600">{agency.userCount}</p>
-                      <p className="text-muted-foreground">Usuários</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Usuários</p>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold text-green-600">{agency.contractCount}</p>
-                      <p className="text-muted-foreground">Contratos</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Contratos</p>
                     </div>
                   </div>
                 </div>
@@ -484,15 +484,15 @@ export function CEODashboard() {
       {dashboard?.pendingPayments && dashboard.pendingPayments.length > 0 && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-500" />
                   Pagamentos Pendentes
                 </CardTitle>
-                <CardDescription>Contratos com pagamentos em atraso</CardDescription>
+                <CardDescription className='mt-1'>Contratos com pagamentos em atraso</CardDescription>
               </div>
-              <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium w-fit">
                 {dashboard.pendingPayments.length} pendentes
               </span>
             </div>
@@ -502,7 +502,7 @@ export function CEODashboard() {
               {dashboard.pendingPayments.slice(0, 5).map((payment: any) => (
                 <div
                   key={payment.contractId}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-lg gap-2"
                 >
                   <div>
                     <p className="font-medium">{payment.property?.name || payment.property?.address || '-'}</p>
@@ -511,7 +511,7 @@ export function CEODashboard() {
                       {payment.agency?.name && ` • ${payment.agency.name}`}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <p className="font-semibold text-red-500">
                       {formatCurrency(Number(payment.monthlyRent || 0))}
                     </p>
@@ -543,7 +543,7 @@ export function CEODashboard() {
               {dashboard.recentPayments.slice(0, 5).map((payment: any) => (
                 <div
                   key={payment.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-lg gap-2"
                 >
                   <div>
                     <p className="font-medium">{payment.property?.name || payment.property?.address || '-'}</p>
@@ -552,7 +552,7 @@ export function CEODashboard() {
                       {payment.agency?.name && ` • ${payment.agency.name}`}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right">
                     <p className="font-semibold text-green-500">
                       {formatCurrency(Number(payment.amount || 0))}
                     </p>
