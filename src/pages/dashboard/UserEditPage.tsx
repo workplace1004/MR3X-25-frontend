@@ -309,6 +309,8 @@ export function UserEditPage() {
                   value={formData.plan}
                   onChange={(e) => handleInputChange('plan', e.target.value)}
                   placeholder="Plano do usuário"
+                  disabled
+                  className="bg-gray-50"
                 />
               </div>
 
@@ -335,33 +337,33 @@ export function UserEditPage() {
             </div>
 
             {}
-            <div className="space-y-3 sm:space-y-4">
-              <Label className="text-sm sm:text-base font-medium">Preferências de Notificação</Label>
+            <div className="border rounded-lg p-4 space-y-3 bg-gray-50/50">
+              <Label className="text-sm font-medium">Preferências de Notificação</Label>
               <div className="space-y-3">
-                <div className="flex items-center space-x-2">
+                <label htmlFor="email-notifications" className="flex items-center space-x-3 cursor-pointer">
                   <Checkbox
                     id="email-notifications"
                     checked={formData.notificationPreferences?.email || false}
                     onCheckedChange={(checked) => handleNotificationChange('email', checked as boolean)}
                   />
-                  <Label htmlFor="email-notifications" className="text-sm">Notificações por email</Label>
-                </div>
-                <div className="flex items-center space-x-2">
+                  <span className="text-sm">Notificações por email</span>
+                </label>
+                <label htmlFor="whatsapp-notifications" className="flex items-center space-x-3 cursor-pointer">
                   <Checkbox
                     id="whatsapp-notifications"
                     checked={formData.notificationPreferences?.whatsapp || false}
                     onCheckedChange={(checked) => handleNotificationChange('whatsapp', checked as boolean)}
                   />
-                  <Label htmlFor="whatsapp-notifications" className="text-sm">Notificações por WhatsApp</Label>
-                </div>
-                <div className="flex items-center space-x-2">
+                  <span className="text-sm">Notificações por WhatsApp</span>
+                </label>
+                <label htmlFor="push-notifications" className="flex items-center space-x-3 cursor-pointer">
                   <Checkbox
                     id="push-notifications"
                     checked={formData.notificationPreferences?.push || false}
                     onCheckedChange={(checked) => handleNotificationChange('push', checked as boolean)}
                   />
-                  <Label htmlFor="push-notifications" className="text-sm">Notificações push</Label>
-                </div>
+                  <span className="text-sm">Notificações push</span>
+                </label>
               </div>
             </div>
 

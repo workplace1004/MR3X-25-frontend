@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usersAPI } from '../../api';
-import { Plus, Search, Filter, RefreshCw, Eye, Edit, UserCheck, UserX, Users } from 'lucide-react';
+import { Plus, Search, Eye, Edit, UserCheck, UserX, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
@@ -56,7 +56,7 @@ export function UsersPage() {
 
   useEffect(() => {
     load();
-  }, [page, allowAccess]);
+  }, [page, allowAccess, search, role, status, plan]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -156,25 +156,15 @@ export function UsersPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div className="flex items-center gap-2 md:col-span-2">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Nome / Email / CPF-CNPJ"
-              className="w-full pl-9 pr-3 py-2 border rounded-md"
-            />
-          </div>
-          <Button variant="outline" onClick={() => { setPage(1); load(); }}>
-            <Filter className="w-4 h-4 mr-2" />
-            Filtrar
-          </Button>
-          <Button variant="outline" onClick={() => { setSearch(''); setRole(''); setStatus(''); setPlan(''); setPage(1); load(); }}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Limpar
-          </Button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="relative sm:col-span-2 lg:col-span-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Nome / Email / CPF-CNPJ"
+            className="w-full pl-9 pr-3 py-2 border rounded-md"
+          />
         </div>
         <Select value={role || 'all'} onValueChange={(v) => setRole(v === 'all' ? '' : v)}>
           <SelectTrigger>
@@ -263,6 +253,10 @@ export function UsersPage() {
                 <Badge className={getRoleColor(u.role)}>{u.role}</Badge>
               </div>
               <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium text-muted-foreground">Plano:</span>
+                <Badge variant="outline">{u.plan || '-'}</Badge>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-muted-foreground">Status:</span>
                 <Badge className={getStatusColor(u.status)}>{u.status}</Badge>
                 {u.isFrozen && <FrozenUserBadge reason={u.frozenReason} />}
@@ -319,6 +313,9 @@ export function UsersPage() {
                   Função
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Plano
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider text-center">
@@ -329,7 +326,7 @@ export function UsersPage() {
             <tbody className="bg-card divide-y divide-border">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12">
+                  <td colSpan={6} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center text-center">
                       <div className="p-4 bg-muted rounded-full mb-4">
                         <Users className="w-12 h-12 text-muted-foreground" />
@@ -357,6 +354,9 @@ export function UsersPage() {
                     </td>
                     <td className="px-4 py-2">
                       <Badge className={getRoleColor(u.role)}>{u.role}</Badge>
+                    </td>
+                    <td className="px-4 py-2">
+                      <Badge variant="outline">{u.plan || '-'}</Badge>
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
