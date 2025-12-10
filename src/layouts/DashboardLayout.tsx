@@ -394,7 +394,7 @@ export function DashboardLayout() {
   });
 
   return (
-    <div className="bg-background">
+    <div className="min-h-screen bg-background">
       {}
       <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-border">
         <div className="flex items-center justify-between p-4">
@@ -538,8 +538,8 @@ export function DashboardLayout() {
       </div>
 
       {}
-      <div className="lg:pl-64">
-        <main className="pt-4 lg:pt-6 p-4 lg:p-8 bg-gray-50">
+      <div className="lg:pl-64 min-h-screen">
+        <main className="min-h-screen pt-4 lg:pt-6 p-4 lg:p-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
