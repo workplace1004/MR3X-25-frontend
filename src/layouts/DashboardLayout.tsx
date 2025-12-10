@@ -539,7 +539,7 @@ export function DashboardLayout() {
 
       {}
       <div className="lg:pl-64">
-        <main className="pt-4 lg:pt-6 p-4 lg:p-8 bg-gray-50 min-h-screen">
+        <main className="pt-4 lg:pt-6 p-4 lg:p-8 bg-gray-50">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

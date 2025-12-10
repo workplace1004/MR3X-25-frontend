@@ -35,18 +35,18 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   
   CEO: [
     'dashboard:read',
-    
-    'users:read', 'users:create', 'users:update', 'users:delete', 
-    'agencies:read', 
-    'properties:read', 
-    'contracts:read', 
-    'payments:read', 
-    'reports:read', 
-    'audit:read', 
-    'documents:read', 
-    'notifications:read', 
-    'chat:read', 
-    
+
+    'users:read', 'users:create', 'users:update', 'users:delete',
+    'agencies:read',
+    'properties:read',
+    'contracts:read',
+    'payments:read',
+    'reports:read',
+    'audit:read',
+    'documents:read',
+    'notifications:read',
+    'chat:read', 'chat:create', 'chat:update', 'chat:delete',
+
     'settings:read', 'settings:update', 
     'billing:read', 'billing:update', 
     'integrations:read', 'integrations:create', 'integrations:update', 'integrations:delete', 

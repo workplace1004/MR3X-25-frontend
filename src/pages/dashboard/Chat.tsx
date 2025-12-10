@@ -217,7 +217,7 @@ export function Chat() {
         </div>
       </div>
 
-      <Card className="h-[600px] overflow-hidden">
+      <Card className="h-[calc(100vh-220px)] sm:h-[600px] overflow-hidden">
         <CardContent className="p-0 h-full">
           <div className="flex h-full">
             {isMobile ? (
