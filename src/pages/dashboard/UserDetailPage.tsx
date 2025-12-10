@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, UserCheck, UserX, Calendar, Mail, Phone, Shield, Activity } from 'lucide-react';
+import { ArrowLeft, UserCheck, UserX, Calendar, Mail, Phone, Shield, Activity } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -37,8 +37,7 @@ interface UserDetails {
 export function UserDetailPage() {
   const params = useParams();
   const navigate = useNavigate();
-  const { hasPermission, user: currentUser } = useAuth();
-  const canEditUsers = hasPermission('users:update') && currentUser?.role !== 'CEO';
+  const { hasPermission } = useAuth();
   const canDeleteUsers = hasPermission('users:delete');
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserDetails | null>(null);
@@ -164,12 +163,6 @@ export function UserDetailPage() {
             Voltar
           </Button>
           <div className="flex items-center gap-2">
-            {canEditUsers && (
-              <Button variant="outline" size="sm" onClick={() => navigate(`/dashboard/users/${user.id}/edit`)} className="flex items-center gap-2">
-                <Edit className="w-4 h-4" />
-                <span className="hidden sm:inline">Editar</span>
-              </Button>
-            )}
             {canDeleteUsers &&
               (user.status === 'ACTIVE' ? (
                 <Button variant="destructive" size="sm" onClick={() => handleStatusChange('SUSPENDED')} className="flex items-center gap-2">
