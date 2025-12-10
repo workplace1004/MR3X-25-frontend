@@ -225,18 +225,18 @@ export function UserDetailPage() {
                   <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Documento</Label>
                   <p className="text-sm">{user.document || 'Não informado'}</p>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Função</Label>
-                    <div><Badge className={`${getRoleColor(user.role)} text-xs`}>{user.role}</Badge></div>
+                    <div><Badge className={`${getRoleColor(user.role)} text-xs whitespace-nowrap`}>{user.role}</Badge></div>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Status</Label>
-                    <div><Badge className={`${getStatusColor(user.status)} text-xs`}>{user.status}</Badge></div>
+                    <div><Badge className={`${getStatusColor(user.status)} text-xs whitespace-nowrap`}>{user.status}</Badge></div>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Plano</Label>
-                    <div><Badge variant="outline" className="text-xs">{user.plan}</Badge></div>
+                    <div><Badge variant="outline" className="text-xs whitespace-nowrap">{user.plan}</Badge></div>
                   </div>
                 </div>
               </div>
