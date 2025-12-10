@@ -16,7 +16,7 @@ import {
   List
 } from 'lucide-react'
 import { DocumentInput } from '@/components/ui/document-input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { CEPInput } from '@/components/ui/cep-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,16 +24,6 @@ import { Button } from '@/components/ui/button'
 import { validateDocument, isValidCEPFormat } from '@/lib/validation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -838,22 +828,31 @@ export function Brokers() {
         </Dialog>
 
         {}
-        <AlertDialog open={!!brokerToDelete} onOpenChange={() => setBrokerToDelete(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir corretor</AlertDialogTitle>
-              <AlertDialogDescription>
+        <Dialog open={!!brokerToDelete} onOpenChange={() => setBrokerToDelete(null)}>
+          <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg rounded-xl">
+            <DialogHeader>
+              <DialogTitle>Excluir corretor</DialogTitle>
+              <DialogDescription>
                 Tem certeza que deseja excluir o corretor <b>{brokerToDelete?.name}</b>? Esta acao nao podera ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-row gap-2 mt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setBrokerToDelete(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
                 Excluir
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   )

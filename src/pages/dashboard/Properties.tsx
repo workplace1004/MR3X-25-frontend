@@ -39,16 +39,6 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Card, CardContent } from '../../components/ui/card';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '../../components/ui/alert-dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -1319,22 +1309,22 @@ export function Properties() {
               {user?.role !== 'INDEPENDENT_OWNER' ? (
                 <div>
                   <Label htmlFor="ownerId">Proprietário</Label>
-                  <select
-                    id="ownerId"
-                    name="ownerId"
+                  <Select
                     value={newProperty.ownerId}
-                    onChange={handleInputChange}
-                    required
+                    onValueChange={(value) => setNewProperty({ ...newProperty, ownerId: value })}
                     disabled={ownersLoading}
-                    className="border rounded-md px-3 py-2 w-full"
                   >
-                    <option value="">{ownersLoading ? 'Carregando proprietários...' : 'Selecione um proprietário'}</option>
-                    {owners.map((owner: any) => (
-                      <option key={owner.id} value={owner.id}>
-                        {owner.name || owner.email}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={ownersLoading ? 'Carregando proprietários...' : 'Selecione um proprietário'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {owners.map((owner: any) => (
+                        <SelectItem key={owner.id} value={String(owner.id)}>
+                          {owner.name || owner.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {owners.length === 0 && !ownersLoading && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Cadastre proprietários na área de usuários antes de vincular um imóvel.
@@ -1505,22 +1495,22 @@ export function Properties() {
               ) : user?.role === 'AGENCY_MANAGER' && !selectedProperty?.brokerId ? (
                 <div>
                   <Label htmlFor="edit-ownerId">Proprietário</Label>
-                  <select
-                    id="edit-ownerId"
-                    name="ownerId"
+                  <Select
                     value={editForm.ownerId}
-                    onChange={handleEditInputChange}
-                    required
+                    onValueChange={(value) => setEditForm({ ...editForm, ownerId: value })}
                     disabled={ownersLoading}
-                    className="border rounded-md px-3 py-2 w-full"
                   >
-                    <option value="">{ownersLoading ? 'Carregando proprietários...' : 'Selecione um proprietário'}</option>
-                    {owners.map((owner: any) => (
-                      <option key={owner.id} value={owner.id}>
-                        {owner.name || owner.email}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={ownersLoading ? 'Carregando proprietários...' : 'Selecione um proprietário'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {owners.map((owner: any) => (
+                        <SelectItem key={owner.id} value={String(owner.id)}>
+                          {owner.name || owner.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {owners.length === 0 && !ownersLoading && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Cadastre proprietários na área de usuários antes de vincular um imóvel.
@@ -1791,11 +1781,15 @@ export function Properties() {
                     </div>
                   )}
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" onClick={() => setShowDocumentsModal(false)}>
                     Fechar
                   </Button>
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button
+                    type="button"
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => toast.info('Funcionalidade de upload de documentos em desenvolvimento')}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Adicionar Documento
                   </Button>
@@ -1966,17 +1960,20 @@ export function Properties() {
                 </div>
                 <div>
                   <Label htmlFor="receipt-payment-method">Método de Pagamento</Label>
-                  <select
-                    id="receipt-payment-method"
-                    className="w-full p-2 border border-input rounded-md"
+                  <Select
                     value={receiptData.paymentMethod}
-                    onChange={(e) => setReceiptData(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                    onValueChange={(value) => setReceiptData(prev => ({ ...prev, paymentMethod: value }))}
                   >
-                    <option value="PIX">PIX</option>
-                    <option value="BOLETO">Boleto</option>
-                    <option value="TRANSFERENCIA">Transferência</option>
-                    <option value="DINHEIRO">Dinheiro</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o método" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PIX">PIX</SelectItem>
+                      <SelectItem value="BOLETO">Boleto</SelectItem>
+                      <SelectItem value="TRANSFERENCIA">Transferência</SelectItem>
+                      <SelectItem value="DINHEIRO">Dinheiro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setShowReceiptModal(false)} disabled={generatingReceipt}>
@@ -2179,26 +2176,33 @@ export function Properties() {
         </Dialog>
 
         {}
-        <AlertDialog open={!!propertyToDelete} onOpenChange={() => setPropertyToDelete(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir imóvel</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir o imóvel <b>{propertyToDelete?.address}</b>? Esta ação não poderá ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
+        <Dialog open={!!propertyToDelete} onOpenChange={() => setPropertyToDelete(null)}>
+          <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg rounded-xl">
+            <DialogHeader>
+              <DialogTitle>Excluir imóvel</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Tem certeza que deseja excluir o imóvel <b>{propertyToDelete?.address}</b>? Esta ação não poderá ser desfeita.
+            </p>
+            <div className="flex flex-row gap-2 mt-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setPropertyToDelete(null)}
+                disabled={deleting}
+              >
+                Cancelar
+              </Button>
+              <Button
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="bg-destructive hover:bg-destructive/90"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
               >
                 {deleting ? 'Excluindo...' : 'Excluir'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {}
         <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
