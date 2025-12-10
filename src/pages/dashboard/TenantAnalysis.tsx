@@ -775,16 +775,14 @@ const LGPDDisclaimerModal = ({
           </AlertDescription>
         </Alert>
 
-        <div className="flex items-center space-x-2 mt-4">
+        <label htmlFor="lgpd-accept" className="flex items-center gap-2 mt-4 cursor-pointer">
           <Checkbox
             id="lgpd-accept"
             checked={accepted}
             onCheckedChange={(checked) => setAccepted(checked as boolean)}
           />
-          <Label htmlFor="lgpd-accept" className="text-sm cursor-pointer">
-            Li e aceito os termos de uso conforme a LGPD
-          </Label>
-        </div>
+          <span className="text-sm">Li e aceito os termos de uso conforme a LGPD</span>
+        </label>
 
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
