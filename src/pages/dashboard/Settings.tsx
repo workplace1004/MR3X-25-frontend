@@ -88,12 +88,12 @@ export function Settings() {
 
       {}
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="general">Geral</TabsTrigger>
-          <TabsTrigger value="payment">Pagamento</TabsTrigger>
-          <TabsTrigger value="email">E-mail</TabsTrigger>
-          <TabsTrigger value="security">Segurança</TabsTrigger>
-          <TabsTrigger value="api">API</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto no-scrollbar">
+          <TabsTrigger value="general" className="flex-shrink-0">Geral</TabsTrigger>
+          <TabsTrigger value="payment" className="flex-shrink-0">Pagamento</TabsTrigger>
+          <TabsTrigger value="email" className="flex-shrink-0">E-mail</TabsTrigger>
+          <TabsTrigger value="security" className="flex-shrink-0">Segurança</TabsTrigger>
+          <TabsTrigger value="api" className="flex-shrink-0">API</TabsTrigger>
         </TabsList>
 
         {}
@@ -109,7 +109,7 @@ export function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5">
                   <Label>Notificações por E-mail</Label>
                   <p className="text-sm text-muted-foreground">Enviar notificações por e-mail</p>
@@ -124,7 +124,7 @@ export function Settings() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5">
                   <Label>Notificações WhatsApp</Label>
                   <p className="text-sm text-muted-foreground">Enviar notificações via WhatsApp</p>
@@ -139,7 +139,7 @@ export function Settings() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5">
                   <Label>Notificações SMS</Label>
                   <p className="text-sm text-muted-foreground">Enviar notificações via SMS</p>
@@ -156,7 +156,7 @@ export function Settings() {
                 <Button
                   onClick={() => handleSave('notificações')}
                   disabled={!canUpdateSettings}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Salvar Alterações
@@ -200,7 +200,7 @@ export function Settings() {
                 <Button
                   onClick={() => handleSave('plataforma')}
                   disabled={!canUpdateSettings}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Salvar Alterações
@@ -302,7 +302,7 @@ export function Settings() {
 
               {!canUpdateSettings && (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg">
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>Você não tem permissão para modificar as configurações de e-mail</span>
                 </div>
               )}
@@ -311,7 +311,7 @@ export function Settings() {
                 <Button
                   onClick={() => handleSave('e-mail')}
                   disabled={!canUpdateSettings}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Salvar Alterações
@@ -334,7 +334,7 @@ export function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-0.5">
                   <Label>Exigir Verificação de E-mail</Label>
                   <p className="text-sm text-muted-foreground">Usuários devem verificar o e-mail antes de acessar a plataforma</p>
@@ -350,31 +350,33 @@ export function Settings() {
 
               <Separator />
 
-              <div className="space-y-2">
-                <Label htmlFor="sessionTimeout">Tempo de Sessão (minutos)</Label>
-                <Input
-                  id="sessionTimeout"
-                  type="number"
-                  value={securitySettings.sessionTimeout}
-                  onChange={(e) => setSecuritySettings({ ...securitySettings, sessionTimeout: e.target.value })}
-                  disabled={!canUpdateSettings}
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sessionTimeout">Tempo de Sessão (minutos)</Label>
+                  <Input
+                    id="sessionTimeout"
+                    type="number"
+                    value={securitySettings.sessionTimeout}
+                    onChange={(e) => setSecuritySettings({ ...securitySettings, sessionTimeout: e.target.value })}
+                    disabled={!canUpdateSettings}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="maxLoginAttempts">Máximo de Tentativas de Login</Label>
-                <Input
-                  id="maxLoginAttempts"
-                  type="number"
-                  value={securitySettings.maxLoginAttempts}
-                  onChange={(e) => setSecuritySettings({ ...securitySettings, maxLoginAttempts: e.target.value })}
-                  disabled={!canUpdateSettings}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="maxLoginAttempts">Máximo de Tentativas de Login</Label>
+                  <Input
+                    id="maxLoginAttempts"
+                    type="number"
+                    value={securitySettings.maxLoginAttempts}
+                    onChange={(e) => setSecuritySettings({ ...securitySettings, maxLoginAttempts: e.target.value })}
+                    disabled={!canUpdateSettings}
+                  />
+                </div>
               </div>
 
               {!canUpdateSettings && (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg">
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>Você não tem permissão para modificar as configurações de segurança</span>
                 </div>
               )}
@@ -383,7 +385,7 @@ export function Settings() {
                 <Button
                   onClick={() => handleSave('segurança')}
                   disabled={!canUpdateSettings}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Salvar Alterações
@@ -443,7 +445,7 @@ export function Settings() {
 
               {!canUpdateSettings && (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg">
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>Você não tem permissão para modificar as configurações da API</span>
                 </div>
               )}
@@ -452,7 +454,7 @@ export function Settings() {
                 <Button
                   onClick={() => handleSave('api')}
                   disabled={!canUpdateSettings}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                  className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Salvar Alterações
@@ -535,20 +537,20 @@ function PaymentConfigurationTab({ canUpdateSettings }: { canUpdateSettings: boo
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="w-5 h-5" />
-          Configuração de Divisão de Pagamentos
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <CreditCard className="w-5 h-5 flex-shrink-0" />
+          <span>Configuração de Divisão de Pagamentos</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm">
           Configure as porcentagens de taxa para divisão de pagamentos. Essas taxas serão aplicadas a todas as divisões de pagamento.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {}
           <div className="space-y-2">
-            <Label htmlFor="platformFee">Taxa da Plataforma (MR3X)</Label>
+            <Label htmlFor="platformFee" className="text-sm">Taxa da Plataforma (MR3X)</Label>
             <div className="relative">
               <Input
                 id="platformFee"
@@ -563,16 +565,16 @@ function PaymentConfigurationTab({ canUpdateSettings }: { canUpdateSettings: boo
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Porcentagem de comissão da plataforma MR3X
             </p>
           </div>
 
           {}
           <div className="space-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <Label htmlFor="agencyFee" className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-gray-500" />
-              Taxa da Agência (Read-Only)
+            <Label htmlFor="agencyFee" className="flex items-center gap-2 text-sm">
+              <AlertCircle className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <span>Taxa da Agência (Read-Only)</span>
             </Label>
             <div className="relative">
               <Input
@@ -587,14 +589,14 @@ function PaymentConfigurationTab({ canUpdateSettings }: { canUpdateSettings: boo
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Porcentagem padrão de comissão da agência. Configure por agência no painel de cada agência.
             </p>
           </div>
 
           {}
-          <div className="space-y-2">
-            <Label htmlFor="ownerFee">Valor do Imóvel</Label>
+          <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+            <Label htmlFor="ownerFee" className="text-sm">Valor do Imóvel</Label>
             <div className="relative">
               <Input
                 id="ownerFee"
@@ -605,16 +607,16 @@ function PaymentConfigurationTab({ canUpdateSettings }: { canUpdateSettings: boo
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Valor restante para o proprietário
             </p>
           </div>
         </div>
 
         {}
-        <div className="p-4 bg-muted rounded-lg">
-          <h4 className="font-semibold mb-2">Exemplo de Cálculo (Pagamento de R$ 1.000)</h4>
-          <div className="space-y-1 text-sm">
+        <div className="p-3 sm:p-4 bg-muted rounded-lg">
+          <h4 className="font-semibold mb-2 text-sm sm:text-base">Exemplo de Cálculo (Pagamento de R$ 1.000)</h4>
+          <div className="space-y-2 text-xs sm:text-sm">
             <div className="flex justify-between">
               <span>Taxa da Plataforma ({platformFee}%):</span>
               <span className="font-medium">R$ {((1000 * parseFloat(platformFee || '0')) / 100).toFixed(2)}</span>
@@ -636,7 +638,7 @@ function PaymentConfigurationTab({ canUpdateSettings }: { canUpdateSettings: boo
 
         {!canUpdateSettings && (
           <div className="flex items-center gap-2 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-lg">
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>Você não tem permissão para modificar a configuração de pagamentos</span>
           </div>
         )}
@@ -645,7 +647,7 @@ function PaymentConfigurationTab({ canUpdateSettings }: { canUpdateSettings: boo
           <Button
             onClick={handleSave}
             disabled={!canUpdateSettings || saving}
-            className="bg-orange-600 hover:bg-orange-700 text-white"
+            className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white"
           >
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Salvando...' : 'Salvar Alterações'}

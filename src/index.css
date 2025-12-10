@@ -46,3 +46,32 @@
     color: var(--color-foreground);
   }
 }
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Fix date/month inputs to take full width */
+input[type="date"],
+input[type="month"],
+input[type="datetime-local"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+/* Ensure date input stretches in grid/flex containers */
+.grid > input[type="date"],
+.grid > input[type="month"],
+.flex > input[type="date"],
+.flex > input[type="month"] {
+  justify-self: stretch;
+  width: 100% !important;
+}
