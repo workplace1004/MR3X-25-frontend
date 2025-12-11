@@ -74,6 +74,7 @@ interface Notification {
   responseAt?: string;
   resolvedAt?: string;
   createdAt: string;
+  userRole?: 'CREDITOR' | 'DEBTOR' | 'VIEWER'; // User's role in this notification
 }
 
 const typeOptions = [
@@ -161,6 +162,8 @@ export default function ExtrajudicialNotifications() {
 
   const [properties, setProperties] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [owners, setOwners] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -216,7 +219,7 @@ export default function ExtrajudicialNotifications() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [notificationsRes, statsRes, propsRes, usersRes] = await Promise.all([
+      const [notificationsRes, statsRes, propsRes, usersRes, tenantsRes] = await Promise.all([
         extrajudicialNotificationsAPI.getNotifications({
           status: statusFilter || undefined,
           type: typeFilter || undefined,
@@ -224,12 +227,19 @@ export default function ExtrajudicialNotifications() {
         extrajudicialNotificationsAPI.getStatistics(),
         propertiesAPI.getProperties(),
         usersAPI.listUsers({ pageSize: 100 }),
+        usersAPI.getTenants(),
       ]);
 
       setNotifications(notificationsRes.data || []);
       setStatistics(statsRes);
       setProperties(propsRes || []);
       setUsers(usersRes.items || []);
+      setTenants(tenantsRes || []);
+
+      // Filter owners from users (PROPRIETARIO, INDEPENDENT_OWNER roles)
+      const ownerRoles = ['PROPRIETARIO', 'INDEPENDENT_OWNER'];
+      const filteredOwners = (usersRes.items || []).filter((u: any) => ownerRoles.includes(u.role));
+      setOwners(filteredOwners);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -311,19 +321,24 @@ export default function ExtrajudicialNotifications() {
   const handleSign = async () => {
     if (!selectedNotification || !signatureRef.current) return;
 
+    // Check user has valid signing role
+    if (!selectedNotification.userRole || selectedNotification.userRole === 'VIEWER') {
+      toast.error('Voce nao tem permissao para assinar esta notificacao');
+      return;
+    }
+
     try {
       setSaving(true);
 
       // Get geolocation
+      let geoLat = signData.geoLat;
+      let geoLng = signData.geoLng;
       if (signData.geoConsent && navigator.geolocation) {
         await new Promise<void>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              setSignData(prev => ({
-                ...prev,
-                geoLat: position.coords.latitude,
-                geoLng: position.coords.longitude,
-              }));
+              geoLat = position.coords.latitude;
+              geoLng = position.coords.longitude;
               resolve();
             },
             reject,
@@ -333,18 +348,22 @@ export default function ExtrajudicialNotifications() {
 
       const signature = signatureRef.current.toDataURL('image/png');
 
+      // Use userRole to determine which signature field to send
+      const signatureField = selectedNotification.userRole === 'CREDITOR' ? 'creditorSignature' : 'debtorSignature';
+
       await extrajudicialNotificationsAPI.signNotification(selectedNotification.id, {
-        [signData.signerType === 'creditor' ? 'creditorSignature' : 'debtorSignature']: signature,
-        geoLat: signData.geoLat,
-        geoLng: signData.geoLng,
+        [signatureField]: signature,
+        geoLat,
+        geoLng,
       });
 
       toast.success('Notificacao assinada com sucesso!');
       setShowSignModal(false);
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing notification:', error);
-      toast.error('Erro ao assinar notificacao');
+      const message = error?.response?.data?.message || 'Erro ao assinar notificacao';
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -632,6 +651,7 @@ export default function ExtrajudicialNotifications() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Prioridade</TableHead>
+                  <TableHead>Seu Papel</TableHead>
                   <TableHead>Devedor</TableHead>
                   <TableHead>Valor Total</TableHead>
                   <TableHead>Prazo</TableHead>
@@ -649,6 +669,28 @@ export default function ExtrajudicialNotifications() {
                     </TableCell>
                     <TableCell>{getStatusBadge(n.status)}</TableCell>
                     <TableCell>{getPriorityBadge(n.priority)}</TableCell>
+                    <TableCell>
+                      {n.userRole === 'CREDITOR' && (
+                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                          Credor
+                          {n.creditorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
+                        </Badge>
+                      )}
+                      {n.userRole === 'DEBTOR' && (
+                        <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+                          Devedor
+                          {n.debtorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
+                        </Badge>
+                      )}
+                      {n.userRole === 'VIEWER' && (
+                        <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+                          Visualizador
+                        </Badge>
+                      )}
+                      {!n.userRole && (
+                        <span className="text-muted-foreground text-xs">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="font-medium">{n.debtorName}</div>
                       <div className="text-xs text-muted-foreground">{n.debtorDocument}</div>
@@ -692,7 +734,12 @@ export default function ExtrajudicialNotifications() {
                           </>
                         )}
 
-                        {['ENVIADO', 'VISUALIZADO'].includes(n.status) && (
+                        {/* Show sign button only for CREDITOR/DEBTOR who haven't signed yet */}
+                        {['ENVIADO', 'VISUALIZADO'].includes(n.status) &&
+                         n.userRole &&
+                         n.userRole !== 'VIEWER' &&
+                         !((n.userRole === 'CREDITOR' && n.creditorSignedAt) ||
+                           (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -700,7 +747,7 @@ export default function ExtrajudicialNotifications() {
                               setSelectedNotification(n);
                               setShowSignModal(true);
                             }}
-                            title="Assinar"
+                            title={`Assinar como ${n.userRole === 'CREDITOR' ? 'Credor' : 'Devedor'}`}
                           >
                             <PenTool className="h-4 w-4" />
                           </Button>
@@ -782,11 +829,11 @@ export default function ExtrajudicialNotifications() {
                     Notificante (Credor)
                   </h3>
                   <div>
-                    <Label>Usuario</Label>
+                    <Label>Proprietario</Label>
                     <Select
                       value={formData.creditorId}
                       onValueChange={(v) => {
-                        const user = users.find(u => u.id === v);
+                        const user = owners.find(u => u.id === v);
                         setFormData(prev => ({
                           ...prev,
                           creditorId: v,
@@ -798,10 +845,10 @@ export default function ExtrajudicialNotifications() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o credor" />
+                        <SelectValue placeholder="Selecione o proprietario" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map(u => (
+                        {owners.map(u => (
                           <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -836,27 +883,27 @@ export default function ExtrajudicialNotifications() {
                     Notificado (Devedor)
                   </h3>
                   <div>
-                    <Label>Usuario</Label>
+                    <Label>Inquilino</Label>
                     <Select
                       value={formData.debtorId}
                       onValueChange={(v) => {
-                        const user = users.find(u => u.id === v);
+                        const tenant = tenants.find(t => t.id === v);
                         setFormData(prev => ({
                           ...prev,
                           debtorId: v,
-                          debtorName: user?.name || '',
-                          debtorDocument: user?.document || '',
-                          debtorEmail: user?.email || '',
-                          debtorPhone: user?.phone || '',
+                          debtorName: tenant?.name || '',
+                          debtorDocument: tenant?.document || '',
+                          debtorEmail: tenant?.email || '',
+                          debtorPhone: tenant?.phone || '',
                         }));
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o devedor" />
+                        <SelectValue placeholder="Selecione o inquilino" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map(u => (
-                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                        {tenants.map(t => (
+                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1320,72 +1367,103 @@ export default function ExtrajudicialNotifications() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div>
-              <Label>Tipo de Assinatura</Label>
-              <Select
-                value={signData.signerType}
-                onValueChange={(v: any) => setSignData({ ...signData, signerType: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="creditor">Credor (Notificante)</SelectItem>
-                  <SelectItem value="debtor">Devedor (Notificado)</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Show signing role based on userRole */}
+            <div className="p-4 bg-muted rounded-lg">
+              <Label className="text-sm text-muted-foreground">Voce esta assinando como:</Label>
+              <p className="text-lg font-semibold mt-1">
+                {selectedNotification?.userRole === 'CREDITOR' && 'Credor (Notificante)'}
+                {selectedNotification?.userRole === 'DEBTOR' && 'Devedor (Notificado)'}
+                {!selectedNotification?.userRole && 'Carregando...'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorName}
+                {selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorName}
+              </p>
             </div>
 
-            <div>
-              <Label>Assinatura</Label>
-              <div className="border rounded-lg p-2 bg-white">
-                <SignatureCanvas
-                  ref={signatureRef}
-                  canvasProps={{
-                    width: 400,
-                    height: 150,
-                    className: 'signature-canvas',
-                  }}
-                />
-              </div>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => signatureRef.current?.clear()}
-              >
-                Limpar
-              </Button>
-            </div>
+            {/* Check if already signed */}
+            {selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt && (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Voce ja assinou esta notificacao como Credor.
+                </AlertDescription>
+              </Alert>
+            )}
+            {selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt && (
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  Voce ja assinou esta notificacao como Devedor.
+                </AlertDescription>
+              </Alert>
+            )}
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="geoConsent"
-                checked={signData.geoConsent}
-                onChange={(e) => setSignData({ ...signData, geoConsent: e.target.checked })}
-              />
-              <Label htmlFor="geoConsent" className="text-sm">
-                Autorizo a captura da minha localizacao para fins de validacao juridica
-              </Label>
-            </div>
+            {/* Show signature canvas only if not already signed */}
+            {!(
+              (selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt) ||
+              (selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt)
+            ) && (
+              <>
+                <div>
+                  <Label>Assinatura</Label>
+                  <div className="border rounded-lg p-2 bg-white">
+                    <SignatureCanvas
+                      ref={signatureRef}
+                      canvasProps={{
+                        className: 'signature-canvas w-full',
+                        style: { width: '100%', height: '150px' },
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => signatureRef.current?.clear()}
+                  >
+                    Limpar
+                  </Button>
+                </div>
 
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Ao assinar, voce declara ciencia do conteudo desta notificacao e aceita
-                que esta assinatura tem validade juridica equivalente a uma assinatura fisica.
-              </AlertDescription>
-            </Alert>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="geoConsent"
+                    checked={signData.geoConsent}
+                    onChange={(e) => setSignData({ ...signData, geoConsent: e.target.checked })}
+                  />
+                  <Label htmlFor="geoConsent" className="text-sm">
+                    Autorizo a captura da minha localizacao para fins de validacao juridica
+                  </Label>
+                </div>
+
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Ao assinar, voce declara ciencia do conteudo desta notificacao e aceita
+                    que esta assinatura tem validade juridica equivalente a uma assinatura fisica.
+                  </AlertDescription>
+                </Alert>
+              </>
+            )}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSignModal(false)}>
-              Cancelar
+              {(selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt) ||
+              (selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt)
+                ? 'Fechar'
+                : 'Cancelar'}
             </Button>
-            <Button onClick={handleSign} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Assinar
-            </Button>
+            {!(
+              (selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt) ||
+              (selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt)
+            ) && (
+              <Button onClick={handleSign} disabled={saving}>
+                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Assinar
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
