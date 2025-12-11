@@ -11,7 +11,7 @@ import {
   Database, GitCompare, Headphones, UserSearch, Gavel
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { chatAPI, notificationsAPI } from '../api';
+import { chatAPI, notificationsAPI, extrajudicialNotificationsAPI } from '../api';
 
 const baseNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home, perm: undefined },
@@ -19,7 +19,6 @@ const baseNavigation = [
 
   { name: 'Meu Contrato', href: '/dashboard/tenant-contract', icon: FileText, perm: undefined, roles: ['INQUILINO'] },
   { name: 'Meus Pagamentos', href: '/dashboard/tenant-payments', icon: DollarSign, perm: undefined, roles: ['INQUILINO'] },
-  { name: 'Meu Perfil', href: '/dashboard/tenant-profile', icon: User, perm: undefined, roles: ['INQUILINO'] },
   
   { name: 'Imóveis', href: '/dashboard/properties', icon: Building2, perm: 'properties:read' },
   { name: 'Inquilinos', href: '/dashboard/tenants', icon: Users, perm: 'users:read' },
@@ -31,7 +30,7 @@ const baseNavigation = [
   { name: 'Contratos', href: '/dashboard/contracts', icon: FileText, perm: 'contracts:read' },
   { name: 'Vistorias', href: '/dashboard/inspections', icon: ClipboardCheck, perm: undefined },
   { name: 'Acordos', href: '/dashboard/agreements', icon: FileSignature, perm: undefined },
-  { name: 'Notif. Extrajudiciais', href: '/dashboard/extrajudicial-notifications', icon: Gavel, perm: undefined },
+  { name: 'Notificação extrajudicial', href: '/dashboard/extrajudicial-notifications', icon: Gavel, perm: undefined },
   { name: 'Faturas', href: '/dashboard/invoices', icon: Receipt, perm: undefined },
   { name: 'Pagamentos', href: '/dashboard/payments', icon: DollarSign, perm: 'payments:read' },
   { name: 'Plano da Agência', href: '/dashboard/agency-plan-config', icon: Package, perm: 'agencies:update', roles: ['AGENCY_ADMIN'] },
@@ -109,6 +108,14 @@ export function DashboardLayout() {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Fetch pending extrajudicial notifications for INQUILINO
+  const { data: extrajudicialData } = useQuery({
+    queryKey: ['extrajudicial-unread'],
+    queryFn: () => extrajudicialNotificationsAPI.getNotifications({}),
+    enabled: isAuthenticated && user?.role === 'INQUILINO',
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
   // Calculate unread counts
   const unreadChatsCount = Array.isArray(chatsData)
     ? chatsData.reduce((sum: number, chat: any) => sum + (chat.unreadCount || 0), 0)
@@ -117,6 +124,16 @@ export function DashboardLayout() {
   const unreadNotificationsCount = Array.isArray(notificationsData)
     ? notificationsData.filter((n: any) => !n.read).length
     : (notificationsData?.data ? notificationsData.data.filter((n: any) => !n.read).length : 0);
+
+  // Calculate pending extrajudicial notifications (sent/viewed but not signed by debtor)
+  const pendingExtrajudicialCount = (() => {
+    const notifications = extrajudicialData?.data || [];
+    return notifications.filter((n: any) =>
+      ['ENVIADO', 'VISUALIZADO'].includes(n.status) &&
+      n.userRole === 'DEBTOR' &&
+      !n.debtorSignedAt
+    ).length;
+  })();
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -304,15 +321,15 @@ export function DashboardLayout() {
 
     if (user?.role === 'INQUILINO') {
       const allowForInquilino = [
-        '/dashboard', 
-        '/dashboard/tenant-contract', 
-        '/dashboard/tenant-payments', 
-        '/dashboard/tenant-profile', 
-        '/dashboard/chat', 
-        '/dashboard/notifications', 
-        '/dashboard/change-password', 
+        '/dashboard',
+        '/dashboard/tenant-contract',
+        '/dashboard/tenant-payments',
+        '/dashboard/extrajudicial-notifications',
+        '/dashboard/chat',
+        '/dashboard/notifications',
+        '/dashboard/change-password',
       ];
-      
+
       if (!allowForInquilino.includes(item.href)) return false;
     }
 
@@ -503,6 +520,8 @@ export function DashboardLayout() {
                 badgeCount = unreadChatsCount;
               } else if (item.href === '/dashboard/notifications') {
                 badgeCount = unreadNotificationsCount;
+              } else if (item.href === '/dashboard/extrajudicial-notifications' && user?.role === 'INQUILINO') {
+                badgeCount = pendingExtrajudicialCount;
               }
 
               return (

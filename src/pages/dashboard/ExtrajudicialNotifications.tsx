@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { extrajudicialNotificationsAPI, propertiesAPI, usersAPI } from '@/api';
+import { useAuth } from '@/contexts/AuthContext';
 import SignatureCanvas from 'react-signature-canvas';
 import {
   Plus,
@@ -35,7 +36,6 @@ import {
   DollarSign,
   Calendar,
   User,
-  RefreshCw,
 } from 'lucide-react';
 
 interface Notification {
@@ -138,6 +138,8 @@ const formatDateTime = (date: string | null | undefined) => {
 
 export default function ExtrajudicialNotifications() {
   const signatureRef = useRef<SignatureCanvas>(null);
+  const { user } = useAuth();
+  const isInquilino = user?.role === 'INQUILINO';
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -219,27 +221,43 @@ export default function ExtrajudicialNotifications() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [notificationsRes, statsRes, propsRes, usersRes, tenantsRes] = await Promise.all([
-        extrajudicialNotificationsAPI.getNotifications({
-          status: statusFilter || undefined,
-          type: typeFilter || undefined,
-        }),
-        extrajudicialNotificationsAPI.getStatistics(),
-        propertiesAPI.getProperties(),
-        usersAPI.listUsers({ pageSize: 100 }),
-        usersAPI.getTenants(),
-      ]);
 
-      setNotifications(notificationsRes.data || []);
-      setStatistics(statsRes);
-      setProperties(propsRes || []);
-      setUsers(usersRes.items || []);
-      setTenants(tenantsRes || []);
+      // INQUILINO users can only see their notifications, not create them
+      // So we skip loading properties, users, and tenants for them
+      if (isInquilino) {
+        const [notificationsRes, statsRes] = await Promise.all([
+          extrajudicialNotificationsAPI.getNotifications({
+            status: statusFilter || undefined,
+            type: typeFilter || undefined,
+          }),
+          extrajudicialNotificationsAPI.getStatistics(),
+        ]);
 
-      // Filter owners from users (PROPRIETARIO, INDEPENDENT_OWNER roles)
-      const ownerRoles = ['PROPRIETARIO', 'INDEPENDENT_OWNER'];
-      const filteredOwners = (usersRes.items || []).filter((u: any) => ownerRoles.includes(u.role));
-      setOwners(filteredOwners);
+        setNotifications(notificationsRes.data || []);
+        setStatistics(statsRes);
+      } else {
+        const [notificationsRes, statsRes, propsRes, usersRes, tenantsRes] = await Promise.all([
+          extrajudicialNotificationsAPI.getNotifications({
+            status: statusFilter || undefined,
+            type: typeFilter || undefined,
+          }),
+          extrajudicialNotificationsAPI.getStatistics(),
+          propertiesAPI.getProperties(),
+          usersAPI.listUsers({ pageSize: 100 }),
+          usersAPI.getTenants(),
+        ]);
+
+        setNotifications(notificationsRes.data || []);
+        setStatistics(statsRes);
+        setProperties(propsRes || []);
+        setUsers(usersRes.items || []);
+        setTenants(tenantsRes || []);
+
+        // Filter owners from users (PROPRIETARIO, INDEPENDENT_OWNER roles)
+        const ownerRoles = ['PROPRIETARIO', 'INDEPENDENT_OWNER'];
+        const filteredOwners = (usersRes.items || []).filter((u: any) => ownerRoles.includes(u.role));
+        setOwners(filteredOwners);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -530,54 +548,56 @@ export default function ExtrajudicialNotifications() {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <FileText className="h-6 w-6" />
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
             Notificacoes Extrajudiciais
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Gerencie notificacoes extrajudiciais com valor juridico
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Notificacao
-        </Button>
+        {!isInquilino && (
+          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Notificacao
+          </Button>
+        )}
       </div>
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
           <Card className="bg-gray-50">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{statistics.total}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold">{statistics.total}</div>
               <div className="text-xs text-muted-foreground">Total</div>
             </CardContent>
           </Card>
           <Card className="bg-yellow-50">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">{(statistics.draft || 0) + (statistics.generated || 0)}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-yellow-600">{(statistics.draft || 0) + (statistics.generated || 0)}</div>
               <div className="text-xs text-muted-foreground">Pendentes</div>
             </CardContent>
           </Card>
           <Card className="bg-blue-50">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{(statistics.sent || 0) + (statistics.viewed || 0)}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">{(statistics.sent || 0) + (statistics.viewed || 0)}</div>
               <div className="text-xs text-muted-foreground">Em Andamento</div>
             </CardContent>
           </Card>
           <Card className="bg-green-50">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{statistics.resolved || 0}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-green-600">{statistics.resolved || 0}</div>
               <div className="text-xs text-muted-foreground">Resolvidas</div>
             </CardContent>
           </Card>
-          <Card className="bg-red-50">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{(statistics.expired || 0) + (statistics.judicial || 0)}</div>
+          <Card className="bg-red-50 col-span-2 sm:col-span-1">
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-red-600">{(statistics.expired || 0) + (statistics.judicial || 0)}</div>
               <div className="text-xs text-muted-foreground">Criticas</div>
             </CardContent>
           </Card>
@@ -586,55 +606,53 @@ export default function ExtrajudicialNotifications() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="w-full sm:flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por numero, partes ou titulo..."
+                  placeholder="Buscar..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Select value={statusFilter || 'ALL'} onValueChange={(v) => setStatusFilter(v === 'ALL' ? '' : v)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Status</SelectItem>
-                {statusOptions.map(s => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter || 'ALL'} onValueChange={(v) => setTypeFilter(v === 'ALL' ? '' : v)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                {typeOptions.map(t => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={loadData}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
-            </Button>
+            <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
+              <Select value={statusFilter || 'ALL'} onValueChange={(v) => setStatusFilter(v === 'ALL' ? '' : v)}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos os Status</SelectItem>
+                  {statusOptions.map(s => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter || 'ALL'} onValueChange={(v) => setTypeFilter(v === 'ALL' ? '' : v)}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos os Tipos</SelectItem>
+                  {typeOptions.map(t => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Notifications Table */}
+      {/* Notifications List */}
       <Card>
-        <CardHeader>
-          <CardTitle>Notificacoes</CardTitle>
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Notificacoes</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
           {loading ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -644,161 +662,234 @@ export default function ExtrajudicialNotifications() {
               Nenhuma notificacao encontrada
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Numero</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Prioridade</TableHead>
-                  <TableHead>Seu Papel</TableHead>
-                  <TableHead>Devedor</TableHead>
-                  <TableHead>Valor Total</TableHead>
-                  <TableHead>Prazo</TableHead>
-                  <TableHead>Acoes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
                 {filteredNotifications.map(n => (
-                  <TableRow key={n.id}>
-                    <TableCell className="font-mono text-sm">
-                      {n.notificationNumber}
-                    </TableCell>
-                    <TableCell>
-                      {typeOptions.find(t => t.value === n.type)?.label || n.type}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(n.status)}</TableCell>
-                    <TableCell>{getPriorityBadge(n.priority)}</TableCell>
-                    <TableCell>
-                      {n.userRole === 'CREDITOR' && (
-                        <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
-                          Credor
-                          {n.creditorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
-                        </Badge>
-                      )}
-                      {n.userRole === 'DEBTOR' && (
-                        <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
-                          Devedor
-                          {n.debtorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
-                        </Badge>
-                      )}
-                      {n.userRole === 'VIEWER' && (
-                        <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
-                          Visualizador
-                        </Badge>
-                      )}
-                      {!n.userRole && (
-                        <span className="text-muted-foreground text-xs">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{n.debtorName}</div>
-                      <div className="text-xs text-muted-foreground">{n.debtorDocument}</div>
-                    </TableCell>
-                    <TableCell className="font-mono">
-                      {formatCurrency(n.totalAmount)}
-                    </TableCell>
-                    <TableCell>
-                      <div>{formatDate(n.deadlineDate)}</div>
-                      <div className="text-xs text-muted-foreground">{n.deadlineDays} dias</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewPdf(n)}
-                          title="Ver PDF"
-                        >
+                  <Card key={n.id} className="border shadow-sm">
+                    <CardContent className="p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <p className="font-mono text-xs text-muted-foreground">{n.notificationNumber}</p>
+                          <p className="font-medium text-sm">{n.debtorName}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {getStatusBadge(n.status)}
+                          {n.userRole === 'CREDITOR' && (
+                            <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300 text-xs">
+                              Credor {n.creditorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
+                            </Badge>
+                          )}
+                          {n.userRole === 'DEBTOR' && (
+                            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300 text-xs">
+                              Devedor {n.debtorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div>
+                          <span className="text-muted-foreground">Tipo:</span>
+                          <p className="font-medium">{typeOptions.find(t => t.value === n.type)?.label || n.type}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Valor:</span>
+                          <p className="font-medium font-mono">{formatCurrency(n.totalAmount)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Prazo:</span>
+                          <p className="font-medium">{formatDate(n.deadlineDate)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Prioridade:</span>
+                          <div>{getPriorityBadge(n.priority)}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end gap-1 border-t pt-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleViewPdf(n)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-
                         {n.status === 'RASCUNHO' && (
                           <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleSend(n.id)}
-                              title="Enviar"
-                            >
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleSend(n.id)}>
                               <Send className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteClick(n.id)}
-                              title="Excluir"
-                            >
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteClick(n.id)}>
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </>
                         )}
-
-                        {/* Show sign button only for CREDITOR/DEBTOR who haven't signed yet */}
                         {['ENVIADO', 'VISUALIZADO'].includes(n.status) &&
-                         n.userRole &&
-                         n.userRole !== 'VIEWER' &&
-                         !((n.userRole === 'CREDITOR' && n.creditorSignedAt) ||
-                           (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedNotification(n);
-                              setShowSignModal(true);
-                            }}
-                            title={`Assinar como ${n.userRole === 'CREDITOR' ? 'Credor' : 'Devedor'}`}
-                          >
+                         n.userRole && n.userRole !== 'VIEWER' &&
+                         !((n.userRole === 'CREDITOR' && n.creditorSignedAt) || (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedNotification(n); setShowSignModal(true); }}>
                             <PenTool className="h-4 w-4" />
                           </Button>
                         )}
-
                         {n.status === 'PRAZO_EXPIRADO' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedNotification(n);
-                              setShowJudicialModal(true);
-                            }}
-                            title="Encaminhar ao Judicial"
-                          >
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedNotification(n); setShowJudicialModal(true); }}>
                             <Gavel className="h-4 w-4 text-red-500" />
                           </Button>
                         )}
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownloadPdf(n.id, n.status === 'RASCUNHO' ? 'provisional' : 'final')}
-                          title="Baixar PDF"
-                        >
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadPdf(n.id, n.status === 'RASCUNHO' ? 'provisional' : 'final')}>
                           <Download className="h-4 w-4" />
                         </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewAudit(n)}
-                          title="Historico de Auditoria"
-                        >
-                          <History className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleVerifyHash(n.id)}
-                          title="Verificar Integridade"
-                        >
-                          <Shield className="h-4 w-4" />
-                        </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Numero</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Prioridade</TableHead>
+                      <TableHead>Seu Papel</TableHead>
+                      <TableHead>Devedor</TableHead>
+                      <TableHead>Valor Total</TableHead>
+                      <TableHead>Prazo</TableHead>
+                      <TableHead>Acoes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredNotifications.map(n => (
+                      <TableRow key={n.id}>
+                        <TableCell className="font-mono text-sm">
+                          {n.notificationNumber}
+                        </TableCell>
+                        <TableCell>
+                          {typeOptions.find(t => t.value === n.type)?.label || n.type}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(n.status)}</TableCell>
+                        <TableCell>{getPriorityBadge(n.priority)}</TableCell>
+                        <TableCell>
+                          {n.userRole === 'CREDITOR' && (
+                            <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                              Credor
+                              {n.creditorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
+                            </Badge>
+                          )}
+                          {n.userRole === 'DEBTOR' && (
+                            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+                              Devedor
+                              {n.debtorSignedAt && <CheckCircle className="h-3 w-3 ml-1 inline" />}
+                            </Badge>
+                          )}
+                          {n.userRole === 'VIEWER' && (
+                            <Badge variant="outline" className="bg-gray-100 text-gray-600 border-gray-300">
+                              Visualizador
+                            </Badge>
+                          )}
+                          {!n.userRole && (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{n.debtorName}</div>
+                          <div className="text-xs text-muted-foreground">{n.debtorDocument}</div>
+                        </TableCell>
+                        <TableCell className="font-mono">
+                          {formatCurrency(n.totalAmount)}
+                        </TableCell>
+                        <TableCell>
+                          <div>{formatDate(n.deadlineDate)}</div>
+                          <div className="text-xs text-muted-foreground">{n.deadlineDays} dias</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewPdf(n)}
+                              title="Ver PDF"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            {n.status === 'RASCUNHO' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleSend(n.id)}
+                                  title="Enviar"
+                                >
+                                  <Send className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteClick(n.id)}
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </>
+                            )}
+
+                            {/* Show sign button only for CREDITOR/DEBTOR who haven't signed yet */}
+                            {['ENVIADO', 'VISUALIZADO'].includes(n.status) &&
+                             n.userRole &&
+                             n.userRole !== 'VIEWER' &&
+                             !((n.userRole === 'CREDITOR' && n.creditorSignedAt) ||
+                               (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedNotification(n);
+                                  setShowSignModal(true);
+                                }}
+                                title={`Assinar como ${n.userRole === 'CREDITOR' ? 'Credor' : 'Devedor'}`}
+                              >
+                                <PenTool className="h-4 w-4" />
+                              </Button>
+                            )}
+
+                            {n.status === 'PRAZO_EXPIRADO' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedNotification(n);
+                                  setShowJudicialModal(true);
+                                }}
+                                title="Encaminhar ao Judicial"
+                              >
+                                <Gavel className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDownloadPdf(n.id, n.status === 'RASCUNHO' ? 'provisional' : 'final')}
+                              title="Baixar PDF"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleVerifyHash(n.id)}
+                              title="Verificar Integridade"
+                            >
+                              <Shield className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -1425,14 +1516,15 @@ export default function ExtrajudicialNotifications() {
                   </Button>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-2">
                   <input
                     type="checkbox"
                     id="geoConsent"
                     checked={signData.geoConsent}
                     onChange={(e) => setSignData({ ...signData, geoConsent: e.target.checked })}
+                    className="mt-1"
                   />
-                  <Label htmlFor="geoConsent" className="text-sm">
+                  <Label htmlFor="geoConsent" className="text-sm leading-tight">
                     Autorizo a captura da minha localizacao para fins de validacao juridica
                   </Label>
                 </div>

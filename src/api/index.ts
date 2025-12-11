@@ -105,7 +105,14 @@ export const contractsAPI = {
   },
 
   downloadContract: async (id: string) => {
-    const response = await apiClient.get(`/contracts/download/${id}`, {
+    const response = await apiClient.get(`/contracts/${id}/final-pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadProvisionalContract: async (id: string) => {
+    const response = await apiClient.get(`/contracts/${id}/provisional-pdf`, {
       responseType: 'blob',
     });
     return response.data;
