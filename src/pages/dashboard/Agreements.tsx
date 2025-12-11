@@ -1727,27 +1727,27 @@ export function Agreements() {
                 <div className="border-t pt-3 sm:pt-4">
                   <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Assinaturas</h4>
                   <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                    <div className="p-2 sm:p-3 border rounded-lg text-center">
-                      <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground block">Inquilino</Label>
+                    <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.tenantSignedAt ? 'border-green-500' : ''}`}>
+                      <PenTool className={`w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 ${agreementDetail.tenantSignedAt ? 'text-green-600' : 'text-muted-foreground'}`} />
+                      <Label className={`text-[10px] sm:text-xs block ${agreementDetail.tenantSignedAt ? 'text-green-600' : 'text-muted-foreground'}`}>Inquilino</Label>
                       {agreementDetail.tenantSignedAt ? (
                         <p className="text-[10px] sm:text-xs text-green-600">Assinado {formatDate(agreementDetail.tenantSignedAt)}</p>
                       ) : (
                         <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                       )}
                     </div>
-                    <div className="p-2 sm:p-3 border rounded-lg text-center">
-                      <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground block">Proprietario</Label>
+                    <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.ownerSignedAt ? 'border-green-500' : ''}`}>
+                      <PenTool className={`w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 ${agreementDetail.ownerSignedAt ? 'text-green-600' : 'text-muted-foreground'}`} />
+                      <Label className={`text-[10px] sm:text-xs block ${agreementDetail.ownerSignedAt ? 'text-green-600' : 'text-muted-foreground'}`}>Proprietario</Label>
                       {agreementDetail.ownerSignedAt ? (
                         <p className="text-[10px] sm:text-xs text-green-600">Assinado {formatDate(agreementDetail.ownerSignedAt)}</p>
                       ) : (
                         <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
                       )}
                     </div>
-                    <div className="p-2 sm:p-3 border rounded-lg text-center">
-                      <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground block">Agencia</Label>
+                    <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.agencySignedAt ? 'border-green-500' : ''}`}>
+                      <PenTool className={`w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 ${agreementDetail.agencySignedAt ? 'text-green-600' : 'text-muted-foreground'}`} />
+                      <Label className={`text-[10px] sm:text-xs block ${agreementDetail.agencySignedAt ? 'text-green-600' : 'text-muted-foreground'}`}>Agencia</Label>
                       {agreementDetail.agencySignedAt ? (
                         <p className="text-[10px] sm:text-xs text-green-600">Assinado {formatDate(agreementDetail.agencySignedAt)}</p>
                       ) : (

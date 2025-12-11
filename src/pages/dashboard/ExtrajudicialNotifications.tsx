@@ -180,9 +180,9 @@ export default function ExtrajudicialNotifications() {
     debtorPhone: '',
     debtorAddress: '',
     title: '',
-    subject: '',
+    subject: 'Esta notificacao extrajudicial tem por finalidade comunicar o(a) notificado(a) sobre a existencia de debito decorrente de obrigacao contratual assumida entre as partes, solicitando o pagamento integral do valor devido dentro do prazo estipulado no documento.',
     description: '',
-    legalBasis: '',
+    legalBasis: 'A presente notificacao funda-se nos arts. 389, 394, 395 e 397 do Codigo Civil, que estabelecem a responsabilidade pelo inadimplemento e a mora do devedor, bem como o dever de pagar juros, correcao, multa e demais encargos previstos contratualmente.',
     demandedAction: '',
     principalAmount: '',
     fineAmount: '',
@@ -192,7 +192,7 @@ export default function ExtrajudicialNotifications() {
     totalAmount: '',
     deadlineDays: '15',
     gracePeriodDays: '',
-    consequencesText: '',
+    consequencesText: 'O nao pagamento no prazo indicado caracterizara mora, autorizando a adocao das medidas legais cabiveis, incluindo cobranca judicial, protesto, negativacao e, quando aplicavel, propositura de acao de despejo, sem prejuizo dos encargos previstos no contrato.',
     notes: '',
   });
 
@@ -495,9 +495,9 @@ export default function ExtrajudicialNotifications() {
       debtorPhone: '',
       debtorAddress: '',
       title: '',
-      subject: '',
+      subject: 'Esta notificacao extrajudicial tem por finalidade comunicar o(a) notificado(a) sobre a existencia de debito decorrente de obrigacao contratual assumida entre as partes, solicitando o pagamento integral do valor devido dentro do prazo estipulado no documento.',
       description: '',
-      legalBasis: '',
+      legalBasis: 'A presente notificacao funda-se nos arts. 389, 394, 395 e 397 do Codigo Civil, que estabelecem a responsabilidade pelo inadimplemento e a mora do devedor, bem como o dever de pagar juros, correcao, multa e demais encargos previstos contratualmente.',
       demandedAction: '',
       principalAmount: '',
       fineAmount: '',
@@ -507,7 +507,7 @@ export default function ExtrajudicialNotifications() {
       totalAmount: '',
       deadlineDays: '15',
       gracePeriodDays: '',
-      consequencesText: '',
+      consequencesText: 'O nao pagamento no prazo indicado caracterizara mora, autorizando a adocao das medidas legais cabiveis, incluindo cobranca judicial, protesto, negativacao e, quando aplicavel, propositura de acao de despejo, sem prejuizo dos encargos previstos no contrato.',
       notes: '',
     });
   };

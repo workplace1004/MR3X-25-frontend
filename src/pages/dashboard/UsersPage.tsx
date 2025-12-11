@@ -17,6 +17,7 @@ export function UsersPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
@@ -160,9 +161,15 @@ export function UsersPage() {
         <div className="relative sm:col-span-2 lg:col-span-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Nome / Email / CPF-CNPJ"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setSearch(searchInput);
+                setPage(1);
+              }
+            }}
+            placeholder="Nome / Email / CPF-CNPJ (Enter para buscar)"
             className="w-full pl-9 pr-3 py-2 border rounded-md"
           />
         </div>
