@@ -266,6 +266,7 @@ function TableRowActions({
   onSendForSignature,
   onApprove,
   onReject,
+  onSign,
 }: {
   agreement: Agreement;
   onView: () => void;
@@ -274,6 +275,7 @@ function TableRowActions({
   onSendForSignature: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onSign: (type: 'agency' | 'owner' | 'tenant') => void;
 }) {
   const context = useMemo(() => toAgreementContext(agreement), [agreement]);
   const actions = useAgreementActions(context);
@@ -288,6 +290,42 @@ function TableRowActions({
       >
         <Eye className="w-4 h-4" />
       </Button>
+
+      {actions.canSignAsAgency && !agreement.agencySignedAt && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onSign('agency')}
+          className="text-green-600 border-green-600 hover:bg-green-50"
+          title="Assinar como Agencia"
+        >
+          <PenTool className="w-4 h-4" />
+        </Button>
+      )}
+
+      {actions.canSignAsOwner && !agreement.ownerSignedAt && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onSign('owner')}
+          className="text-green-600 border-green-600 hover:bg-green-50"
+          title="Assinar como Proprietario"
+        >
+          <PenTool className="w-4 h-4" />
+        </Button>
+      )}
+
+      {actions.canSignAsTenant && !agreement.tenantSignedAt && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onSign('tenant')}
+          className="text-green-600 border-green-600 hover:bg-green-50"
+          title="Assinar como Inquilino"
+        >
+          <PenTool className="w-4 h-4" />
+        </Button>
+      )}
 
       {actions.canEdit && (
         <Button
@@ -359,6 +397,8 @@ export function Agreements() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [signAgreementData, setSignAgreementData] = useState<{ agreement: Agreement | null; type: 'agency' | 'owner' | 'tenant' | null }>({ agreement: null, type: null });
 
   const [filterType, setFilterType] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -748,11 +788,18 @@ export function Agreements() {
   };
 
   const handleSign = (agreement: Agreement, type: 'agency' | 'owner' | 'tenant') => {
+    setSignAgreementData({ agreement, type });
+    setShowSignModal(true);
+  };
+
+  const confirmSign = () => {
+    if (!signAgreementData.agreement || !signAgreementData.type) return;
+
     const signatureData: any = {};
     const timestamp = Date.now();
     const signedBy = user?.name || user?.email || 'Unknown';
 
-    switch (type) {
+    switch (signAgreementData.type) {
       case 'agency':
         signatureData.agencySignature = `SIGNED_BY_AGENCY_${signedBy}_${timestamp}`;
         break;
@@ -765,9 +812,20 @@ export function Agreements() {
     }
 
     signAgreementMutation.mutate({
-      id: agreement.id,
+      id: signAgreementData.agreement.id,
       signature: signatureData,
     });
+    setShowSignModal(false);
+    setSignAgreementData({ agreement: null, type: null });
+  };
+
+  const getSignTypeLabel = (type: 'agency' | 'owner' | 'tenant' | null) => {
+    switch (type) {
+      case 'agency': return 'Agencia';
+      case 'owner': return 'Proprietario';
+      case 'tenant': return 'Inquilino';
+      default: return '';
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -988,6 +1046,7 @@ export function Agreements() {
                             onSendForSignature={() => handleSendForSignature(agreement)}
                             onApprove={() => handleApprove(agreement)}
                             onReject={() => handleReject(agreement)}
+                            onSign={(type) => handleSign(agreement, type)}
                           />
                         </td>
                       </tr>
@@ -1779,6 +1838,64 @@ export function Agreements() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {}
+        <Dialog open={showSignModal} onOpenChange={setShowSignModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <PenTool className="w-5 h-5 text-green-600" />
+                Assinar Acordo
+              </DialogTitle>
+              <DialogDescription>
+                Confirme a assinatura do acordo como {getSignTypeLabel(signAgreementData.type)}
+              </DialogDescription>
+            </DialogHeader>
+            {signAgreementData.agreement && (
+              <div className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Titulo:</span>
+                    <span className="text-sm font-medium">{signAgreementData.agreement.title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Tipo:</span>
+                    <span className="text-sm font-medium">{signAgreementData.agreement.type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Valor:</span>
+                    <span className="text-sm font-medium">
+                      {signAgreementData.agreement.negotiatedAmount
+                        ? formatCurrency(parseFloat(signAgreementData.agreement.negotiatedAmount))
+                        : signAgreementData.agreement.originalAmount
+                          ? formatCurrency(parseFloat(signAgreementData.agreement.originalAmount))
+                          : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Assinando como:</span>
+                    <Badge className="bg-green-600 text-white">{getSignTypeLabel(signAgreementData.type)}</Badge>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Ao clicar em "Assinar", voce confirma que leu e concorda com os termos deste acordo.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setShowSignModal(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={confirmSign}
+                  >
+                    <PenTool className="w-4 h-4 mr-2" />
+                    Assinar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );

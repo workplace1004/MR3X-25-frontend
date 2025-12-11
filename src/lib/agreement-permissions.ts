@@ -473,9 +473,18 @@ export function canSignAgreement(
       break;
 
     case SignatureType.OWNER:
-      if (agreement.ownerId !== user.id &&
-          agreement.property?.ownerId !== user.id) {
-        return false;
+      // PROPRIETARIO can sign as owner if they created the agreement or own the property
+      if (user.role === UserRole.PROPRIETARIO) {
+        if (agreement.createdBy !== user.id &&
+            agreement.ownerId !== user.id &&
+            agreement.property?.ownerId !== user.id) {
+          return false;
+        }
+      } else {
+        if (agreement.ownerId !== user.id &&
+            agreement.property?.ownerId !== user.id) {
+          return false;
+        }
       }
       break;
 
