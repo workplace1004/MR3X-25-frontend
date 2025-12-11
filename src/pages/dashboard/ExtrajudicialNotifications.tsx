@@ -347,7 +347,7 @@ export default function ExtrajudicialNotifications() {
       let geoLng = signData.geoLng;
       if (signData.geoConsent && navigator.geolocation) {
         try {
-          await new Promise<void>((resolve, reject) => {
+          await new Promise<void>((resolve) => {
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 geoLat = position.coords.latitude;
