@@ -127,21 +127,25 @@ export function Contracts() {
   // Helper function to capture barcode SVG as rotated image (-90 degrees)
   const captureBarcodeAsRotatedImage = async (): Promise<{ rotated: string; original: string; width: number; height: number } | null> => {
     try {
-      // Find the barcode SVG element - try multiple selectors
-      let svgElement: SVGElement | null = document.querySelector('#contract-preview-content svg[class*="react-barcode"]');
-      if (!svgElement) {
-        svgElement = document.querySelector('#contract-preview-content .flex-shrink-0 svg');
-      }
-      if (!svgElement) {
-        // Try to find any SVG that looks like a barcode (has rect elements)
-        const allSvgs = document.querySelectorAll('#contract-preview-content svg');
-        for (const svg of allSvgs) {
-          if (svg.querySelectorAll('rect').length > 10) {
-            svgElement = svg as SVGElement;
-            break;
-          }
+      // Find the CODE128 barcode SVG element (NOT the QR code)
+      // The barcode is wider than tall, QR code is square
+      let svgElement: SVGElement | null = null;
+
+      // Get all SVGs in the preview
+      const allSvgs = document.querySelectorAll('#contract-preview-content svg');
+
+      for (const svg of allSvgs) {
+        const bbox = svg.getBoundingClientRect();
+        const aspectRatio = bbox.width / bbox.height;
+
+        // CODE128 barcode is much wider than tall (aspect ratio > 2)
+        // QR code is square (aspect ratio ~1)
+        if (aspectRatio > 2 && svg.querySelectorAll('rect').length > 10) {
+          svgElement = svg as SVGElement;
+          break;
         }
       }
+
       if (!svgElement) return null;
 
       // Get SVG dimensions
@@ -178,9 +182,9 @@ export function Contracts() {
             rotCtx.fillStyle = 'white';
             rotCtx.fillRect(0, 0, rotatedCanvas.width, rotatedCanvas.height);
 
-            // Rotate -90 degrees (counterclockwise)
-            rotCtx.translate(0, rotatedCanvas.height);
-            rotCtx.rotate(-Math.PI / 2);
+            // Rotate +90 degrees (clockwise) - reading from top to bottom
+            rotCtx.translate(rotatedCanvas.width, 0);
+            rotCtx.rotate(Math.PI / 2);
             rotCtx.drawImage(originalCanvas, 0, 0);
           }
 
@@ -214,9 +218,10 @@ export function Contracts() {
 
     // Capture pre-rotated barcode image before generating PDF
     const barcodeData = await captureBarcodeAsRotatedImage();
+    console.log('Barcode data captured:', barcodeData ? 'yes' : 'no');
 
     const opt = {
-      margin: [10, 18, 10, 10] as [number, number, number, number], // Extra right margin for barcode
+      margin: [10, 20, 10, 10] as [number, number, number, number], // Extra right margin for barcode
       filename: `contrato-previa-${previewToken || 'draft'}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
@@ -232,38 +237,36 @@ export function Contracts() {
       const pageCount = pdfInstance.internal.getNumberOfPages();
       const pageHeight = pdfInstance.internal.pageSize.getHeight();
       const pageWidth = pdfInstance.internal.pageSize.getWidth();
+      const token = previewToken || 'DRAFT';
 
       for (let i = 1; i <= pageCount; i++) {
         pdfInstance.setPage(i);
 
         // Add the pre-rotated barcode image if available
         if (barcodeData && barcodeData.rotated) {
-          // Calculate dimensions to fit nicely on the page
-          // The rotated image has swapped dimensions (original width is now height)
-          const maxBarcodeHeight = pageHeight * 0.6; // 60% of page height
-          const barcodeWidth = 12; // mm width for the barcode strip
-
-          // Calculate aspect ratio and final dimensions
-          const aspectRatio = barcodeData.width / barcodeData.height;
-          let finalHeight = maxBarcodeHeight;
-          let finalWidth = finalHeight / aspectRatio;
-
-          // If width is too large, scale down
-          if (finalWidth > barcodeWidth) {
-            finalWidth = barcodeWidth;
-            finalHeight = finalWidth * aspectRatio;
-          }
+          // Barcode dimensions - the rotated image (width/height are swapped)
+          // Original barcode is wide and short, rotated it's tall and narrow
+          const finalWidth = 10; // mm - narrow strip
+          const finalHeight = pageHeight * 0.5; // 50% of page height
 
           // Position on right edge, centered vertically
-          const xPos = pageWidth - finalWidth - 2; // 2mm from right edge
+          const xPos = pageWidth - finalWidth - 3; // 3mm from right edge
           const yPos = (pageHeight - finalHeight) / 2;
 
           // Draw white background
           pdfInstance.setFillColor(255, 255, 255);
-          pdfInstance.rect(xPos - 1, yPos - 1, finalWidth + 2, finalHeight + 2, 'F');
+          pdfInstance.rect(xPos - 2, yPos - 2, finalWidth + 4, finalHeight + 4, 'F');
 
-          // Add the pre-rotated barcode image (no rotation needed, already rotated)
+          // Add the pre-rotated barcode image
           pdfInstance.addImage(barcodeData.rotated, 'PNG', xPos, yPos, finalWidth, finalHeight);
+        } else {
+          // Fallback: draw token text vertically if barcode capture failed
+          pdfInstance.setFillColor(255, 255, 255);
+          pdfInstance.rect(pageWidth - 15, pageHeight / 2 - 40, 12, 80, 'F');
+
+          pdfInstance.setFontSize(8);
+          pdfInstance.setTextColor(0, 0, 0);
+          pdfInstance.text(token, pageWidth - 5, pageHeight / 2, { angle: 90 });
         }
       }
 
@@ -2075,11 +2078,11 @@ export function Contracts() {
 
         {}
         <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
-          <DialogContent className="w-[95vw] sm:w-auto max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogContent className="w-[95vw] sm:w-auto max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
             <DialogHeader className="flex flex-row items-center justify-between">
               <div>
                 <DialogTitle>Prévia do Contrato</DialogTitle>
-                <DialogDescription>Visualize como ficará o contrato com as informações preenchidas.</DialogDescription>
+                <DialogDescription className="hidden sm:block">Visualize como ficará o contrato com as informações preenchidas.</DialogDescription>
               </div>
               {/* Download/Print icons in header - only show for details view */}
               {!isCreatePreview && previewContent && (
@@ -2096,9 +2099,9 @@ export function Contracts() {
             {previewContent ? (
               <div id="contract-preview-content" className="space-y-4">
                 {}
-                <div className="bg-muted p-4 rounded-lg border">
+                <div className="bg-muted p-3 sm:p-4 rounded-lg border">
                   <h3 className="font-semibold mb-3">Informações de Segurança</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                     <div className="break-all sm:break-normal">
                       <span className="font-medium">Token:</span>{' '}
                       <span className="font-mono text-xs">{previewToken}</span>
@@ -2144,7 +2147,7 @@ export function Contracts() {
 
                 {}
                 {previewToken && (
-                  <div className="flex flex-col sm:flex-row items-center justify-center p-4 bg-white border rounded-lg gap-6 overflow-x-auto">
+                  <div className="flex flex-col sm:flex-row items-center justify-center p-3 sm:p-4 bg-white border rounded-lg gap-4 sm:gap-6">
                     <div className="flex-shrink-0">
                       <QRCodeSVG
                         value={`https://mr3x.com.br/verify/${previewToken}`}
@@ -2152,7 +2155,7 @@ export function Contracts() {
                         level="H"
                       />
                     </div>
-                    <div className="flex-shrink-0 max-w-full overflow-x-auto">
+                    <div className="flex-shrink-0 w-full sm:w-auto overflow-x-auto flex justify-center">
                       <Barcode
                         value={previewToken}
                         format="CODE128"
@@ -2167,7 +2170,7 @@ export function Contracts() {
                 )}
 
                 {}
-                <div className="prose prose-sm max-w-none bg-white p-6 border rounded-lg">
+                <div className="prose prose-sm max-w-none bg-white p-4 sm:p-6 border rounded-lg">
                   <div className="text-sm leading-relaxed" style={{ wordBreak: 'normal', overflowWrap: 'normal', hyphens: 'none' }}>
                     {previewContent.split('\n').map((line, index) => {
                       const isBold = line.startsWith('**') || line.includes('CLÁUSULA') || line.includes('CONTRATO');
