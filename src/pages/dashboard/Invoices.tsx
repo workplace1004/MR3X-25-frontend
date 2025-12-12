@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { invoicesAPI, propertiesAPI } from '../../api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -24,6 +24,7 @@ import {
   QrCode,
   Barcode,
   AlertTriangle,
+  Search,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -119,6 +120,19 @@ export function Invoices() {
   const [filterProperty, setFilterProperty] = useState<string>('');
   const [filterMonth, setFilterMonth] = useState<string>('');
 
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+  }, []);
+
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceDetail, setInvoiceDetail] = useState<Invoice | null>(null);
   const [properties, setProperties] = useState<any[]>([]);
@@ -145,12 +159,13 @@ export function Invoices() {
   }
 
   const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ['invoices', user?.id, filterType, filterStatus, filterProperty, filterMonth],
+    queryKey: ['invoices', user?.id, filterType, filterStatus, filterProperty, filterMonth, searchQuery],
     queryFn: () => invoicesAPI.getInvoices({
       type: filterType && filterType !== 'all' ? filterType : undefined,
       status: filterStatus && filterStatus !== 'all' ? filterStatus : undefined,
       propertyId: filterProperty && filterProperty !== 'all' ? filterProperty : undefined,
       referenceMonth: filterMonth || undefined,
+      search: searchQuery || undefined,
     }),
     enabled: canViewInvoices,
   });
@@ -467,6 +482,39 @@ export function Invoices() {
             </Card>
           </div>
         )}
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por número, imóvel ou inquilino"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+        </div>
 
         {}
         <div className="flex flex-col gap-3 p-3 sm:p-4 bg-card border border-border rounded-lg">

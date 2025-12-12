@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { inspectionsAPI, propertiesAPI, contractsAPI } from '../../api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -19,7 +19,6 @@ import {
   Clock,
   FileText,
   PenTool,
-  Filter,
   Upload,
   Image,
   Video,
@@ -27,6 +26,7 @@ import {
   Printer,
   Lock,
   Copy,
+  Search,
 } from 'lucide-react';
 import { formatDate } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -132,9 +132,27 @@ export function Inspections() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
 
-  const [filterType, setFilterType] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
-  const [filterProperty, setFilterProperty] = useState<string>('');
+  const [filterType, _setFilterType] = useState<string>('');
+  const [filterStatus, _setFilterStatus] = useState<string>('');
+  const [filterProperty, _setFilterProperty] = useState<string>('');
+
+  // Suppress unused variable warnings - filters will be implemented later
+  void _setFilterType;
+  void _setFilterStatus;
+  void _setFilterProperty;
+
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+  }, []);
 
   const [newInspection, setNewInspection] = useState({
     propertyId: '',
@@ -189,11 +207,12 @@ export function Inspections() {
   }
 
   const { data: inspections = [], isLoading } = useQuery({
-    queryKey: ['inspections', user?.id, filterType, filterStatus, filterProperty],
+    queryKey: ['inspections', user?.id, filterType, filterStatus, filterProperty, searchQuery],
     queryFn: () => inspectionsAPI.getInspections({
       type: filterType && filterType !== 'all' ? filterType : undefined,
       status: filterStatus && filterStatus !== 'all' ? filterStatus : undefined,
       propertyId: filterProperty && filterProperty !== 'all' ? filterProperty : undefined,
+      search: searchQuery || undefined,
     }),
     enabled: canViewInspections,
   });
@@ -731,69 +750,36 @@ export function Inspections() {
           </div>
         </div>
 
-        {/* Filters - Mobile Responsive */}
-        <div className="p-3 sm:p-4 bg-card border border-border rounded-lg space-y-3 sm:space-y-0">
-          <div className="flex items-center gap-2 mb-2 sm:mb-0 sm:hidden">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filtros:</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 sm:items-center">
-            <div className="hidden sm:flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtros:</span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por imóvel, token ou vistoriador"
+                className="pl-10"
+              />
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-full sm:w-[150px] text-sm">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os tipos</SelectItem>
-                <SelectItem value="ENTRY">Entrada</SelectItem>
-                <SelectItem value="EXIT">Saída</SelectItem>
-                <SelectItem value="PERIODIC">Periódica</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[180px] text-sm">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="RASCUNHO">Rascunho</SelectItem>
-                <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
-                <SelectItem value="AGUARDANDO_ASSINATURA">Aguard. Assinatura</SelectItem>
-                <SelectItem value="CONCLUIDA">Concluída</SelectItem>
-                <SelectItem value="APROVADA">Aprovada</SelectItem>
-                <SelectItem value="REJEITADA">Rejeitada</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterProperty} onValueChange={setFilterProperty}>
-              <SelectTrigger className="w-full sm:w-[200px] text-sm">
-                <SelectValue placeholder="Imóvel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos imóveis</SelectItem>
-                {properties.map((property) => (
-                  <SelectItem key={property.id} value={property.id?.toString()}>
-                    {property.name || property.address}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {(filterType && filterType !== 'all') || (filterStatus && filterStatus !== 'all') || (filterProperty && filterProperty !== 'all') ? (
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  setFilterType('');
-                  setFilterStatus('');
-                  setFilterProperty('');
-                }}
-                className="w-full sm:w-auto"
+                onClick={handleClearSearch}
+                className="self-stretch"
               >
-                Limpar filtros
+                Limpar
               </Button>
-            ) : null}
+            )}
           </div>
         </div>
 

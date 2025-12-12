@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usersAPI, agenciesAPI, tenantAnalysisAPI } from '@/api'
+import { usersAPI, agenciesAPI, tenantAnalysisAPI, plansAPI } from '@/api'
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -131,6 +131,19 @@ export function Tenants() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeErrorMessage, setUpgradeErrorMessage] = useState('')
 
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim())
+  }, [searchTerm])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+    setSearchQuery('')
+  }, [])
+
   const checkEmailExists = useCallback(async (email: string, currentEmail?: string) => {
     // Reset states
     setEmailVerified(false)
@@ -174,8 +187,8 @@ export function Tenants() {
   const canLinkBrokers = user?.role === 'AGENCY_MANAGER' || user?.role === 'AGENCY_ADMIN'
 
   const { data: tenants, isLoading } = useQuery({
-    queryKey: ['tenants', user?.id, user?.agencyId],
-    queryFn: () => usersAPI.getTenants(),
+    queryKey: ['tenants', user?.id, user?.agencyId, searchQuery],
+    queryFn: () => usersAPI.getTenants(searchQuery ? { search: searchQuery } : undefined),
     enabled: canViewUsers,
     staleTime: 0,
   })
@@ -191,6 +204,28 @@ export function Tenants() {
     queryFn: () => usersAPI.getBrokers(),
     enabled: canLinkBrokers,
   })
+
+  // Check tenant creation limits
+  const isAgencyUser = ['AGENCY_ADMIN', 'AGENCY_MANAGER', 'BROKER'].includes(user?.role || '')
+  const isOwnerUser = ['INDEPENDENT_OWNER', 'PROPRIETARIO'].includes(user?.role || '')
+
+  const { data: tenantLimits } = useQuery({
+    queryKey: ['tenant-limits', user?.agencyId, user?.id],
+    queryFn: async () => {
+      if (isAgencyUser && user?.agencyId) {
+        return plansAPI.canCreateTenant(user.agencyId)
+      } else if (isOwnerUser && user?.id) {
+        return plansAPI.canCreateTenantForOwner(user.id)
+      }
+      return { allowed: true, current: 0, limit: 9999 }
+    },
+    enabled: showCreateTenantButton && (!!user?.agencyId || isOwnerUser),
+  })
+
+  const canCreateTenant = tenantLimits?.allowed !== false
+  const tenantUsageText = tenantLimits && tenantLimits.limit < 9999
+    ? `${tenantLimits.current}/${tenantLimits.limit} usuários`
+    : null
 
   // Permission check after all hooks
   if (!canViewUsers) {
@@ -645,17 +680,63 @@ export function Tenants() {
             </div>
 
             {showCreateTenantButton && (
-              <Button
-                className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
-                onClick={() => {
-                  closeAllModals()
-                  setEmailError('')
-                  setShowAnalysisSearchModal(true)
+              <div className="flex items-center gap-2">
+                {tenantUsageText && (
+                  <span className="text-sm text-muted-foreground hidden sm:inline">
+                    {tenantUsageText}
+                  </span>
+                )}
+                <Button
+                  className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none disabled:opacity-50"
+                  disabled={!canCreateTenant}
+                  onClick={() => {
+                    if (!canCreateTenant) {
+                      setUpgradeErrorMessage(tenantLimits?.message || 'Você atingiu o limite de usuários do seu plano.')
+                      setShowUpgradeModal(true)
+                      return
+                    }
+                    closeAllModals()
+                    setEmailError('')
+                    setShowAnalysisSearchModal(true)
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Cadastrar Inquilino</span>
+                  <span className="sm:hidden">Adicionar</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSearch()
+                  }
                 }}
+                placeholder="Pesquisar por nome, email ou documento"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Cadastrar Inquilino</span>
-                <span className="sm:hidden">Adicionar</span>
+                Limpar
               </Button>
             )}
           </div>
@@ -883,11 +964,17 @@ export function Tenants() {
             </p>
             {showCreateTenantButton && (
               <Button
+                disabled={!canCreateTenant}
                 onClick={() => {
+                  if (!canCreateTenant) {
+                    setUpgradeErrorMessage(tenantLimits?.message || 'Você atingiu o limite de usuários do seu plano.')
+                    setShowUpgradeModal(true)
+                    return
+                  }
                   setEmailError('')
                   setShowAnalysisSearchModal(true)
                 }}
-                className="bg-orange-600 hover:bg-orange-700 text-white"
+                className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Cadastrar Inquilino
@@ -1764,7 +1851,7 @@ export function Tenants() {
               <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-amber-800">
                 <p className="font-medium mb-1">Por que isso acontece?</p>
-                <p>Cada plano tem um limite de inquilinos que podem ser cadastrados. Para continuar cadastrando, você precisa fazer upgrade do seu plano.</p>
+                <p>Cada plano tem um limite de usuários que podem ser cadastrados. Para continuar cadastrando, você precisa fazer upgrade do seu plano.</p>
               </div>
             </div>
             <div className="flex flex-col gap-2 mt-6">

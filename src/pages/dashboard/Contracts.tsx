@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { contractsAPI, propertiesAPI, usersAPI, contractTemplatesAPI, agenciesAPI } from '../../api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
@@ -19,7 +19,8 @@ import {
   Clock,
   List,
   Grid3X3,
-  Printer
+  Printer,
+  Search
 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { formatCurrency, formatDate } from '../../lib/utils';
@@ -136,6 +137,19 @@ export function Contracts() {
   const [previewContent, setPreviewContent] = useState<string>('');
   const [previewToken, setPreviewToken] = useState<string>('');
   const [userIp, setUserIp] = useState<string>('');
+
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+  }, []);
 
   // Generate preview token function
   const generatePreviewToken = (templateType: string) => {
@@ -407,8 +421,8 @@ export function Contracts() {
   }
 
   const { data: contracts, isLoading } = useQuery({
-    queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none'],
-    queryFn: () => contractsAPI.getContracts(),
+    queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none', searchQuery],
+    queryFn: () => contractsAPI.getContracts(searchQuery ? { search: searchQuery } : undefined),
     enabled: canViewContracts,
   });
 
@@ -1432,10 +1446,43 @@ export function Contracts() {
           </div>
         </div>
 
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por imóvel, inquilino ou token"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+        </div>
+
         {}
         {contracts && contracts.length > 0 ? (
           viewMode === 'table' ? (
-            
+
             <div className="bg-card border border-border rounded-lg overflow-hidden">
               {}
               <div className="hidden md:block overflow-x-auto">

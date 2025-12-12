@@ -32,24 +32,50 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-type UserRole = 'BROKER' | 'PROPRIETARIO' | 'AGENCY_MANAGER'
+type UserRole = 'BROKER' | 'PROPRIETARIO' | 'AGENCY_MANAGER' | 'INQUILINO'
 
 const roleLabels: Record<UserRole, string> = {
   BROKER: 'Corretor',
   PROPRIETARIO: 'Proprietário',
   AGENCY_MANAGER: 'Gerente',
+  INQUILINO: 'Inquilino',
 }
 
 const roleColors: Record<UserRole, string> = {
   BROKER: 'bg-yellow-500',
   PROPRIETARIO: 'bg-green-500',
   AGENCY_MANAGER: 'bg-indigo-500',
+  INQUILINO: 'bg-blue-500',
 }
 
 const roleIcons: Record<UserRole, any> = {
   BROKER: Briefcase,
   PROPRIETARIO: UserCog,
   AGENCY_MANAGER: UserCheck,
+  INQUILINO: Users,
+}
+
+const statusLabels: Record<string, string> = {
+  ACTIVE: 'Ativo',
+  INACTIVE: 'Inativo',
+  SUSPENDED: 'Suspenso',
+}
+
+const statusColors: Record<string, string> = {
+  ACTIVE: 'bg-green-100 text-green-800',
+  INACTIVE: 'bg-yellow-100 text-yellow-800',
+  SUSPENDED: 'bg-red-100 text-red-800',
+}
+
+// Get display status based on user data (checks isFrozen for plan limits)
+const getDisplayStatus = (userData: any): string => {
+  if (userData.isFrozen) {
+    return 'INACTIVE'
+  }
+  if (userData.status === 'SUSPENDED') {
+    return 'SUSPENDED'
+  }
+  return 'ACTIVE'
 }
 
 export function AgencyUsers() {
@@ -65,11 +91,12 @@ export function AgencyUsers() {
   const { data: myUsers, isLoading } = useQuery({
     queryKey: ['agency-users', user?.id, user?.agencyId],
     queryFn: async () => {
-      // Get all users that are BROKER, PROPRIETARIO, or AGENCY_MANAGER
-      const [brokers, owners, managers] = await Promise.all([
+      // Get all users that are BROKER, PROPRIETARIO, AGENCY_MANAGER, or INQUILINO
+      const [brokers, owners, managers, tenants] = await Promise.all([
         usersAPI.getBrokers(),
         usersAPI.listUsers({ role: 'PROPRIETARIO', pageSize: 100 }),
         usersAPI.listUsers({ role: 'AGENCY_MANAGER', pageSize: 100 }),
+        usersAPI.getTenants(),
       ])
 
       const userId = user?.id?.toString()
@@ -87,8 +114,9 @@ export function AgencyUsers() {
       const myBrokers = (brokers || []).filter(filterByAgency)
       const myOwners = ((owners?.items || []) as any[]).filter(filterByAgency)
       const myManagers = ((managers?.items || []) as any[]).filter(filterByAgency)
+      const myTenants = (tenants || []).filter(filterByAgency)
 
-      return [...myBrokers, ...myOwners, ...myManagers]
+      return [...myBrokers, ...myOwners, ...myManagers, ...myTenants]
     },
     enabled: !!user?.id,
     staleTime: 0,
@@ -191,6 +219,7 @@ export function AgencyUsers() {
                     <tr>
                       <th className="text-left p-4 font-semibold">Nome</th>
                       <th className="text-left p-4 font-semibold">Tipo</th>
+                      <th className="text-left p-4 font-semibold">Status</th>
                       <th className="text-left p-4 font-semibold">Telefone</th>
                       <th className="text-left p-4 font-semibold">Email</th>
                       <th className="text-left p-4 font-semibold">Ações</th>
@@ -213,6 +242,16 @@ export function AgencyUsers() {
                             <Badge className={`${roleColors[userData.role as UserRole] || 'bg-gray-500'} text-white`}>
                               {roleLabels[userData.role as UserRole] || userData.role}
                             </Badge>
+                          </td>
+                          <td className="p-4">
+                            {(() => {
+                              const displayStatus = getDisplayStatus(userData)
+                              return (
+                                <Badge className={statusColors[displayStatus] || 'bg-gray-100 text-gray-800'}>
+                                  {statusLabels[displayStatus] || displayStatus}
+                                </Badge>
+                              )
+                            })()}
                           </td>
                           <td className="p-4">
                             <div className="text-muted-foreground">{userData.phone || '-'}</div>
@@ -255,9 +294,19 @@ export function AgencyUsers() {
                             <p className="text-sm text-muted-foreground truncate">{userData.email || '-'}</p>
                           </div>
                         </div>
-                        <Badge className={`${roleColors[userData.role as UserRole] || 'bg-gray-500'} text-white text-xs flex-shrink-0`}>
-                          {roleLabels[userData.role as UserRole] || userData.role}
-                        </Badge>
+                        <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                          <Badge className={`${roleColors[userData.role as UserRole] || 'bg-gray-500'} text-white text-xs`}>
+                            {roleLabels[userData.role as UserRole] || userData.role}
+                          </Badge>
+                          {(() => {
+                            const displayStatus = getDisplayStatus(userData)
+                            return (
+                              <Badge className={`${statusColors[displayStatus] || 'bg-gray-100 text-gray-800'} text-xs`}>
+                                {statusLabels[displayStatus] || displayStatus}
+                              </Badge>
+                            )
+                          })()}
+                        </div>
                       </div>
                       <Button
                         size="sm"
@@ -287,9 +336,19 @@ export function AgencyUsers() {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold truncate">{userData.name || 'Sem nome'}</h3>
                           <p className="text-sm text-muted-foreground truncate">{userData.email}</p>
-                          <Badge className={`${roleColors[userData.role as UserRole] || 'bg-gray-500'} text-white mt-1`}>
-                            {roleLabels[userData.role as UserRole] || userData.role}
-                          </Badge>
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            <Badge className={`${roleColors[userData.role as UserRole] || 'bg-gray-500'} text-white`}>
+                              {roleLabels[userData.role as UserRole] || userData.role}
+                            </Badge>
+                            {(() => {
+                              const displayStatus = getDisplayStatus(userData)
+                              return (
+                                <Badge className={statusColors[displayStatus] || 'bg-gray-100 text-gray-800'}>
+                                  {statusLabels[displayStatus] || displayStatus}
+                                </Badge>
+                              )
+                            })()}
+                          </div>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

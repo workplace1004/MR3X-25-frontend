@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { usersAPI } from '../../api';
 import { Plus, Search, Eye, Edit, UserCheck, UserX, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,8 +18,8 @@ export function UsersPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
   const [plan, setPlan] = useState('');
@@ -26,11 +27,23 @@ export function UsersPage() {
   const [isMobile, setIsMobile] = useState(false);
   const pageSize = 10;
 
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+    setPage(1);
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+    setPage(1);
+  }, []);
+
   const canViewUsers = hasPermission('users:read');
-  const canCreateUsers = hasPermission('users:create'); 
+  const canCreateUsers = hasPermission('users:create');
   const canEditUsers = hasPermission('users:update');
   const canDeleteUsers = hasPermission('users:delete');
-  const isAllowedRole = user?.role === 'CEO' || user?.role === 'ADMIN';
+  // Allow CEO, ADMIN, AGENCY_ADMIN, AGENCY_MANAGER, BROKER, PROPRIETARIO, INDEPENDENT_OWNER
+  const isAllowedRole = ['CEO', 'ADMIN', 'AGENCY_ADMIN', 'AGENCY_MANAGER', 'BROKER', 'PROPRIETARIO', 'INDEPENDENT_OWNER'].includes(user?.role || '');
   const allowAccess = canViewUsers && isAllowedRole;
 
   useEffect(() => {
@@ -45,7 +58,7 @@ export function UsersPage() {
 
     setLoading(true);
     try {
-      const res = await usersAPI.listUsers({ search, role, status, plan, page, pageSize, excludeCurrentUser: true });
+      const res = await usersAPI.listUsers({ search: searchQuery, role, status, plan, page, pageSize, excludeCurrentUser: true });
       setItems(res.items || []);
       setTotal(res.total || 0);
     } catch (error: any) {
@@ -57,7 +70,7 @@ export function UsersPage() {
 
   useEffect(() => {
     load();
-  }, [page, allowAccess, search, role, status, plan]);
+  }, [page, allowAccess, searchQuery, role, status, plan]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -157,22 +170,40 @@ export function UsersPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="relative sm:col-span-2 lg:col-span-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                setSearch(searchInput);
-                setPage(1);
-              }
-            }}
-            placeholder="Nome / Email / CPF-CNPJ (Enter para buscar)"
-            className="w-full pl-9 pr-3 py-2 border rounded-md"
-          />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="flex w-full sm:max-w-lg gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSearch();
+                }
+              }}
+              placeholder="Pesquisar por nome, email ou CPF/CNPJ"
+              className="pl-10"
+            />
+          </div>
+          <Button onClick={handleSearch} className="self-stretch">
+            Buscar
+          </Button>
+          {(searchTerm || searchQuery) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSearch}
+              className="self-stretch"
+            >
+              Limpar
+            </Button>
+          )}
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Select value={role || 'all'} onValueChange={(v) => setRole(v === 'all' ? '' : v)}>
           <SelectTrigger>
             <SelectValue placeholder="Função" />
@@ -233,7 +264,7 @@ export function UsersPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum usuário encontrado</h3>
                 <p className="text-sm text-muted-foreground">
-                  {search || role || status || plan
+                  {searchQuery || role || status || plan
                     ? 'Nenhum usuário corresponde aos filtros aplicados.'
                     : 'Ainda não há usuários cadastrados no sistema.'}
                 </p>
@@ -340,7 +371,7 @@ export function UsersPage() {
                       </div>
                       <h3 className="text-lg font-semibold text-foreground mb-2">Nenhum usuário encontrado</h3>
                       <p className="text-sm text-muted-foreground">
-                        {search || role || status || plan
+                        {searchQuery || role || status || plan
                           ? 'Nenhum usuário corresponde aos filtros aplicados.'
                           : 'Ainda não há usuários cadastrados no sistema.'}
                       </p>

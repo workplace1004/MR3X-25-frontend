@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../stores/authStore';
 import { getOwnerPermissions, getRestrictionMessage } from '../../lib/owner-permissions';
@@ -58,6 +58,7 @@ import {
   User,
   Calendar,
   Hash,
+  ClipboardList,
 } from 'lucide-react';
 import { tenantAnalysisAPI } from '../../api';
 import { toast } from 'sonner';
@@ -819,17 +820,33 @@ export function TenantAnalysis() {
     limit: 10,
   });
 
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+    setFilters(prev => ({ ...prev, page: 1 }));
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+    setFilters(prev => ({ ...prev, page: 1 }));
+  }, []);
+
   // Permission check for PROPRIETARIO
   const { user } = useAuthStore();
   const permissions = getOwnerPermissions(user?.role, 'tenant_analysis');
 
   const { data: history, isLoading: isLoadingHistory } = useQuery({
-    queryKey: ['tenant-analysis-history', filters],
+    queryKey: ['tenant-analysis-history', filters, searchQuery],
     queryFn: () => tenantAnalysisAPI.getHistory({
       riskLevel: filters.riskLevel as any || undefined,
       status: filters.status as any || undefined,
       page: filters.page,
       limit: filters.limit,
+      search: searchQuery || undefined,
     }),
   });
 
@@ -1016,6 +1033,38 @@ export function TenantAnalysis() {
         <CardHeader className="pb-3 sm:pb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="text-lg sm:text-xl">Histórico de Análises</CardTitle>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+            <div className="flex w-full sm:max-w-lg gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                  placeholder="Pesquisar por documento ou nome"
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={handleSearch} className="self-stretch">
+                Buscar
+              </Button>
+              {(searchTerm || searchQuery) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSearch}
+                  className="self-stretch"
+                >
+                  Limpar
+                </Button>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex">
               <Select
                 value={filters.riskLevel || 'all'}
@@ -1097,8 +1146,14 @@ export function TenantAnalysis() {
                     ))}
                     {(!history?.data || history.data.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                          Nenhuma análise encontrada
+                        <TableCell colSpan={8} className="text-center py-12">
+                          <div className="flex flex-col items-center justify-center">
+                            <ClipboardList className="w-16 h-16 text-muted-foreground mb-4" />
+                            <h3 className="text-lg font-semibold mb-2">Nenhuma análise encontrada</h3>
+                            <p className="text-muted-foreground">
+                              Comece realizando uma nova análise de inquilino
+                            </p>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}
@@ -1150,8 +1205,12 @@ export function TenantAnalysis() {
                   </Card>
                 ))}
                 {(!history?.data || history.data.length === 0) && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Nenhuma análise encontrada
+                  <div className="text-center py-12 bg-card border border-border rounded-lg">
+                    <ClipboardList className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Nenhuma análise encontrada</h3>
+                    <p className="text-muted-foreground">
+                      Comece realizando uma nova análise de inquilino
+                    </p>
                   </div>
                 )}
               </div>

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { agreementsAPI, propertiesAPI, contractsAPI, usersAPI } from '../../api';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAgreementPermissions, useAgreementActions } from '../../hooks/use-agreement-permissions';
@@ -22,13 +22,13 @@ import {
   XCircle,
   FileText,
   PenTool,
-  Filter,
   Send,
   Ban,
   DollarSign,
   Building2,
   ShieldAlert,
   Lock,
+  Search,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -400,9 +400,27 @@ export function Agreements() {
   const [showSignModal, setShowSignModal] = useState(false);
   const [signAgreementData, setSignAgreementData] = useState<{ agreement: Agreement | null; type: 'agency' | 'owner' | 'tenant' | null }>({ agreement: null, type: null });
 
-  const [filterType, setFilterType] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
-  const [filterProperty, setFilterProperty] = useState<string>('');
+  const [filterType, _setFilterType] = useState<string>('');
+  const [filterStatus, _setFilterStatus] = useState<string>('');
+  const [filterProperty, _setFilterProperty] = useState<string>('');
+
+  // Suppress unused variable warnings - filters will be implemented later
+  void _setFilterType;
+  void _setFilterStatus;
+  void _setFilterProperty;
+
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+  }, []);
 
   const [newAgreement, setNewAgreement] = useState({
     propertyId: '',
@@ -473,11 +491,12 @@ export function Agreements() {
   }
 
   const { data: agreementsResponse, isLoading } = useQuery({
-    queryKey: ['agreements', user?.id, filterType, filterStatus, filterProperty],
+    queryKey: ['agreements', user?.id, filterType, filterStatus, filterProperty, searchQuery],
     queryFn: () => agreementsAPI.getAgreements({
       type: filterType && filterType !== 'all' ? filterType : undefined,
       status: filterStatus && filterStatus !== 'all' ? filterStatus : undefined,
       propertyId: filterProperty && filterProperty !== 'all' ? filterProperty : undefined,
+      search: searchQuery || undefined,
     }),
     enabled: permissions.canView,
   });
@@ -936,63 +955,37 @@ export function Agreements() {
           </div>
         </div>
 
-        {}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 p-3 sm:p-4 bg-card border border-border rounded-lg">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filtros:</span>
-          </div>
-          <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-4 flex-1">
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os tipos</SelectItem>
-                {agreementTypes.map(t => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                {agreementStatuses.map(s => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterProperty} onValueChange={setFilterProperty}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Imóvel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos imóveis</SelectItem>
-                {properties.map((property) => (
-                  <SelectItem key={property.id} value={property.id?.toString()}>
-                    {property.name || property.address}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {(filterType || filterStatus || filterProperty) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full sm:w-auto"
-              onClick={() => {
-                setFilterType('');
-                setFilterStatus('');
-                setFilterProperty('');
-              }}
-            >
-              Limpar filtros
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por título, imóvel ou inquilino"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
             </Button>
-          )}
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
         </div>
 
         {}

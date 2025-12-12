@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsAPI, propertiesAPI, contractsAPI } from '../../api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOwnerPermissions } from '../../hooks/useOwnerPermissions';
@@ -15,6 +15,7 @@ import {
   Eye,
   MoreHorizontal,
   User,
+  Search,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { ReadOnlyBadge } from '../../components/ui/read-only-badge';
@@ -81,6 +82,19 @@ export function Payments() {
   const [updating, setUpdating] = useState(false);
   const [deleting] = useState(false);
 
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+  }, []);
+
   if (!canViewPayments) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -93,8 +107,8 @@ export function Payments() {
   }
 
   const { data: payments, isLoading } = useQuery({
-    queryKey: ['payments'],
-    queryFn: () => paymentsAPI.getPayments(),
+    queryKey: ['payments', searchQuery],
+    queryFn: () => paymentsAPI.getPayments(searchQuery ? { search: searchQuery } : undefined),
     enabled: canViewPayments,
   });
 
@@ -311,6 +325,39 @@ export function Payments() {
               <TooltipContent>Registrar Pagamento</TooltipContent>
             </Tooltip>
           )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por imóvel ou inquilino"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
         </div>
 
         {}

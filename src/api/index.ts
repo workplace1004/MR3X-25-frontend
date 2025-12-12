@@ -78,9 +78,14 @@ export const propertiesAPI = {
 };
 
 export const contractsAPI = {
-  getContracts: async () => {
-    const response = await apiClient.get('/contracts');
-    
+  getContracts: async (params?: { search?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) {
+      qs.append('search', params.search);
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/contracts${query ? `?${query}` : ''}`);
+
     return Array.isArray(response.data) ? response.data : (response.data?.data || []);
   },
 
@@ -239,8 +244,13 @@ export const contractTemplatesAPI = {
 };
 
 export const paymentsAPI = {
-  getPayments: async () => {
-    const response = await apiClient.get('/payments');
+  getPayments: async (params?: { search?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) {
+      qs.append('search', params.search);
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/payments${query ? `?${query}` : ''}`);
     return response.data;
   },
 
@@ -313,8 +323,11 @@ export const usersAPI = {
     return response.data;
   },
 
-  getTenants: async () => {
-    const response = await apiClient.get('/users/tenants');
+  getTenants: async (params?: { search?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.search) qs.append('search', params.search);
+    const query = qs.toString();
+    const response = await apiClient.get(`/users/tenants${query ? `?${query}` : ''}`);
     return response.data;
   },
 
@@ -561,6 +574,16 @@ export const plansAPI = {
     return response.data;
   },
 
+  canCreateTenant: async (agencyId: string) => {
+    const response = await apiClient.get(`/plans/agency/${agencyId}/can-create-tenant`);
+    return response.data;
+  },
+
+  canCreateTenantForOwner: async (userId: string) => {
+    const response = await apiClient.get(`/plans/user/${userId}/can-create-tenant`);
+    return response.data;
+  },
+
   getScreeningPrice: async (agencyId: string) => {
     const response = await apiClient.get(`/plans/agency/${agencyId}/screening-price`);
     return response.data;
@@ -783,6 +806,7 @@ export const inspectionsAPI = {
     inspectorId?: string;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }) => {
     const qs = new URLSearchParams();
     if (params) {
@@ -995,6 +1019,7 @@ export const extrajudicialNotificationsAPI = {
     endDate?: string;
     skip?: number;
     take?: number;
+    search?: string;
   }) => {
     const qs = new URLSearchParams();
     if (params) {
@@ -1211,6 +1236,7 @@ export const agreementsAPI = {
     ownerId?: string;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }) => {
     const qs = new URLSearchParams();
     if (params) {
@@ -1330,6 +1356,7 @@ export const invoicesAPI = {
     referenceMonth?: string;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }) => {
     const qs = new URLSearchParams();
     if (params) {
@@ -1818,6 +1845,7 @@ export const tenantAnalysisAPI = {
     status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'EXPIRED';
     page?: number;
     limit?: number;
+    search?: string;
   }) => {
     const qs = new URLSearchParams();
     if (params) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import Barcode from 'react-barcode';
@@ -142,9 +142,23 @@ export default function ExtrajudicialNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, _setStatusFilter] = useState<string>('');
+  const [typeFilter, _setTypeFilter] = useState<string>('');
+
+  // Suppress unused variable warnings - filters will be implemented later
+  void _setStatusFilter;
+  void _setTypeFilter;
   const [statistics, setStatistics] = useState<any>(null);
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim());
+  }, [searchTerm]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('');
+    setSearchQuery('');
+  }, []);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -513,8 +527,8 @@ export default function ExtrajudicialNotifications() {
   };
 
   const filteredNotifications = notifications.filter(n => {
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
+    if (searchQuery) {
+      const search = searchQuery.toLowerCase();
       return (
         n.notificationNumber?.toLowerCase().includes(search) ||
         n.creditorName?.toLowerCase().includes(search) ||
@@ -582,48 +596,39 @@ export default function ExtrajudicialNotifications() {
         </div>
       )}
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-3 sm:p-4">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <div className="w-full sm:flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
-              <Select value={statusFilter || 'ALL'} onValueChange={(v) => setStatusFilter(v === 'ALL' ? '' : v)}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todos os Status</SelectItem>
-                  {statusOptions.map(s => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={typeFilter || 'ALL'} onValueChange={(v) => setTypeFilter(v === 'ALL' ? '' : v)}>
-                <SelectTrigger className="w-full sm:w-[150px]">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todos os Tipos</SelectItem>
-                  {typeOptions.map(t => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex w-full sm:max-w-lg gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSearch();
+                }
+              }}
+              placeholder="Pesquisar por número, credor ou devedor"
+              className="pl-10"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Button onClick={handleSearch} className="self-stretch">
+            Buscar
+          </Button>
+          {(searchTerm || searchQuery) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSearch}
+              className="self-stretch"
+            >
+              Limpar
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Notifications List */}
       <Card>

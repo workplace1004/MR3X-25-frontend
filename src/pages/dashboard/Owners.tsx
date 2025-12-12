@@ -19,7 +19,8 @@ import {
   XCircle,
   Loader2,
   Crown,
-  AlertTriangle
+  AlertTriangle,
+  Search
 } from 'lucide-react'
 import { DocumentInput } from '@/components/ui/document-input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -101,6 +102,19 @@ export function Owners() {
   const [emailVerified, setEmailVerified] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
 
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchTerm.trim())
+  }, [searchTerm])
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+    setSearchQuery('')
+  }, [])
+
   const checkEmailExists = useCallback(async (email: string, currentEmail?: string) => {
     setEmailVerified(false)
 
@@ -150,9 +164,9 @@ export function Owners() {
   }
 
   const { data: owners, isLoading } = useQuery({
-    queryKey: ['owners', user?.id, user?.agencyId],
+    queryKey: ['owners', user?.id, user?.agencyId, searchQuery],
     queryFn: async () => {
-      const list = await usersAPI.listUsers({ role: 'PROPRIETARIO', pageSize: 100 })
+      const list = await usersAPI.listUsers({ role: 'PROPRIETARIO', pageSize: 100, search: searchQuery || undefined })
       return list.items || []
     },
     enabled: canViewUsers,
@@ -431,6 +445,39 @@ export function Owners() {
                 <Plus className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Cadastrar Proprietário</span>
                 <span className="sm:hidden">Adicionar</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSearch()
+                  }
+                }}
+                placeholder="Pesquisar por nome, email ou documento"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
               </Button>
             )}
           </div>
