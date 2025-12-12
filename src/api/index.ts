@@ -476,6 +476,11 @@ export const agenciesAPI = {
     const response = await apiClient.get(`/agencies/${id}/check-user-creation`);
     return response.data;
   },
+
+  changePlan: async (id: string, newPlan: string) => {
+    const response = await apiClient.post(`/agencies/${id}/change-plan`, { newPlan });
+    return response.data;
+  },
 };
 
 export const plansAPI = {

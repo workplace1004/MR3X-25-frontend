@@ -9,6 +9,7 @@ import {
   Users,
   Check,
   ArrowUpCircle,
+  ArrowDownCircle,
   AlertTriangle,
   Loader2,
   Lock,
@@ -83,6 +84,7 @@ const getPlanColor = (name: string) => {
     case 'free':
       return 'bg-gray-500';
     case 'essential':
+    case 'basic':
       return 'bg-blue-500';
     case 'professional':
       return 'bg-purple-500';
@@ -93,6 +95,23 @@ const getPlanColor = (name: string) => {
   }
 };
 
+// Plan order for comparison (higher index = better plan)
+const PLAN_ORDER: Record<string, number> = {
+  'FREE': 0,
+  'BASIC': 1,
+  'ESSENTIAL': 1,
+  'PROFESSIONAL': 2,
+  'ENTERPRISE': 3,
+};
+
+const getPlanOrder = (planName: string): number => {
+  return PLAN_ORDER[planName.toUpperCase()] ?? 0;
+};
+
+const isUpgrade = (currentPlan: string, newPlan: string): boolean => {
+  return getPlanOrder(newPlan) > getPlanOrder(currentPlan);
+};
+
 export function AgencyPlanConfig() {
   const { user, hasPermission } = useAuth();
   const queryClient = useQueryClient();
@@ -101,6 +120,7 @@ export function AgencyPlanConfig() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PlanChangePreview | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [changingPlan, setChangingPlan] = useState(false);
   const [creci, setCreci] = useState('');
   const [creciState, setCreciState] = useState('');
   const [savingCreci, setSavingCreci] = useState(false);
@@ -211,16 +231,25 @@ export function AgencyPlanConfig() {
   };
 
   const handleRequestPlanChange = async () => {
-    if (!selectedPlan) return;
+    if (!selectedPlan || !agencyId) return;
 
+    setChangingPlan(true);
     try {
-      
-      toast.success('Solicitação de mudança de plano enviada! Nossa equipe entrará em contato.');
+      const result = await agenciesAPI.changePlan(agencyId, selectedPlan);
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['agency', agencyId] });
+      queryClient.invalidateQueries({ queryKey: ['agency-plan-usage', agencyId] });
+      queryClient.invalidateQueries({ queryKey: ['agency-frozen-entities', agencyId] });
+
+      toast.success(result.message || 'Plano alterado com sucesso!');
       setShowUpgradeModal(false);
       setSelectedPlan(null);
       setPreviewData(null);
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao solicitar mudança de plano');
+      toast.error(error.response?.data?.message || error.message || 'Erro ao alterar plano');
+    } finally {
+      setChangingPlan(false);
     }
   };
 
@@ -513,6 +542,7 @@ export function AgencyPlanConfig() {
               const isCurrentPlan = currentPlanName.toUpperCase() === plan.name.toUpperCase();
               const PlanIcon = getPlanIcon(plan.name);
               const planColor = getPlanColor(plan.name);
+              const isPlanUpgrade = isUpgrade(currentPlanName, plan.name);
 
               return (
                 <Card key={plan.id} className={`relative overflow-visible flex flex-col ${isCurrentPlan ? 'border-2 border-primary' : ''}`}>
@@ -572,7 +602,7 @@ export function AgencyPlanConfig() {
 
                     <Button
                       className="w-full mt-4"
-                      variant={isCurrentPlan ? 'outline' : 'default'}
+                      variant={isCurrentPlan ? 'outline' : isPlanUpgrade ? 'default' : 'secondary'}
                       disabled={isCurrentPlan || loadingPreview}
                       onClick={() => handlePreviewPlanChange(plan.name.toUpperCase())}
                     >
@@ -580,10 +610,15 @@ export function AgencyPlanConfig() {
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       ) : isCurrentPlan ? (
                         'Plano Atual'
-                      ) : (
+                      ) : isPlanUpgrade ? (
                         <>
                           <ArrowUpCircle className="w-4 h-4 mr-2" />
-                          Selecionar
+                          Fazer Upgrade
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDownCircle className="w-4 h-4 mr-2" />
+                          Fazer Downgrade
                         </>
                       )}
                     </Button>
@@ -622,44 +657,44 @@ export function AgencyPlanConfig() {
                 <div className="flex items-center justify-between text-sm">
                   <span>Limite de Imóveis</span>
                   <span>
-                    {previewData.currentLimits.properties === -1 ? 'Ilimitado' : previewData.currentLimits.properties}
+                    {previewData.currentLimits?.properties === -1 ? 'Ilimitado' : (previewData.currentLimits?.properties ?? 0)}
                     {' '}&rarr;{' '}
-                    {previewData.newLimits.properties === -1 ? 'Ilimitado' : previewData.newLimits.properties}
+                    {previewData.newLimits?.properties === -1 ? 'Ilimitado' : (previewData.newLimits?.properties ?? 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span>Limite de Usuários</span>
                   <span>
-                    {previewData.currentLimits.users === -1 ? 'Ilimitado' : previewData.currentLimits.users}
+                    {previewData.currentLimits?.users === -1 ? 'Ilimitado' : (previewData.currentLimits?.users ?? 0)}
                     {' '}&rarr;{' '}
-                    {previewData.newLimits.users === -1 ? 'Ilimitado' : previewData.newLimits.users}
+                    {previewData.newLimits?.users === -1 ? 'Ilimitado' : (previewData.newLimits?.users ?? 0)}
                   </span>
                 </div>
               </div>
 
-              {previewData.willUnfreeze.properties > 0 || previewData.willUnfreeze.users > 0 ? (
+              {(previewData.willUnfreeze?.properties ?? 0) > 0 || (previewData.willUnfreeze?.users ?? 0) > 0 ? (
                 <Alert className="border-green-300 bg-green-50">
                   <Unlock className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800 text-sm">
-                    {previewData.willUnfreeze.properties > 0 && (
-                      <span>{previewData.willUnfreeze.properties} imóvel(eis) serão desbloqueados. </span>
+                    {(previewData.willUnfreeze?.properties ?? 0) > 0 && (
+                      <span>{previewData.willUnfreeze?.properties} imóvel(eis) serão desbloqueados. </span>
                     )}
-                    {previewData.willUnfreeze.users > 0 && (
-                      <span>{previewData.willUnfreeze.users} usuário(s) serão reativados.</span>
+                    {(previewData.willUnfreeze?.users ?? 0) > 0 && (
+                      <span>{previewData.willUnfreeze?.users} usuário(s) serão reativados.</span>
                     )}
                   </AlertDescription>
                 </Alert>
               ) : null}
 
-              {previewData.willFreeze.properties > 0 || previewData.willFreeze.users > 0 ? (
+              {(previewData.willFreeze?.properties ?? 0) > 0 || (previewData.willFreeze?.users ?? 0) > 0 ? (
                 <Alert className="border-amber-300 bg-amber-50">
                   <Lock className="h-4 w-4 text-amber-600" />
                   <AlertDescription className="text-amber-800 text-sm">
-                    {previewData.willFreeze.properties > 0 && (
-                      <span>{previewData.willFreeze.properties} imóvel(eis) serão congelados. </span>
+                    {(previewData.willFreeze?.properties ?? 0) > 0 && (
+                      <span>{previewData.willFreeze?.properties} imóvel(eis) serão congelados. </span>
                     )}
-                    {previewData.willFreeze.users > 0 && (
-                      <span>{previewData.willFreeze.users} usuário(s) serão desativados.</span>
+                    {(previewData.willFreeze?.users ?? 0) > 0 && (
+                      <span>{previewData.willFreeze?.users} usuário(s) serão desativados.</span>
                     )}
                   </AlertDescription>
                 </Alert>
@@ -667,11 +702,18 @@ export function AgencyPlanConfig() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUpgradeModal(false)}>
+            <Button variant="outline" onClick={() => setShowUpgradeModal(false)} disabled={changingPlan}>
               Cancelar
             </Button>
-            <Button onClick={handleRequestPlanChange}>
-              Solicitar Mudança
+            <Button onClick={handleRequestPlanChange} disabled={changingPlan}>
+              {changingPlan ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Alterando...
+                </>
+              ) : (
+                'Confirmar Mudança'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

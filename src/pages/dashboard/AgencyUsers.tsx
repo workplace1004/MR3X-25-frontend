@@ -57,20 +57,20 @@ const roleIcons: Record<UserRole, any> = {
 
 const statusLabels: Record<string, string> = {
   ACTIVE: 'Ativo',
-  INACTIVE: 'Inativo',
+  FROZEN: 'Congelado',
   SUSPENDED: 'Suspenso',
 }
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
-  INACTIVE: 'bg-yellow-100 text-yellow-800',
+  FROZEN: 'bg-blue-100 text-blue-800',
   SUSPENDED: 'bg-red-100 text-red-800',
 }
 
 // Get display status based on user data (checks isFrozen for plan limits)
 const getDisplayStatus = (userData: any): string => {
   if (userData.isFrozen) {
-    return 'INACTIVE'
+    return 'FROZEN'
   }
   if (userData.status === 'SUSPENDED') {
     return 'SUSPENDED'
