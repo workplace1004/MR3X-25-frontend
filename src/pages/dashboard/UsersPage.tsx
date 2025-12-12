@@ -156,9 +156,14 @@ export function UsersPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Usuários</h1>
-          <p className="text-sm text-muted-foreground">Gerencie usuários e permissões</p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-purple-100 rounded-lg">
+            <Users className="w-6 h-6 text-purple-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Usuários</h1>
+            <p className="text-sm text-muted-foreground">Gerencie usuários e permissões</p>
+          </div>
         </div>
         {canCreateUsers && (
           <Link to="/dashboard/users/new">

@@ -648,11 +648,16 @@ export function Tenants() {
     <TooltipProvider>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Inquilinos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie todos os seus inquilinos
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Users className="w-6 h-6 text-blue-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Inquilinos</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie todos os seus inquilinos
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex border border-border rounded-lg p-1">

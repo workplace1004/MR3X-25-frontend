@@ -907,8 +907,8 @@ export function TenantAnalysis() {
           <UserSearch className="w-6 h-6 text-blue-700" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Análise de Inquilinos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Análise de Inquilinos</h1>
+          <p className="text-muted-foreground mt-1">
             Verificação completa de candidatos a inquilinos
           </p>
         </div>

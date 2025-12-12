@@ -202,11 +202,16 @@ export function Chat() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Chat</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Converse com inquilinos e gerencie comunicações
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-blue-100 rounded-lg">
+            <MessageSquare className="w-6 h-6 text-blue-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Chat</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Converse com inquilinos e gerencie comunicações
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1">

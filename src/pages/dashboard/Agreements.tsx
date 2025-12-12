@@ -891,17 +891,22 @@ export function Agreements() {
       <div className="space-y-6">
         {}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Acordos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie acordos e termos negociados
-            </p>
-            {isMR3XRole && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-amber-600">
-                <Lock className="w-4 h-4" />
-                <span>Modo somente leitura (Funcao de plataforma)</span>
-              </div>
-            )}
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-violet-100 rounded-lg">
+              <FileSignature className="w-6 h-6 text-violet-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Acordos</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie acordos e termos negociados
+              </p>
+              {isMR3XRole && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-amber-600">
+                  <Lock className="w-4 h-4" />
+                  <span>Modo somente leitura (Funcao de plataforma)</span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {}

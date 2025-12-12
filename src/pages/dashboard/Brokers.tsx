@@ -20,7 +20,8 @@ import {
   Loader2,
   Crown,
   AlertTriangle,
-  Search
+  Search,
+  Briefcase
 } from 'lucide-react'
 import { DocumentInput } from '@/components/ui/document-input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -398,11 +399,16 @@ export function Brokers() {
     <TooltipProvider>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Corretores</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie todos os corretores da sua agencia
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <Briefcase className="w-6 h-6 text-yellow-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Corretores</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie todos os corretores da sua agencia
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex border border-border rounded-lg p-1">

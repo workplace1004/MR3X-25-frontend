@@ -692,11 +692,16 @@ export function Inspections() {
       <div className="space-y-6">
         {}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Vistorias</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie as vistorias de entrada, saída e periódicas
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-cyan-100 rounded-lg">
+              <ClipboardCheck className="w-6 h-6 text-cyan-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Vistorias</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie as vistorias de entrada, saída e periódicas
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {}

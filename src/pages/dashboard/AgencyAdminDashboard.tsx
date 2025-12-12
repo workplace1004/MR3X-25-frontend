@@ -177,11 +177,16 @@ export function AgencyAdminDashboard() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard do Diretor</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Visão geral da sua agência imobiliária
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-orange-100 rounded-lg">
+          <Home className="w-6 h-6 text-orange-700" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard do Diretor</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Visão geral da sua agência imobiliária
+          </p>
+        </div>
       </div>
 
       {}

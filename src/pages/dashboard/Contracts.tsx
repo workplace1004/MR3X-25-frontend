@@ -1388,11 +1388,16 @@ export function Contracts() {
     <TooltipProvider>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Contratos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie todos os seus contratos
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <FileText className="w-6 h-6 text-emerald-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Contratos</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie todos os seus contratos
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {}

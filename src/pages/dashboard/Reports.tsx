@@ -6,7 +6,7 @@ import { paymentsAPI, propertiesAPI, usersAPI } from '../../api'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext'
-import { Download, DollarSign, Building2, Users, Calendar } from 'lucide-react'
+import { Download, DollarSign, Building2, Users, Calendar, BarChart3 } from 'lucide-react'
 import { formatCurrency } from '../../lib/utils'
 
 export default function Reports() {
@@ -204,11 +204,16 @@ export default function Reports() {
     <div className="space-y-6">
       {}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Relatórios</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Análise completa de recebimentos e pagamentos
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-purple-100 rounded-lg">
+            <BarChart3 className="w-6 h-6 text-purple-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Relatórios</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Análise completa de recebimentos e pagamentos
+            </p>
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Select value={reportType} onValueChange={(v: any) => setReportType(v)}>

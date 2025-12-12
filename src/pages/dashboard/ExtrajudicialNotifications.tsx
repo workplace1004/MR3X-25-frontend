@@ -540,17 +540,21 @@ export default function ExtrajudicialNotifications() {
   });
 
   return (
-    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
-            Notificacoes Extrajudiciais
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie notificacoes extrajudiciais com valor juridico
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-amber-100 rounded-lg">
+            <Gavel className="w-6 h-6 text-amber-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+              Notificacoes Extrajudiciais
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Gerencie notificacoes extrajudiciais com valor juridico
+            </p>
+          </div>
         </div>
         {!isInquilino && !isProprietario && (
           <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">

@@ -1048,11 +1048,16 @@ export function Properties() {
     <TooltipProvider>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Imóveis</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie todos os seus imóveis em um só lugar
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <Building2 className="w-6 h-6 text-orange-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Imóveis</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie todos os seus imóveis em um só lugar
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             {user?.role === 'AGENCY_ADMIN' && (

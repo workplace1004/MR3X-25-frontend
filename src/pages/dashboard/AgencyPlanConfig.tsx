@@ -264,11 +264,16 @@ export function AgencyPlanConfig() {
   return (
     <div className="space-y-6">
       {}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Plano da Agência</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Gerencie o plano e os limites da sua agência
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-orange-100 rounded-lg">
+          <Package className="w-6 h-6 text-orange-700" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Plano da Agência</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            Gerencie o plano e os limites da sua agência
+          </p>
+        </div>
       </div>
 
       {}

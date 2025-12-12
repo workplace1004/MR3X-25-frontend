@@ -383,11 +383,16 @@ export function Invoices() {
       <div className="space-y-6">
         {}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Faturas</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie as faturas e cobran&ccedil;as dos contratos
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-amber-100 rounded-lg">
+              <Receipt className="w-6 h-6 text-amber-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Faturas</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie as faturas e cobran&ccedil;as dos contratos
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {}

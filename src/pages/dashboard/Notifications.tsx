@@ -131,11 +131,16 @@ export function Notifications() {
     <div className="space-y-6">
       {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Notificações</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            {unreadCount > 0 ? `Você tem ${unreadCount} notificações não lidas` : 'Todas as notificações foram lidas'}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-orange-100 rounded-lg">
+            <Bell className="w-6 h-6 text-orange-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Notificações</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              {unreadCount > 0 ? `Você tem ${unreadCount} notificações não lidas` : 'Todas as notificações foram lidas'}
+            </p>
+          </div>
         </div>
       </div>
 

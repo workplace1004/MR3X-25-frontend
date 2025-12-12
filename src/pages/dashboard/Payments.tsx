@@ -298,16 +298,21 @@ export function Payments() {
         )}
 
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">
-              Pagamentos
-              {isReadOnlyOwner && (
-                <ReadOnlyBadge className="ml-3 align-middle" />
-              )}
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Acompanhe todos os seus pagamentos
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <DollarSign className="w-6 h-6 text-green-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                Pagamentos
+                {isReadOnlyOwner && (
+                  <ReadOnlyBadge className="ml-3 align-middle" />
+                )}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Acompanhe todos os seus pagamentos
+              </p>
+            </div>
           </div>
           {canCreatePayments && (
             <Tooltip>

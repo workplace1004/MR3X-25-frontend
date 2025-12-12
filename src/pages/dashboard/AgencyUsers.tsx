@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Users,
+  UsersRound,
   Eye,
   MoreHorizontal,
   Grid3X3,
@@ -170,11 +171,16 @@ export function AgencyUsers() {
     <TooltipProvider>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Meus Usuários</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Visualize os usuários que você cadastrou ({myUsers?.length || 0} total)
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <UsersRound className="w-6 h-6 text-purple-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Meus Usuários</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Visualize os usuários que você cadastrou ({myUsers?.length || 0} total)
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex border border-border rounded-lg p-1">
