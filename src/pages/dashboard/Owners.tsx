@@ -24,7 +24,6 @@ import {
   Search
 } from 'lucide-react'
 import { DocumentInput } from '@/components/ui/document-input'
-import { FrozenUserBadge } from '@/components/ui/FrozenBadge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { CEPInput } from '@/components/ui/cep-input'
 import { RGInput } from '@/components/ui/rg-input'
