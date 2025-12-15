@@ -21,7 +21,8 @@ import {
   Loader2,
   Crown,
   AlertTriangle,
-  Search
+  Search,
+  CreditCard
 } from 'lucide-react'
 import { DocumentInput } from '@/components/ui/document-input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -79,6 +80,10 @@ export function Owners() {
     maritalStatus: '',
     profession: '',
     rg: '',
+    bankName: '',
+    bankBranch: '',
+    bankAccount: '',
+    pixKey: '',
   })
 
   const [editForm, setEditForm] = useState({
@@ -97,6 +102,10 @@ export function Owners() {
     maritalStatus: '',
     profession: '',
     rg: '',
+    bankName: '',
+    bankBranch: '',
+    bankAccount: '',
+    pixKey: '',
   })
 
   const [selectedOwner, setSelectedOwner] = useState<any>(null)
@@ -210,7 +219,8 @@ export function Owners() {
       setNewOwner({
         document: '', name: '', phone: '', email: '', password: '', birthDate: '',
         cep: '', address: '', neighborhood: '', city: '', state: '',
-        nationality: '', maritalStatus: '', profession: '', rg: ''
+        nationality: '', maritalStatus: '', profession: '', rg: '',
+        bankName: '', bankBranch: '', bankAccount: '', pixKey: ''
       })
       toast.success('Imóvel criado com sucesso')
     },
@@ -369,6 +379,10 @@ export function Owners() {
         maritalStatus: fullOwnerDetails.maritalStatus || '',
         profession: fullOwnerDetails.profession || '',
         rg: fullOwnerDetails.rg || '',
+        bankName: fullOwnerDetails.bankName || '',
+        bankBranch: fullOwnerDetails.bankBranch || '',
+        bankAccount: fullOwnerDetails.bankAccount || '',
+        pixKey: fullOwnerDetails.pixKey || '',
       })
       setEmailVerified(true) // Current email is valid
       setShowEditModal(true)
@@ -865,6 +879,37 @@ export function Owners() {
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Crown className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Dados Bancários</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bankName">Banco</Label>
+                    <Input id="bankName" name="bankName" value={newOwner.bankName} onChange={handleInputChange} placeholder="Ex: Banco do Brasil" />
+                  </div>
+                  <div>
+                    <Label htmlFor="bankBranch">Agência</Label>
+                    <Input id="bankBranch" name="bankBranch" value={newOwner.bankBranch} onChange={handleInputChange} placeholder="Ex: 1234-5" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="bankAccount">Conta</Label>
+                    <Input id="bankAccount" name="bankAccount" value={newOwner.bankAccount} onChange={handleInputChange} placeholder="Ex: 12345-6" />
+                  </div>
+                  <div>
+                    <Label htmlFor="pixKey">Chave PIX</Label>
+                    <Input id="pixKey" name="pixKey" value={newOwner.pixKey} onChange={handleInputChange} placeholder="CPF, Email, Telefone ou Chave Aleatória" />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)} disabled={creating}>
                   Cancelar
@@ -1035,6 +1080,37 @@ export function Owners() {
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Crown className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Dados Bancários</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-bankName">Banco</Label>
+                    <Input id="edit-bankName" name="bankName" value={editForm.bankName} onChange={handleEditInputChange} placeholder="Ex: Banco do Brasil" />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-bankBranch">Agência</Label>
+                    <Input id="edit-bankBranch" name="bankBranch" value={editForm.bankBranch} onChange={handleEditInputChange} placeholder="Ex: 1234-5" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-bankAccount">Conta</Label>
+                    <Input id="edit-bankAccount" name="bankAccount" value={editForm.bankAccount} onChange={handleEditInputChange} placeholder="Ex: 12345-6" />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-pixKey">Chave PIX</Label>
+                    <Input id="edit-pixKey" name="pixKey" value={editForm.pixKey} onChange={handleEditInputChange} placeholder="CPF, Email, Telefone ou Chave Aleatória" />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} disabled={updating} className="text-orange-600 border-orange-600 hover:bg-orange-50">
                   Cancelar
@@ -1137,6 +1213,33 @@ export function Owners() {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Estado</label>
                       <div className="text-base">{ownerDetail.state || '-'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <CreditCard className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Dados Bancários</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Banco</label>
+                      <div className="text-base">{ownerDetail.bankName || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Agência</label>
+                      <div className="text-base">{ownerDetail.bankBranch || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Conta</label>
+                      <div className="text-base">{ownerDetail.bankAccount || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Chave PIX</label>
+                      <div className="text-base">{ownerDetail.pixKey || '-'}</div>
                     </div>
                   </div>
                 </div>

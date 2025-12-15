@@ -962,6 +962,29 @@ export function Contracts() {
 
       // Fiador
       FIADOR_DADOS: '',
+      FIADOR_NOME: contractData.guarantorName || '',
+      FIADOR_CPF: formatDocument(contractData.guarantorDocument) || '',
+      FIADOR_RG: contractData.guarantorRg || '',
+      FIADOR_ENDERECO: contractData.guarantorAddress || '',
+      FIADOR_PROFISSAO: contractData.guarantorProfession || '',
+      FIADOR_RESPONSABILIDADE_SOLIDARIA: 'SIM',
+      IP_FIADOR: contractData.guarantorSignatureIP || '[IP registrado na assinatura]',
+      DATA_ASS_FIADOR: contractData.guarantorSignedAt ? new Date(contractData.guarantorSignedAt).toLocaleDateString('pt-BR') : '________________________________',
+
+      // Finalidade
+      FINALIDADE_ESPECIAL: contractData.specialPurpose || 'N/A',
+
+      // Pagamento
+      FORMA_PAGAMENTO: contractData.paymentMethod || 'Depósito bancário / PIX',
+      USO_IMOBILIARIA: contractData.useRealEstate ? 'SIM' : 'NÃO',
+      DADOS_BANCARIOS: contractOwner?.bankName ? `Banco: ${contractOwner.bankName}, Ag: ${contractOwner.bankBranch || ''}, Conta: ${contractOwner.bankAccount || ''}, PIX: ${contractOwner.pixKey || ''}` : 'A ser informado',
+
+      // Garantia
+      GARANTIA_DADOS: contractData.guaranteeDetails || '',
+
+      // Correção e Multas
+      INDICE_CORRECAO: contractData.readjustmentIndex || 'IGP-M',
+      MULTA_RESCISAO_MESES: contractData.earlyTerminationPenaltyMonths || '3',
 
       // Vistoria
       DATA_VISTORIA_INICIAL: contractData.startDate ? new Date(contractData.startDate).toLocaleDateString('pt-BR') : '',
@@ -993,7 +1016,7 @@ export function Contracts() {
 
       // Contract Type 2 - Property Administration specific variables
       IMOVEL_AREA_CONSTRUIDA: contractProperty?.builtArea ? `${parseFloat(contractProperty.builtArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : 'N/A',
-      IMOVEL_AREA_TOTAL: contractProperty?.totalArea ? `${parseFloat(contractProperty.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : 'N/A',
+      IMOVEL_AREA_TOTAL: contractProperty?.totalArea ? `${parseFloat(contractProperty.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
       IMOVEL_AREA: contractProperty?.builtArea ? `${parseFloat(contractProperty.builtArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : (contractProperty?.totalArea ? `${parseFloat(contractProperty.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : 'N/A'),
       IMOVEL_BAIRRO: contractProperty?.neighborhood || '',
       IMOVEL_MOVEIS: contractProperty?.furnitureList || 'Conforme vistoria',
@@ -1009,6 +1032,55 @@ export function Contracts() {
       VALOR_EMERGENCIA: '500,00',
       VALOR_LIMITE_SERVICOS: '300,00',
       MODELO_AUTORIZACAO: 'Sistema digital da imobiliária',
+
+      // Contract Type 4 - Rural Property Rental specific variables
+      // Multiple Landlords (Locador 1 = primary owner)
+      LOCADOR1_NOME: contractOwner?.name || '',
+      LOCADOR1_NACIONALIDADE: contractOwner?.nationality || 'Brasileira',
+      LOCADOR1_ESTADO_CIVIL: contractOwner?.maritalStatus || '',
+      LOCADOR1_PROFISSAO: contractOwner?.profession || '',
+      LOCADOR1_RG: contractOwner?.rg || '',
+      LOCADOR1_CPF: formatDocument(contractOwner?.document) || '',
+      LOCADOR1_ENDERECO: formatAddress(contractOwner) || '',
+
+      // Multiple Landlords (Locador 2 - secondary owner/spouse)
+      LOCADOR2_NOME: contractOwner?.spouseName || '',
+      LOCADOR2_NACIONALIDADE: contractOwner?.spouseNationality || 'Brasileira',
+      LOCADOR2_ESTADO_CIVIL: contractOwner?.maritalStatus || '',
+      LOCADOR2_PROFISSAO: contractOwner?.spouseProfession || '',
+      LOCADOR2_RG: contractOwner?.spouseRg || '',
+      LOCADOR2_CPF: formatDocument(contractOwner?.spouseDocument) || '',
+      LOCADOR2_ENDERECO: formatAddress(contractOwner) || '',
+
+      // Tenant Representative (PJ)
+      LOCATARIO_REP_NOME: contractTenant?.representativeName || contractTenant?.company?.responsible || contractTenant?.name || '',
+      LOCATARIO_REP_NACIONALIDADE: contractTenant?.representativeNationality || contractTenant?.nationality || 'Brasileira',
+      LOCATARIO_REP_ESTADO_CIVIL: contractTenant?.representativeMaritalStatus || contractTenant?.maritalStatus || '',
+      LOCATARIO_REP_CPF: formatDocument(contractTenant?.representativeDocument || contractTenant?.document) || '',
+      LOCATARIO_REP_RG: contractTenant?.representativeRg || contractTenant?.rg || '',
+      LOCATARIO_REP_ENDERECO: contractTenant?.representativeAddress || formatAddress(contractTenant) || '',
+
+      // Rural Property Specific
+      IMOVEL_LOCALIDADE: contractProperty?.locality || formatAddress(contractProperty) || '',
+      IMOVEL_AREA_LOCADA: contractProperty?.rentedArea ? `${parseFloat(contractProperty.rentedArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : (contractProperty?.builtArea || ''),
+      IMOVEL_COMARCA: contractProperty?.county || contractProperty?.city || '',
+      FINALIDADE_USO: contractData.purposeOfUse || 'Exploração agrícola',
+
+      // Payment Information (from owner's banking data)
+      BANCO: contractOwner?.bankName || '[A ser informado]',
+      AGENCIA: contractOwner?.bankBranch || '[A ser informado]',
+      CONTA: contractOwner?.bankAccount || '[A ser informado]',
+      CHAVE_PIX: contractOwner?.pixKey || '[A ser informado]',
+
+      // Rural Contract Penalties
+      MULTA_RESTITUICAO_MESES: contractData.restitutionPenaltyMonths || '3',
+      MULTA_INFRACAO_MESES: contractData.infractionPenaltyMonths || '3',
+      DATA_VISTORIA_FINAL: contractData.endDate ? new Date(contractData.endDate).toLocaleDateString('pt-BR') : '',
+
+      // Multiple Signatures
+      DATA_ASS_LOCADOR1: contractData.ownerSignedAt ? new Date(contractData.ownerSignedAt).toLocaleDateString('pt-BR') : '________________________________',
+      DATA_ASS_LOCADOR2: contractData.secondOwnerSignedAt ? new Date(contractData.secondOwnerSignedAt).toLocaleDateString('pt-BR') : '________________________________',
+      IP_LOCADORES: contractData.ownerSignedIP || '[IP registrado na assinatura]',
 
     };
 
@@ -1332,6 +1404,29 @@ export function Contracts() {
 
       // Fiador
       FIADOR_DADOS: '',
+      FIADOR_NOME: (newContract as any).guarantorName || '',
+      FIADOR_CPF: formatDocument((newContract as any).guarantorDocument) || '',
+      FIADOR_RG: (newContract as any).guarantorRg || '',
+      FIADOR_ENDERECO: (newContract as any).guarantorAddress || '',
+      FIADOR_PROFISSAO: (newContract as any).guarantorProfession || '',
+      FIADOR_RESPONSABILIDADE_SOLIDARIA: 'SIM',
+      IP_FIADOR: '[IP registrado na assinatura]',
+      DATA_ASS_FIADOR: '________________________________',
+
+      // Finalidade
+      FINALIDADE_ESPECIAL: (newContract as any).specialPurpose || 'N/A',
+
+      // Pagamento
+      FORMA_PAGAMENTO: (newContract as any).paymentMethod || 'Depósito bancário / PIX',
+      USO_IMOBILIARIA: (newContract as any).useRealEstate ? 'SIM' : 'NÃO',
+      DADOS_BANCARIOS: owner?.bankName ? `Banco: ${owner.bankName}, Ag: ${owner.bankBranch || ''}, Conta: ${owner.bankAccount || ''}, PIX: ${owner.pixKey || ''}` : 'A ser informado',
+
+      // Garantia
+      GARANTIA_DADOS: (newContract as any).guaranteeDetails || '',
+
+      // Correção e Multas
+      INDICE_CORRECAO: newContract.readjustmentIndex || 'IGP-M',
+      MULTA_RESCISAO_MESES: newContract.earlyTerminationPenaltyMonths || '3',
 
       // Vistoria
       DATA_VISTORIA_INICIAL: newContract.startDate ? new Date(newContract.startDate).toLocaleDateString('pt-BR') : '',
@@ -1363,7 +1458,7 @@ export function Contracts() {
 
       // Contract Type 2 - Property Administration specific variables
       IMOVEL_AREA_CONSTRUIDA: selectedProperty?.builtArea ? `${parseFloat(selectedProperty.builtArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : 'N/A',
-      IMOVEL_AREA_TOTAL: selectedProperty?.totalArea ? `${parseFloat(selectedProperty.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : 'N/A',
+      IMOVEL_AREA_TOTAL: selectedProperty?.totalArea ? `${parseFloat(selectedProperty.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '',
       IMOVEL_AREA: selectedProperty?.builtArea ? `${parseFloat(selectedProperty.builtArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : (selectedProperty?.totalArea ? `${parseFloat(selectedProperty.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} m²` : 'N/A'),
       IMOVEL_BAIRRO: selectedProperty?.neighborhood || '',
       IMOVEL_MOVEIS: selectedProperty?.furnitureList || 'Conforme vistoria',
@@ -1379,6 +1474,55 @@ export function Contracts() {
       VALOR_EMERGENCIA: '500,00',
       VALOR_LIMITE_SERVICOS: '300,00',
       MODELO_AUTORIZACAO: 'Sistema digital da imobiliária',
+
+      // Contract Type 4 - Rural Property Rental specific variables
+      // Multiple Landlords (Locador 1 = primary owner)
+      LOCADOR1_NOME: owner?.name || '',
+      LOCADOR1_NACIONALIDADE: owner?.nationality || 'Brasileira',
+      LOCADOR1_ESTADO_CIVIL: owner?.maritalStatus || '',
+      LOCADOR1_PROFISSAO: owner?.profession || '',
+      LOCADOR1_RG: owner?.rg || '',
+      LOCADOR1_CPF: formatDocument(owner?.document) || '',
+      LOCADOR1_ENDERECO: formatAddress(owner) || '',
+
+      // Multiple Landlords (Locador 2 - secondary owner/spouse)
+      LOCADOR2_NOME: owner?.spouseName || '',
+      LOCADOR2_NACIONALIDADE: owner?.spouseNationality || 'Brasileira',
+      LOCADOR2_ESTADO_CIVIL: owner?.maritalStatus || '',
+      LOCADOR2_PROFISSAO: owner?.spouseProfession || '',
+      LOCADOR2_RG: owner?.spouseRg || '',
+      LOCADOR2_CPF: formatDocument(owner?.spouseDocument) || '',
+      LOCADOR2_ENDERECO: formatAddress(owner) || '',
+
+      // Tenant Representative (PJ)
+      LOCATARIO_REP_NOME: selectedTenant?.representativeName || selectedTenant?.company?.responsible || selectedTenant?.name || '',
+      LOCATARIO_REP_NACIONALIDADE: selectedTenant?.representativeNationality || selectedTenant?.nationality || 'Brasileira',
+      LOCATARIO_REP_ESTADO_CIVIL: selectedTenant?.representativeMaritalStatus || selectedTenant?.maritalStatus || '',
+      LOCATARIO_REP_CPF: formatDocument(selectedTenant?.representativeDocument || selectedTenant?.document) || '',
+      LOCATARIO_REP_RG: selectedTenant?.representativeRg || selectedTenant?.rg || '',
+      LOCATARIO_REP_ENDERECO: selectedTenant?.representativeAddress || formatAddress(selectedTenant) || '',
+
+      // Rural Property Specific
+      IMOVEL_LOCALIDADE: selectedProperty?.locality || formatAddress(selectedProperty) || '',
+      IMOVEL_AREA_LOCADA: selectedProperty?.rentedArea ? `${parseFloat(selectedProperty.rentedArea).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : (selectedProperty?.builtArea || ''),
+      IMOVEL_COMARCA: selectedProperty?.county || selectedProperty?.city || '',
+      FINALIDADE_USO: (newContract as any).purposeOfUse || 'Exploração agrícola',
+
+      // Payment Information (from owner's banking data)
+      BANCO: owner?.bankName || '[A ser informado]',
+      AGENCIA: owner?.bankBranch || '[A ser informado]',
+      CONTA: owner?.bankAccount || '[A ser informado]',
+      CHAVE_PIX: owner?.pixKey || '[A ser informado]',
+
+      // Rural Contract Penalties
+      MULTA_RESTITUICAO_MESES: (newContract as any).restitutionPenaltyMonths || '3',
+      MULTA_INFRACAO_MESES: (newContract as any).infractionPenaltyMonths || '3',
+      DATA_VISTORIA_FINAL: newContract.endDate ? new Date(newContract.endDate).toLocaleDateString('pt-BR') : '',
+
+      // Multiple Signatures
+      DATA_ASS_LOCADOR1: '________________________________',
+      DATA_ASS_LOCADOR2: '________________________________',
+      IP_LOCADORES: '[Será registrado na assinatura]',
 
     };
 
