@@ -42,22 +42,26 @@ export default function Reports() {
     return Array.from({ length: 5 }).map((_, idx) => currentYear - idx)
   }, [currentYear])
 
+  // Load properties, tenants and payments for stats display (regardless of reportType)
   useEffect(() => {
     if (!canViewReports) return
 
     const loadData = async () => {
       try {
-        if (reportType === 'property' && canViewProperties && properties.length === 0) {
+        // Always load properties for stats display
+        if (canViewProperties && properties.length === 0) {
           const propertiesData = await propertiesAPI.getProperties()
           setProperties(ensureArray(propertiesData))
         }
 
-        if (reportType === 'tenant' && canViewUsers && tenants.length === 0) {
+        // Always load tenants for stats display
+        if (canViewUsers && tenants.length === 0) {
           const tenantsData = await usersAPI.getTenants()
           setTenants(ensureArray(tenantsData))
         }
 
-        if ((reportType === 'property' || reportType === 'tenant') && canViewPayments && payments.length === 0) {
+        // Always load payments for charts and stats
+        if (canViewPayments && payments.length === 0) {
           const paymentsData = await paymentsAPI.getPayments()
           setPayments(ensureArray(paymentsData))
         }
@@ -66,7 +70,7 @@ export default function Reports() {
       }
     }
     loadData()
-  }, [reportType, canViewProperties, canViewUsers, canViewPayments, canViewReports, properties.length, tenants.length, payments.length])
+  }, [canViewProperties, canViewUsers, canViewPayments, canViewReports, properties.length, tenants.length, payments.length])
 
   useEffect(() => {
     if (!canViewReports) return
@@ -76,7 +80,8 @@ export default function Reports() {
       setError(null)
       try {
         const response = await paymentsAPI.getAnnualReport(year)
-        const backendData = Array.isArray(response) ? response : (response?.data || [])
+        // Backend returns { year, total, totalPayments, monthly: [...] }
+        const backendData = Array.isArray(response) ? response : (response?.monthly || response?.data || [])
 
         const monthToIndex = (m: string | number | undefined): number => {
           if (typeof m === 'number') return Math.min(Math.max(m, 1), 12)
