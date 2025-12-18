@@ -68,6 +68,8 @@ const getPlanNameInPortuguese = (name?: string | null) => {
   switch (name.toLowerCase()) {
     case 'free':
       return 'Gratuito';
+    case 'basic':
+      return 'Básico';
     case 'essential':
       return 'Essencial';
     case 'professional':
@@ -379,15 +381,33 @@ export function AgencyPlanConfig() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Limite de Imóveis:</span>
+              <span className="text-sm">Imóveis:</span>
               <Badge variant="outline">
                 {currentPlanData?.propertyLimit || 1}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Limite de Usuários:</span>
+              <span className="text-sm">Inquilinos:</span>
               <Badge variant="outline">
-                {currentPlanData?.userLimit || 1}
+                {currentPlanData?.tenantLimit || currentPlanData?.maxTenants || currentPlanData?.propertyLimit || 1}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Proprietários:</span>
+              <Badge variant="outline">
+                {currentPlanData?.ownerLimit || currentPlanData?.maxOwners || currentPlanData?.propertyLimit || 1}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Corretores:</span>
+              <Badge variant="outline">
+                {currentPlanData?.brokerLimit || currentPlanData?.maxBrokers || 1}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Gerentes:</span>
+              <Badge variant="outline">
+                {currentPlanData?.managerLimit || currentPlanData?.maxManagers || 1}
               </Badge>
             </div>
           </div>
@@ -622,15 +642,33 @@ export function AgencyPlanConfig() {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Limite de Imóveis:</span>
+                        <span className="text-sm">Imóveis:</span>
                         <Badge variant="outline">
                           {plan.propertyLimit}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Limite de Usuários:</span>
+                        <span className="text-sm">Inquilinos:</span>
                         <Badge variant="outline">
-                          {plan.userLimit}
+                          {plan.tenantLimit || plan.maxTenants || plan.propertyLimit}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Proprietários:</span>
+                        <Badge variant="outline">
+                          {plan.ownerLimit || plan.maxOwners || plan.propertyLimit}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Corretores:</span>
+                        <Badge variant="outline">
+                          {plan.brokerLimit || plan.maxBrokers || 1}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Gerentes:</span>
+                        <Badge variant="outline">
+                          {plan.managerLimit || plan.maxManagers || 1}
                         </Badge>
                       </div>
                     </div>

@@ -255,6 +255,7 @@ export function Agencies() {
   const getPlanLabel = (plan: string) => {
     switch (plan) {
       case 'FREE': return 'Gratuito'
+      case 'BASIC': return 'Básico'
       case 'ESSENTIAL': return 'Essencial'
       case 'PROFESSIONAL': return 'Profissional'
       case 'ENTERPRISE': return 'Empresarial'

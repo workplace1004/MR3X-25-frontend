@@ -47,6 +47,8 @@ const getPlanNameInPortuguese = (name: string) => {
   switch (name.toLowerCase()) {
     case 'free':
       return 'Gratuito';
+    case 'basic':
+      return 'Básico';
     case 'essential':
       return 'Essencial';
     case 'professional':
@@ -62,6 +64,8 @@ const getPlanIcon = (name: string) => {
   switch (name.toLowerCase()) {
     case 'free':
       return Package;
+    case 'basic':
+      return Zap;
     case 'essential':
       return Star;
     case 'professional':
@@ -77,6 +81,8 @@ const getPlanColor = (name: string) => {
   switch (name.toLowerCase()) {
     case 'free':
       return 'bg-gray-500';
+    case 'basic':
+      return 'bg-blue-500';
     case 'essential':
       return 'bg-blue-500';
     case 'professional':
@@ -347,15 +353,21 @@ export function OwnerPlanConfig() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Limite de Imóveis:</span>
+              <span className="text-sm">Imóveis:</span>
               <Badge variant="outline">
                 {currentPlanData?.propertyLimit || 1}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Limite de Inquilinos:</span>
+              <span className="text-sm">Inquilinos:</span>
               <Badge variant="outline">
-                {currentPlanData?.userLimit || 5}
+                {currentPlanData?.tenantLimit || currentPlanData?.maxTenants || currentPlanData?.propertyLimit || 1}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Proprietários:</span>
+              <Badge variant="outline">
+                {currentPlanData?.ownerLimit || currentPlanData?.maxOwners || currentPlanData?.propertyLimit || 1}
               </Badge>
             </div>
           </div>
@@ -493,15 +505,21 @@ export function OwnerPlanConfig() {
 
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Limite de Imóveis:</span>
+                        <span className="text-sm">Imóveis:</span>
                         <Badge variant="outline">
                           {plan.propertyLimit}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm">Limite de Inquilinos:</span>
+                        <span className="text-sm">Inquilinos:</span>
                         <Badge variant="outline">
-                          {plan.userLimit}
+                          {plan.tenantLimit || plan.maxTenants || plan.propertyLimit}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Proprietários:</span>
+                        <Badge variant="outline">
+                          {plan.ownerLimit || plan.maxOwners || plan.propertyLimit}
                         </Badge>
                       </div>
                     </div>

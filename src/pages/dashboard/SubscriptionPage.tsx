@@ -93,6 +93,23 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('pt-BR');
 };
 
+const getPlanNameInPortuguese = (name: string) => {
+  switch (name?.toUpperCase()) {
+    case 'FREE':
+      return 'Gratuito';
+    case 'BASIC':
+      return 'Básico';
+    case 'ESSENTIAL':
+      return 'Essencial';
+    case 'PROFESSIONAL':
+      return 'Profissional';
+    case 'ENTERPRISE':
+      return 'Empresarial';
+    default:
+      return name;
+  }
+};
+
 const getPlanColor = (planName: string) => {
   switch (planName) {
     case 'FREE':
@@ -257,7 +274,7 @@ export function SubscriptionPage() {
                 <CardTitle className="flex items-center justify-between">
                   <span>Plano Atual</span>
                   <Badge className={getPlanColor(currentUsage?.plan || 'FREE')}>
-                    {currentUsage?.planDisplayName || 'FREE'}
+                    {getPlanNameInPortuguese(currentUsage?.plan || 'FREE')}
                   </Badge>
                 </CardTitle>
                 <CardDescription>
@@ -495,7 +512,7 @@ export function SubscriptionPage() {
                   )}
 
                   <CardHeader>
-                    <CardTitle>{plan.displayName}</CardTitle>
+                    <CardTitle>{getPlanNameInPortuguese(plan.name)}</CardTitle>
                     <CardDescription>{plan.description}</CardDescription>
                   </CardHeader>
 
@@ -710,7 +727,7 @@ export function SubscriptionPage() {
                       </TableCell>
                       <TableCell>
                         <Badge className={getPlanColor(month.plan)}>
-                          {month.plan}
+                          {getPlanNameInPortuguese(month.plan)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-amber-600">
@@ -737,8 +754,8 @@ export function SubscriptionPage() {
                 : 'Confirmar Alteracao de Plano'}
             </DialogTitle>
             <DialogDescription>
-              Voce esta alterando do plano {upgradePreview?.currentPlan} para{' '}
-              {upgradePreview?.targetPlan}
+              Voce esta alterando do plano {getPlanNameInPortuguese(upgradePreview?.currentPlan || '')} para{' '}
+              {getPlanNameInPortuguese(upgradePreview?.targetPlan || '')}
             </DialogDescription>
           </DialogHeader>
 

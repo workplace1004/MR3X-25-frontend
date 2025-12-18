@@ -72,7 +72,9 @@ export default function PlansPage() {
     price: '',
     propertyLimit: '',
     tenantLimit: '',
-    userLimit: '',
+    ownerLimit: '',
+    brokerLimit: '',
+    managerLimit: '',
     features: '',
     description: '',
     // Free usage limits
@@ -112,7 +114,9 @@ export default function PlansPage() {
       price: String(plan.price),
       propertyLimit: String(plan.propertyLimit),
       tenantLimit: String(plan.tenantLimit || plan.maxTenants || plan.propertyLimit),
-      userLimit: String(plan.userLimit),
+      ownerLimit: String(plan.ownerLimit || plan.maxOwners || plan.propertyLimit),
+      brokerLimit: String(plan.brokerLimit || plan.maxBrokers || 1),
+      managerLimit: String(plan.managerLimit || plan.maxManagers || 1),
       features: Array.isArray(plan.features) ? plan.features.join(', ') : plan.features || '',
       description: plan.description || '',
       // Free usage limits (-1 means unlimited)
@@ -193,7 +197,9 @@ export default function PlansPage() {
         propertyLimit: parseInt(planForm.propertyLimit),
         contractLimit: parseInt(planForm.propertyLimit), // Contracts = Properties
         tenantLimit: parseInt(planForm.tenantLimit),
-        userLimit: parseInt(planForm.userLimit),
+        ownerLimit: parseInt(planForm.ownerLimit),
+        brokerLimit: parseInt(planForm.brokerLimit),
+        managerLimit: parseInt(planForm.managerLimit),
         features: featuresArray,
         description: planForm.description,
         // Free usage limits
@@ -209,6 +215,8 @@ export default function PlansPage() {
     switch (name.toLowerCase()) {
       case 'free':
         return 'Gratuito'
+      case 'basic':
+        return 'Básico'
       case 'essential':
         return 'Essencial'
       case 'professional':
@@ -224,6 +232,8 @@ export default function PlansPage() {
     switch (name.toLowerCase()) {
       case 'free':
         return <Package className="w-8 h-8" />
+      case 'basic':
+        return <Zap className="w-8 h-8" />
       case 'essential':
         return <Star className="w-8 h-8" />
       case 'professional':
@@ -239,6 +249,8 @@ export default function PlansPage() {
     switch (name.toLowerCase()) {
       case 'free':
         return 'bg-gray-500'
+      case 'basic':
+        return 'bg-blue-500'
       case 'essential':
         return 'bg-blue-500'
       case 'professional':
@@ -389,21 +401,33 @@ export default function PlansPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Limite de Imóveis:</span>
+                  <span className="text-sm">Imóveis:</span>
                   <Badge variant="outline">
                     {plan.propertyLimit}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Limite de Inquilinos:</span>
+                  <span className="text-sm">Inquilinos:</span>
                   <Badge variant="outline">
                     {plan.tenantLimit || plan.maxTenants || plan.propertyLimit}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Usuários Internos:</span>
-                  <Badge variant="secondary">
-                    {plan.userLimit === 9999 || plan.userLimit === -1 ? '∞' : plan.userLimit}
+                  <span className="text-sm">Proprietários:</span>
+                  <Badge variant="outline">
+                    {plan.ownerLimit || plan.maxOwners || plan.propertyLimit}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Corretores:</span>
+                  <Badge variant="outline">
+                    {plan.brokerLimit || plan.maxBrokers || 1}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Gerentes:</span>
+                  <Badge variant="outline">
+                    {plan.managerLimit || plan.maxManagers || 1}
                   </Badge>
                 </div>
               </div>
@@ -517,17 +541,35 @@ export default function PlansPage() {
                   value={planForm.tenantLimit}
                   onChange={(e) => setPlanForm(prev => ({ ...prev, tenantLimit: e.target.value }))}
                 />
-                <p className="text-xs text-muted-foreground mt-1">1 contrato = 1 inquilino</p>
               </div>
               <div>
-                <Label htmlFor="edit-plan-user-limit">Limite de Usuários Internos</Label>
+                <Label htmlFor="edit-plan-owner-limit">Limite de Proprietários</Label>
                 <Input
-                  id="edit-plan-user-limit"
+                  id="edit-plan-owner-limit"
                   type="number"
-                  value={planForm.userLimit}
-                  onChange={(e) => setPlanForm(prev => ({ ...prev, userLimit: e.target.value }))}
+                  value={planForm.ownerLimit}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, ownerLimit: e.target.value }))}
                 />
-                <p className="text-xs text-muted-foreground mt-1">Funcionários da imobiliária</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-plan-broker-limit">Limite de Corretores</Label>
+                <Input
+                  id="edit-plan-broker-limit"
+                  type="number"
+                  value={planForm.brokerLimit}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, brokerLimit: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-plan-manager-limit">Limite de Gerentes</Label>
+                <Input
+                  id="edit-plan-manager-limit"
+                  type="number"
+                  value={planForm.managerLimit}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, managerLimit: e.target.value }))}
+                />
               </div>
             </div>
 
