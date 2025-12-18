@@ -22,12 +22,14 @@ import {
   Search,
   Send,
   Lock,
-  PenLine
+  PenLine,
+  CheckCircle
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { formatCurrency, formatDate } from '../../lib/utils';
-import { safeGetCurrentPosition } from '../../hooks/use-geolocation';
+import { safeGetCurrentPosition, isSecureOrigin } from '../../hooks/use-geolocation';
+import { SignatureCapture } from '../../components/contracts/SignatureCapture';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -139,6 +141,11 @@ export function Contracts() {
   const [previewToken, setPreviewToken] = useState<string>('');
   const [userIp, setUserIp] = useState<string>('');
   const [signing, setSigning] = useState(false);
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [signContractData, setSignContractData] = useState<{ contract: any; type: 'tenant' | 'owner' | 'agency' | null }>({ contract: null, type: null });
+  const [signature, setSignature] = useState<string | null>(null);
+  const [geoConsent, setGeoConsent] = useState(false);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -275,11 +282,16 @@ export function Contracts() {
     console.log('Barcode data captured:', barcodeData ? 'yes' : 'no');
 
     const filename = `contrato-previa-${previewToken || 'draft'}.pdf`;
+    const token = previewToken || 'DRAFT';
 
     try {
-      // Clone the element to avoid modifying the original
+      // Clone the element to capture at fixed width for consistent layout
       const clone = element.cloneNode(true) as HTMLElement;
-      clone.style.width = `${element.scrollWidth}px`;
+      clone.style.width = '800px';
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.top = '0';
+      clone.style.background = 'white';
       document.body.appendChild(clone);
 
       // Use html2canvas-pro which supports OKLCH colors
@@ -288,70 +300,154 @@ export function Contracts() {
         useCORS: true,
         scrollX: 0,
         scrollY: 0,
+        width: 800,
+        windowWidth: 800,
         backgroundColor: '#ffffff',
       });
 
       document.body.removeChild(clone);
 
-      // Create PDF with proper dimensions
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
 
-      const pdf = new jsPDF('portrait', 'mm', 'a4');
-      const token = previewToken || 'DRAFT';
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-      let heightLeft = imgHeight;
-      let position = 10; // top margin
-      let pageNum = 1;
+      // Margins - proper padding for top/bottom/left/right
+      const marginLeft = 10;
+      const marginTop = 15; // More top margin
+      const marginBottom = 15; // More bottom margin
+      const marginRight = 20; // Extra margin for barcode
 
-      // Add first page
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', 10, position, imgWidth - 30, imgHeight);
+      const usableWidth = pageWidth - marginLeft - marginRight;
+      const usableHeight = pageHeight - marginTop - marginBottom;
 
-      // Add barcode or token to first page
-      if (barcodeData && barcodeData.rotated) {
-        const finalWidth = 10;
-        const finalHeight = pageHeight * 0.5;
-        const xPos = imgWidth - finalWidth - 3;
-        const yPos = (pageHeight - finalHeight) / 2;
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(xPos - 2, yPos - 2, finalWidth + 4, finalHeight + 4, 'F');
-        pdf.addImage(barcodeData.rotated, 'PNG', xPos, yPos, finalWidth, finalHeight);
-      } else {
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(imgWidth - 15, pageHeight / 2 - 40, 12, 80, 'F');
-        pdf.setFontSize(8);
-        pdf.setTextColor(0, 0, 0);
-        pdf.text(token, imgWidth - 5, pageHeight / 2, { angle: 90 });
-      }
+      // Calculate the scale to fit width
+      const imgScale = usableWidth / canvas.width;
+      const pxPerPage = usableHeight / imgScale;
 
-      heightLeft -= pageHeight - 20;
+      // Find smart break points between content rows (avoid cutting text)
+      const findBreakPoints = (): number[] => {
+        const breaks: number[] = [0];
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          // Fallback to simple pagination
+          let y = pxPerPage;
+          while (y < canvas.height) {
+            breaks.push(Math.floor(y));
+            y += pxPerPage;
+          }
+          breaks.push(canvas.height);
+          return breaks;
+        }
 
-      // Add remaining pages if needed
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pageNum++;
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', 10, position, imgWidth - 30, imgHeight);
+        let currentY = 0;
 
-        // Add barcode or token to each page
+        while (currentY < canvas.height) {
+          const targetY = currentY + pxPerPage;
+
+          if (targetY >= canvas.height) {
+            breaks.push(canvas.height);
+            break;
+          }
+
+          // Search backwards from targetY to find a good break point (white row)
+          let bestBreakY = Math.floor(targetY);
+          const searchStart = Math.floor(targetY);
+          const searchEnd = Math.floor(currentY + pxPerPage * 0.6);
+
+          for (let y = searchStart; y > searchEnd; y -= 2) {
+            try {
+              const imageData = ctx.getImageData(0, y, canvas.width, 2);
+              const pixels = imageData.data;
+
+              let whitePixels = 0;
+              const totalPixels = (canvas.width * 2);
+
+              for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                if (r > 245 && g > 245 && b > 245) {
+                  whitePixels++;
+                }
+              }
+
+              // If this row is mostly white (gap between content), use it as break
+              if (whitePixels / totalPixels > 0.85) {
+                bestBreakY = y;
+                break;
+              }
+            } catch {
+              // If getImageData fails, use default position
+              break;
+            }
+          }
+
+          breaks.push(bestBreakY);
+          currentY = bestBreakY;
+        }
+
+        return breaks;
+      };
+
+      const breakPoints = findBreakPoints();
+
+      for (let i = 0; i < breakPoints.length - 1; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
+
+        const srcY = breakPoints[i];
+        const srcHeight = breakPoints[i + 1] - srcY;
+
+        if (srcHeight <= 0) continue;
+
+        const destHeight = srcHeight * imgScale;
+
+        // Create a temporary canvas for this page's portion
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = srcHeight;
+        const ctx = pageCanvas.getContext('2d');
+
+        if (ctx) {
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+          ctx.drawImage(
+            canvas,
+            0, srcY, canvas.width, srcHeight,
+            0, 0, canvas.width, srcHeight
+          );
+
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
+          pdf.addImage(pageImgData, 'JPEG', marginLeft, marginTop, usableWidth, destHeight);
+        }
+
+        // Add barcode/token to this page
         if (barcodeData && barcodeData.rotated) {
           const finalWidth = 10;
           const finalHeight = pageHeight * 0.5;
-          const xPos = imgWidth - finalWidth - 3;
+
+          const xPos = pageWidth - finalWidth - 3;
           const yPos = (pageHeight - finalHeight) / 2;
+
           pdf.setFillColor(255, 255, 255);
           pdf.rect(xPos - 2, yPos - 2, finalWidth + 4, finalHeight + 4, 'F');
+
           pdf.addImage(barcodeData.rotated, 'PNG', xPos, yPos, finalWidth, finalHeight);
         } else {
           pdf.setFillColor(255, 255, 255);
-          pdf.rect(imgWidth - 15, pageHeight / 2 - 40, 12, 80, 'F');
+          pdf.rect(pageWidth - 15, pageHeight / 2 - 40, 12, 80, 'F');
+
           pdf.setFontSize(8);
           pdf.setTextColor(0, 0, 0);
-          pdf.text(token, imgWidth - 5, pageHeight / 2, { angle: 90 });
+          pdf.text(token, pageWidth - 5, pageHeight / 2, { angle: 90 });
         }
-
-        heightLeft -= pageHeight;
       }
 
       pdf.save(filename);
@@ -381,7 +477,19 @@ export function Contracts() {
 
     const styles = `
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; padding-right: 25mm; position: relative; }
+        /* Remove browser header/footer (URL, date, page numbers) */
+        @page {
+          margin: 15mm 10mm 15mm 10mm;
+          size: A4;
+        }
+
+        body {
+          font-family: Arial, sans-serif;
+          padding: 0;
+          margin: 0;
+          padding-right: 15mm;
+          position: relative;
+        }
         .prose { max-width: 100%; }
         .font-bold { font-weight: bold; }
         .font-semibold { font-weight: 600; }
@@ -415,7 +523,17 @@ export function Contracts() {
           max-width: 15mm;
         }
         @media print {
-          body { margin: 0; padding: 10mm; padding-right: 20mm; }
+          /* Hide URL, date, title in header/footer */
+          @page {
+            margin: 15mm 10mm 15mm 10mm;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            padding-right: 15mm;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
           .barcode-container { position: fixed; right: 2mm; }
           p { page-break-inside: avoid; }
         }
@@ -1142,7 +1260,8 @@ export function Contracts() {
     }
   };
 
-  const handleSignContract = async () => {
+  // Open sign modal for contract from detail view
+  const handleSignContract = () => {
     if (!selectedContract || !user) {
       toast.error('Contrato não carregado');
       return;
@@ -1154,41 +1273,15 @@ export function Contracts() {
       return;
     }
 
-    setSigning(true);
-
-    safeGetCurrentPosition(async (position) => {
-      try {
-        await contractsAPI.signContractWithGeo(selectedContract.id.toString(), {
-          signature: user.name || 'Assinatura eletrônica',
-          signatureType,
-          geoLat: position?.coords.latitude,
-          geoLng: position?.coords.longitude,
-          geoConsent: position !== null,
-        });
-
-        toast.success('Contrato assinado com sucesso');
-        queryClient.invalidateQueries({
-          queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none']
-        });
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
-
-        // Refresh current contract details
-        await handleViewContract(selectedContract);
-      } catch (error: any) {
-        console.error('Error signing contract:', error);
-        toast.error(error?.response?.data?.message || error?.message || 'Erro ao assinar contrato');
-      } finally {
-        setSigning(false);
-      }
-    }, (error) => {
-      console.error('Geolocation error:', error);
-      toast.error('Não foi possível obter a localização para assinatura');
-      setSigning(false);
-    }, { enableHighAccuracy: true });
+    setSignContractData({ contract: selectedContract, type: signatureType });
+    setSignature(null);
+    setGeoConsent(false);
+    setGeoLocation(null);
+    setShowSignModal(true);
   };
 
-  const handleSignContractFromList = async (contract: any) => {
+  // Open sign modal for contract from list
+  const handleSignContractFromList = (contract: any) => {
     if (!contract || !user) {
       toast.error('Contrato não carregado');
       return;
@@ -1200,33 +1293,111 @@ export function Contracts() {
       return;
     }
 
+    setSignContractData({ contract, type: signatureType });
+    setSignature(null);
+    setGeoConsent(false);
+    setGeoLocation(null);
+    setShowSignModal(true);
+  };
+
+  // Close sign modal
+  const closeSignModal = () => {
+    setShowSignModal(false);
+    setSignContractData({ contract: null, type: null });
+    setSignature(null);
+    setGeoConsent(false);
+    setGeoLocation(null);
+  };
+
+  // Handle geolocation consent change
+  const handleGeoConsentChange = (consent: boolean) => {
+    setGeoConsent(consent);
+    if (consent) {
+      if (!isSecureOrigin()) {
+        toast.warning('Geolocalização requer HTTPS. Continuando sem localização.');
+        setGeoLocation(null);
+        return;
+      }
+
+      toast.info('Obtendo localização...');
+      safeGetCurrentPosition(
+        (position) => {
+          if (position) {
+            setGeoLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            toast.success('Localização obtida com sucesso!');
+          } else {
+            setGeoLocation(null);
+            toast.warning('Continuando sem localização.');
+          }
+        },
+        (error) => {
+          console.error('Error getting geolocation:', error);
+          toast.error('Erro ao obter localização.');
+          setGeoConsent(false);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    } else {
+      setGeoLocation(null);
+    }
+  };
+
+  // Get signature type label
+  const getSignTypeLabel = (type: 'tenant' | 'owner' | 'agency' | null): string => {
+    switch (type) {
+      case 'tenant': return 'Locatário';
+      case 'owner': return 'Proprietário';
+      case 'agency': return 'Imobiliária';
+      default: return '';
+    }
+  };
+
+  // Confirm signature
+  const confirmSign = async () => {
+    if (!signContractData.contract || !signContractData.type || !signature || !user) {
+      toast.error('Dados incompletos para assinatura');
+      return;
+    }
+
+    // Allow signing without geolocation on HTTP
+    if (!geoConsent && isSecureOrigin()) {
+      toast.error('É necessário autorizar o compartilhamento de localização');
+      return;
+    }
+
     setSigning(true);
 
-    safeGetCurrentPosition(async (position) => {
-      try {
-        await contractsAPI.signContractWithGeo(contract.id.toString(), {
-          signature: user.name || 'Assinatura eletrônica',
-          signatureType,
-          geoLat: position?.coords.latitude,
-          geoLng: position?.coords.longitude,
-          geoConsent: position !== null,
-        });
+    try {
+      await contractsAPI.signContractWithGeo(signContractData.contract.id.toString(), {
+        signature,
+        signatureType: signContractData.type,
+        geoLat: geoLocation?.lat,
+        geoLng: geoLocation?.lng,
+        geoConsent: geoConsent,
+      });
 
-        toast.success('Contrato assinado com sucesso');
-        queryClient.invalidateQueries({
-          queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none']
-        });
-      } catch (error: any) {
-        console.error('Error signing contract:', error);
-        toast.error(error?.response?.data?.message || error?.message || 'Erro ao assinar contrato');
-      } finally {
-        setSigning(false);
+      toast.success('Contrato assinado com sucesso');
+      queryClient.invalidateQueries({
+        queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none']
+      });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+
+      // Refresh current contract details if viewing
+      if (selectedContract && selectedContract.id === signContractData.contract.id) {
+        await handleViewContract(signContractData.contract);
       }
-    }, (error) => {
-      console.error('Geolocation error:', error);
-      toast.error('Não foi possível obter a localização para assinatura');
+
+      closeSignModal();
+    } catch (error: any) {
+      console.error('Error signing contract:', error);
+      toast.error(error?.response?.data?.message || error?.message || 'Erro ao assinar contrato');
+    } finally {
       setSigning(false);
-    }, { enableHighAccuracy: true });
+    }
   };
 
   const canEditContract = (_contract: any): boolean => {
@@ -2825,6 +2996,87 @@ export function Contracts() {
                 {deleting ? 'Excluindo...' : 'Excluir'}
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Sign Contract Modal */}
+        <Dialog open={showSignModal} onOpenChange={(open) => !open && closeSignModal()}>
+          <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg rounded-xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <PenLine className="w-5 h-5 text-green-600" />
+                Assinar Contrato
+              </DialogTitle>
+              <DialogDescription>
+                Assinatura como: <strong>{getSignTypeLabel(signContractData.type)}</strong>
+              </DialogDescription>
+            </DialogHeader>
+            {signContractData.contract && (
+              <div className="space-y-4">
+                <div className="bg-muted p-3 rounded-lg space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Imóvel:</span>
+                    <span className="font-medium truncate ml-2">
+                      {signContractData.contract.property?.name || signContractData.contract.property?.address || '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Aluguel:</span>
+                    <span className="font-medium">
+                      {signContractData.contract.monthlyRent
+                        ? formatCurrency(parseFloat(signContractData.contract.monthlyRent))
+                        : '-'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Período:</span>
+                    <span className="font-medium">
+                      {formatDate(signContractData.contract.startDate)} - {formatDate(signContractData.contract.endDate)}
+                    </span>
+                  </div>
+                </div>
+
+                <SignatureCapture
+                  onSignatureChange={setSignature}
+                  onGeolocationConsent={handleGeoConsentChange}
+                  geolocationRequired={isSecureOrigin()}
+                  label="Desenhe sua assinatura"
+                  disabled={signing}
+                />
+
+                {geoLocation && (
+                  <div className="text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Localização capturada: {geoLocation.lat.toFixed(6)}, {geoLocation.lng.toFixed(6)}
+                  </div>
+                )}
+
+                {!isSecureOrigin() && (
+                  <div className="text-xs text-amber-600 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    Geolocalização indisponível (requer HTTPS)
+                  </div>
+                )}
+
+                <div className="flex flex-row gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={closeSignModal}
+                    disabled={signing}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    onClick={confirmSign}
+                    disabled={signing || !signature || (isSecureOrigin() && (!geoConsent || !geoLocation))}
+                  >
+                    {signing ? 'Assinando...' : 'Confirmar Assinatura'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
