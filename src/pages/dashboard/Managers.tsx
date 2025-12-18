@@ -109,7 +109,7 @@ export function Managers() {
   const [managerDetail, setManagerDetail] = useState<any>(null)
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [emailError, setEmailError] = useState('')
   const [emailVerified, setEmailVerified] = useState(false)
@@ -352,7 +352,8 @@ export function Managers() {
 
   const handleViewManager = async (manager: any) => {
     closeAllModals()
-    setLoadingDetails(true)
+    const managerId = manager.id.toString()
+    setLoadingDetailsId(managerId)
     try {
       const fullManagerDetails = await usersAPI.getUserById(manager.id)
       setSelectedManager(fullManagerDetails)
@@ -361,13 +362,14 @@ export function Managers() {
     } catch {
       toast.error('Erro ao carregar detalhes do gerente')
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
   const handleEditManager = async (manager: any) => {
     closeAllModals()
-    setLoadingDetails(true)
+    const managerId = manager.id.toString()
+    setLoadingDetailsId(managerId)
     try {
       const fullManagerDetails = await usersAPI.getUserById(manager.id)
       setSelectedManager(fullManagerDetails)
@@ -389,7 +391,7 @@ export function Managers() {
     } catch {
       toast.error('Erro ao carregar detalhes do gerente')
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
@@ -578,12 +580,12 @@ export function Managers() {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Button size="icon" variant="outline" onClick={() => handleViewManager(manager)} disabled={loadingDetails} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                              <Eye className="w-4 h-4" />
+                            <Button size="icon" variant="outline" onClick={() => handleViewManager(manager)} disabled={loadingDetailsId === manager.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                              {loadingDetailsId === manager.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             </Button>
                             {canUpdateUsers && !manager.isFrozen && (
-                              <Button size="icon" variant="outline" onClick={() => handleEditManager(manager)} disabled={loadingDetails} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                                <Edit className="w-4 h-4" />
+                              <Button size="icon" variant="outline" onClick={() => handleEditManager(manager)} disabled={loadingDetailsId === manager.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                                {loadingDetailsId === manager.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                               </Button>
                             )}
                             {canUpdateUsers && manager.isFrozen && (
@@ -635,12 +637,12 @@ export function Managers() {
                       </div>
                     </div>
                     <div className="flex gap-2 w-full justify-end">
-                      <Button size="icon" variant="outline" onClick={() => handleViewManager(manager)} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                        <Eye className="w-4 h-4" />
+                      <Button size="icon" variant="outline" onClick={() => handleViewManager(manager)} disabled={loadingDetailsId === manager.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                        {loadingDetailsId === manager.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
                       {canUpdateUsers && !manager.isFrozen && (
-                        <Button size="icon" variant="outline" onClick={() => handleEditManager(manager)} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                          <Edit className="w-4 h-4" />
+                        <Button size="icon" variant="outline" onClick={() => handleEditManager(manager)} disabled={loadingDetailsId === manager.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                          {loadingDetailsId === manager.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                         </Button>
                       )}
                       {canUpdateUsers && manager.isFrozen && (

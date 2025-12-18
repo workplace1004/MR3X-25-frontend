@@ -127,7 +127,7 @@ export function Owners() {
   const [ownerDetail, setOwnerDetail] = useState<any>(null)
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showEditPassword, setShowEditPassword] = useState(false)
@@ -356,7 +356,8 @@ export function Owners() {
 
   const handleViewOwner = async (owner: any) => {
     closeAllModals()
-    setLoadingDetails(true)
+    const ownerId = owner.id.toString()
+    setLoadingDetailsId(ownerId)
     try {
       const fullOwnerDetails = await usersAPI.getUserById(owner.id)
       setSelectedOwner(fullOwnerDetails)
@@ -365,14 +366,15 @@ export function Owners() {
     } catch {
       toast.error('Erro ao carregar detalhes do imóvel')
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
   const handleEditOwner = async (owner: any) => {
     closeAllModals()
     setEmailError('')
-    setLoadingDetails(true)
+    const ownerId = owner.id.toString()
+    setLoadingDetailsId(ownerId)
     try {
       const fullOwnerDetails = await usersAPI.getUserById(owner.id)
       setSelectedOwner(fullOwnerDetails)
@@ -402,7 +404,7 @@ export function Owners() {
     } catch {
       toast.error('Erro ao carregar detalhes do imóvel')
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
@@ -596,12 +598,12 @@ export function Owners() {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Button size="icon" variant="outline" onClick={() => handleViewOwner(owner)} disabled={loadingDetails} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                              <Eye className="w-4 h-4" />
+                            <Button size="icon" variant="outline" onClick={() => handleViewOwner(owner)} disabled={loadingDetailsId === owner.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                              {loadingDetailsId === owner.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             </Button>
                             {canUpdateUsers && !owner.isFrozen && (
-                              <Button size="icon" variant="outline" onClick={() => handleEditOwner(owner)} disabled={loadingDetails} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                                <Edit className="w-4 h-4" />
+                              <Button size="icon" variant="outline" onClick={() => handleEditOwner(owner)} disabled={loadingDetailsId === owner.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                                {loadingDetailsId === owner.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                               </Button>
                             )}
                             {canUpdateUsers && owner.isFrozen && (
@@ -654,12 +656,12 @@ export function Owners() {
                       </div>
                     </div>
                     <div className="flex gap-2 w-full justify-end">
-                      <Button size="icon" variant="outline" onClick={() => handleViewOwner(owner)} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                        <Eye className="w-4 h-4" />
+                      <Button size="icon" variant="outline" onClick={() => handleViewOwner(owner)} disabled={loadingDetailsId === owner.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                        {loadingDetailsId === owner.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
                       {canUpdateUsers && !owner.isFrozen && (
-                        <Button size="icon" variant="outline" onClick={() => handleEditOwner(owner)} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                          <Edit className="w-4 h-4" />
+                        <Button size="icon" variant="outline" onClick={() => handleEditOwner(owner)} disabled={loadingDetailsId === owner.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                          {loadingDetailsId === owner.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                         </Button>
                       )}
                       {canUpdateUsers && owner.isFrozen && (

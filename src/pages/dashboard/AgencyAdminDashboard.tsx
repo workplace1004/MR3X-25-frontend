@@ -11,10 +11,10 @@ import {
   TrendingDown,
   CalendarDays,
   Home,
-  Loader2,
   Inbox
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Skeleton } from '../../components/ui/skeleton';
 import {
   ResponsiveContainer,
   PieChart,
@@ -106,8 +106,109 @@ export function AgencyAdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="space-y-6 sm:space-y-8">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-12 h-12 rounded-lg" />
+          <div>
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+
+        {/* First KPI Row Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-3 sm:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg" />
+                  <Skeleton className="w-16 h-4" />
+                </div>
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Second KPI Row Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-3 sm:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg" />
+                  <Skeleton className="w-16 h-4" />
+                </div>
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts Row Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48 mb-2" />
+                <Skeleton className="h-4 w-36" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center h-[220px]">
+                  <Skeleton className="w-40 h-40 rounded-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Second Charts Row Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48 mb-2" />
+                <Skeleton className="h-4 w-36" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[220px] flex items-end gap-2">
+                  {[...Array(6)].map((_, j) => (
+                    <Skeleton key={j} className="flex-1" style={{ height: `${Math.random() * 60 + 40}%` }} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48 mb-2" />
+            <Skeleton className="h-4 w-36" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {/* Table Header */}
+              <div className="flex gap-4 border-b pb-3">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-4 flex-1" />
+                ))}
+              </div>
+              {/* Table Rows */}
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-4 py-2">
+                  {[...Array(5)].map((_, j) => (
+                    <Skeleton key={j} className="h-4 flex-1" />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -441,11 +542,17 @@ export function AgencyAdminDashboard() {
               </thead>
               <tbody>
                 {dueDatesLoading ? (
-                  <tr>
-                    <td colSpan={5} className="text-center text-muted-foreground py-4">
-                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-                    </td>
-                  </tr>
+                  <>
+                    {[...Array(5)].map((_, i) => (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="p-2"><Skeleton className="h-4 w-32" /></td>
+                        <td className="p-2"><Skeleton className="h-4 w-24" /></td>
+                        <td className="p-2"><Skeleton className="h-4 w-20" /></td>
+                        <td className="p-2"><Skeleton className="h-4 w-24" /></td>
+                        <td className="p-2"><Skeleton className="h-6 w-16 rounded" /></td>
+                      </tr>
+                    ))}
+                  </>
                 ) : !dueDates || dueDates.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12">

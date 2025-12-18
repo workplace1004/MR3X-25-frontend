@@ -13,7 +13,8 @@ import {
   Search,
   MapPin,
   Home,
-  CreditCard
+  CreditCard,
+  Loader2
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -34,6 +35,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,7 +92,7 @@ export function AgencyUsers() {
 
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [userDetail, setUserDetail] = useState<any>(null)
-  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [searchTerm, setSearchTerm] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -135,15 +137,18 @@ export function AgencyUsers() {
   })
 
   const handleViewUser = async (userData: any) => {
-    setLoadingDetails(true)
+    const userId = userData.id.toString()
+    setLoadingDetailsId(userId)
+    setUserDetail(null) // Clear previous data to show skeleton
+    setShowDetailModal(true) // Open modal immediately to show skeleton
     try {
       const fullUserDetails = await usersAPI.getUserById(userData.id)
       setUserDetail(fullUserDetails)
-      setShowDetailModal(true)
     } catch {
       toast.error('Erro ao carregar detalhes do usuário')
+      setShowDetailModal(false) // Close modal on error
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
@@ -161,8 +166,71 @@ export function AgencyUsers() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-12 h-12 rounded-lg" />
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-20 rounded-lg" />
+            <Skeleton className="h-9 w-64 rounded-md" />
+            <Skeleton className="h-9 w-16 rounded-md" />
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          {/* Table Header */}
+          <div className="hidden md:block">
+            <div className="bg-muted/50 p-4 flex gap-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            {/* Table Rows */}
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="border-t border-border p-4 flex items-center gap-4">
+                <div className="flex items-center gap-3 w-32">
+                  <Skeleton className="h-9 w-9 rounded-full" />
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-1" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-8 w-8 rounded" />
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Skeleton */}
+          <div className="md:hidden">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="border-b border-border last:border-b-0 p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-5 w-32 mb-1" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </div>
+                <Skeleton className="h-9 w-full rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -308,10 +376,10 @@ export function AgencyUsers() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleViewUser(userData)}
-                              disabled={loadingDetails}
+                              disabled={loadingDetailsId === userData.id.toString()}
                               className="text-orange-600 border-orange-600 hover:bg-orange-50"
                             >
-                              <Eye className="w-4 h-4" />
+                              {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             </Button>
                           </td>
                         </tr>
@@ -359,9 +427,10 @@ export function AgencyUsers() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleViewUser(userData)}
+                        disabled={loadingDetailsId === userData.id.toString()}
                         className="text-orange-600 border-orange-600 hover:bg-orange-50 w-full"
                       >
-                        <Eye className="w-4 h-4" />
+                        {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
                     </div>
                   )
@@ -403,14 +472,14 @@ export function AgencyUsers() {
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost">
-                              <MoreHorizontal className="w-4 h-4" />
+                            <Button size="icon" variant="ghost" disabled={loadingDetailsId === userData.id.toString()}>
+                              {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <MoreHorizontal className="w-4 h-4" />}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewUser(userData)}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              Visualizar
+                            <DropdownMenuItem onClick={() => handleViewUser(userData)} disabled={loadingDetailsId === userData.id.toString()}>
+                              {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
+                              {loadingDetailsId === userData.id.toString() ? 'Carregando...' : 'Visualizar'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -443,10 +512,43 @@ export function AgencyUsers() {
                  userDetail?.role === 'BROKER' ? 'Detalhes do Corretor' :
                  userDetail?.role === 'INQUILINO' ? 'Detalhes do Locatário' :
                  userDetail?.role === 'AGENCY_MANAGER' ? 'Detalhes do Gerente' :
-                 'Detalhes do Usuário'}
+                 loadingDetailsId ? 'Carregando...' : 'Detalhes do Usuário'}
               </DialogTitle>
             </DialogHeader>
-            {userDetail ? (
+            {loadingDetailsId && !userDetail ? (
+              <div className="space-y-6">
+                {/* Skeleton for Personal Information Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Skeleton className="w-6 h-6 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i}>
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-5 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Skeleton for Address Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Skeleton className="w-6 h-6 rounded-full" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i}>
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-5 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : userDetail ? (
               <div className="space-y-6">
                 {/* Personal Information Section */}
                 <div className="space-y-4">

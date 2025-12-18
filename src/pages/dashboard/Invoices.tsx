@@ -25,6 +25,7 @@ import {
   Barcode,
   AlertTriangle,
   Search,
+  Loader2,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -135,7 +136,7 @@ export function Invoices() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceDetail, setInvoiceDetail] = useState<Invoice | null>(null);
   const [properties, setProperties] = useState<any[]>([]);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [cancelReason, setCancelReason] = useState('');
   const [resendEmail, setResendEmail] = useState('');
@@ -244,7 +245,8 @@ export function Invoices() {
 
   const handleViewInvoice = async (invoice: Invoice) => {
     closeAllModals();
-    setActionLoading(true);
+    const invoiceId = invoice.id.toString();
+    setActionLoadingId(invoiceId);
     try {
       const fullDetails = await invoicesAPI.getInvoiceById(invoice.id);
       setInvoiceDetail(fullDetails);
@@ -252,7 +254,7 @@ export function Invoices() {
     } catch (error: any) {
       toast.error(error?.message || 'Erro ao carregar detalhes da fatura');
     } finally {
-      setActionLoading(false);
+      setActionLoadingId(null);
     }
   };
 
@@ -653,14 +655,14 @@ export function Invoices() {
                         <td className="p-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button size="icon" variant="ghost" disabled={actionLoading}>
-                                <MoreHorizontal className="w-4 h-4" />
+                              <Button size="icon" variant="ghost" disabled={actionLoadingId === invoice.id.toString()}>
+                                {actionLoadingId === invoice.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <MoreHorizontal className="w-4 h-4" />}
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewInvoice(invoice)} disabled={actionLoading}>
+                              <DropdownMenuItem onClick={() => handleViewInvoice(invoice)} disabled={actionLoadingId === invoice.id.toString()}>
                                 <Eye className="w-4 h-4 mr-2" />
-                                {actionLoading ? 'Carregando...' : 'Ver detalhes'}
+                                {actionLoadingId === invoice.id.toString() ? 'Carregando...' : 'Ver detalhes'}
                               </DropdownMenuItem>
                               {invoice.status !== 'PAID' && invoice.status !== 'CANCELED' && (
                                 <>

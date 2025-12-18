@@ -114,7 +114,7 @@ export function Brokers() {
   const [brokerDetail, setBrokerDetail] = useState<any>(null)
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showEditPassword, setShowEditPassword] = useState(false)
@@ -352,7 +352,8 @@ export function Brokers() {
 
   const handleViewBroker = async (broker: any) => {
     closeAllModals()
-    setLoadingDetails(true)
+    const brokerId = broker.id.toString()
+    setLoadingDetailsId(brokerId)
     try {
       const fullBrokerDetails = await usersAPI.getUserById(broker.id)
       setSelectedBroker(fullBrokerDetails)
@@ -361,14 +362,15 @@ export function Brokers() {
     } catch {
       toast.error('Erro ao carregar detalhes do corretor')
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
   const handleEditBroker = async (broker: any) => {
     closeAllModals()
     setEmailError('')
-    setLoadingDetails(true)
+    const brokerId = broker.id.toString()
+    setLoadingDetailsId(brokerId)
     try {
       const fullBrokerDetails = await usersAPI.getUserById(broker.id)
       setSelectedBroker(fullBrokerDetails)
@@ -391,7 +393,7 @@ export function Brokers() {
     } catch {
       toast.error('Erro ao carregar detalhes do corretor')
     } finally {
-      setLoadingDetails(false)
+      setLoadingDetailsId(null)
     }
   }
 
@@ -581,12 +583,12 @@ export function Brokers() {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
-                            <Button size="icon" variant="outline" onClick={() => handleViewBroker(broker)} disabled={loadingDetails} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                              <Eye className="w-4 h-4" />
+                            <Button size="icon" variant="outline" onClick={() => handleViewBroker(broker)} disabled={loadingDetailsId === broker.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                              {loadingDetailsId === broker.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             </Button>
                             {canUpdateUsers && !broker.isFrozen && (
-                              <Button size="icon" variant="outline" onClick={() => handleEditBroker(broker)} disabled={loadingDetails} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                                <Edit className="w-4 h-4" />
+                              <Button size="icon" variant="outline" onClick={() => handleEditBroker(broker)} disabled={loadingDetailsId === broker.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                                {loadingDetailsId === broker.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                               </Button>
                             )}
                             {canUpdateUsers && broker.isFrozen && (
@@ -638,12 +640,12 @@ export function Brokers() {
                       </div>
                     </div>
                     <div className="flex gap-2 w-full justify-end">
-                      <Button size="icon" variant="outline" onClick={() => handleViewBroker(broker)} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                        <Eye className="w-4 h-4" />
+                      <Button size="icon" variant="outline" onClick={() => handleViewBroker(broker)} disabled={loadingDetailsId === broker.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                        {loadingDetailsId === broker.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
                       {canUpdateUsers && !broker.isFrozen && (
-                        <Button size="icon" variant="outline" onClick={() => handleEditBroker(broker)} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                          <Edit className="w-4 h-4" />
+                        <Button size="icon" variant="outline" onClick={() => handleEditBroker(broker)} disabled={loadingDetailsId === broker.id.toString()} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                          {loadingDetailsId === broker.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                         </Button>
                       )}
                       {canUpdateUsers && broker.isFrozen && (

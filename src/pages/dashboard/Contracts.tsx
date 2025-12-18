@@ -141,16 +141,17 @@ export function Contracts() {
   const [previewContent, setPreviewContent] = useState<string>('');
   const [previewToken, setPreviewToken] = useState<string>('');
   const [userIp, setUserIp] = useState<string>('');
-  const [signing, setSigning] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
   const [signContractData, setSignContractData] = useState<{ contract: any; type: 'tenant' | 'owner' | 'agency' | null }>({ contract: null, type: null });
   const [signature, setSignature] = useState<string | null>(null);
   const [geoConsent, setGeoConsent] = useState(false);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Loading states for better UX
-  const [loadingDetail, setLoadingDetail] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  // Loading states for better UX - track by contract ID to avoid showing loading on all buttons
+  const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
+  const [downloadingPdfId, setDownloadingPdfId] = useState<string | null>(null);
+  const [signingContractId, setSigningContractId] = useState<string | null>(null);
+  const [preparingContractId, setPreparingContractId] = useState<string | null>(null);
   const [printing, setPrinting] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -278,12 +279,12 @@ export function Contracts() {
   };
 
   const handleDownloadPreviewPDF = async () => {
-    setDownloadingPdf(true);
+    setDownloadingPdfId('preview');
 
     const element = document.getElementById('contract-preview-content');
     if (!element) {
       toast.error('Erro ao gerar PDF');
-      setDownloadingPdf(false);
+      setDownloadingPdfId(null);
       return;
     }
 
@@ -465,7 +466,7 @@ export function Contracts() {
       console.error('PDF generation error:', error);
       toast.error('Erro ao gerar PDF. Tente novamente.');
     } finally {
-      setDownloadingPdf(false);
+      setDownloadingPdfId(null);
     }
   };
 
@@ -802,13 +803,15 @@ export function Contracts() {
 
   const handleViewContract = async (contract: any) => {
     closeAllModals();
-    setLoadingDetail(true);
+    const contractId = contract.id.toString();
+    setLoadingDetailId(contractId);
 
     try {
-      const fullContract = await contractsAPI.getContractById(contract.id.toString());
+      const fullContract = await contractsAPI.getContractById(contractId);
 
       if (!fullContract) {
         toast.error('Contrato não encontrado');
+        setLoadingDetailId(null);
         return;
       }
 
@@ -847,7 +850,7 @@ export function Contracts() {
       setContractDetail(contract);
       setShowDetailModal(true);
     } finally {
-      setLoadingDetail(false);
+      setLoadingDetailId(null);
     }
   };
 
@@ -1224,14 +1227,18 @@ export function Contracts() {
       });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+      setPreparingContractId(null);
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || error?.message || 'Erro ao enviar contrato para assinatura');
+      setPreparingContractId(null);
     },
   });
 
   const handlePrepareForSigning = (contract: any) => {
-    prepareForSigningMutation.mutate(contract.id.toString());
+    const contractId = contract.id.toString();
+    setPreparingContractId(contractId);
+    prepareForSigningMutation.mutate(contractId);
   };
 
   const getUserSignatureType = (contract: any): 'tenant' | 'owner' | 'agency' | null => {
@@ -1384,10 +1391,11 @@ export function Contracts() {
       return;
     }
 
-    setSigning(true);
+    const contractId = signContractData.contract.id.toString();
+    setSigningContractId(contractId);
 
     try {
-      await contractsAPI.signContractWithGeo(signContractData.contract.id.toString(), {
+      await contractsAPI.signContractWithGeo(contractId, {
         signature,
         signatureType: signContractData.type,
         geoLat: geoLocation?.lat,
@@ -1412,7 +1420,7 @@ export function Contracts() {
       console.error('Error signing contract:', error);
       toast.error(error?.response?.data?.message || error?.message || 'Erro ao assinar contrato');
     } finally {
-      setSigning(false);
+      setSigningContractId(null);
     }
   };
 
@@ -2003,21 +2011,21 @@ export function Contracts() {
                               size="icon"
                               variant="outline"
                               onClick={() => handleViewContract(contract)}
-                              disabled={loadingDetail}
+                              disabled={loadingDetailId === contract.id.toString()}
                               className="text-orange-600 border-orange-600 hover:bg-orange-50"
                             >
-                              {loadingDetail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                              {loadingDetailId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             </Button>
                              {canUpdateContracts && contract.status === 'PENDENTE' && (
                               <Button
                                 size="icon"
                                 variant="outline"
                                 onClick={() => handlePrepareForSigning(contract)}
-                                disabled={prepareForSigningMutation.isPending}
+                                disabled={preparingContractId === contract.id.toString()}
                                 className="text-green-600 border-green-600 hover:bg-green-50"
                                 title="Enviar para assinatura"
                               >
-                                {prepareForSigningMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                {preparingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                               </Button>
                             )}
                             {canUserSignContract(contract) && (
@@ -2025,11 +2033,11 @@ export function Contracts() {
                                 size="icon"
                                 variant="outline"
                                 onClick={() => handleSignContractFromList(contract)}
-                                disabled={signing}
+                                disabled={signingContractId === contract.id.toString()}
                                 className="text-purple-600 border-purple-600 hover:bg-purple-50"
                                 title="Assinar contrato"
                               >
-                                {signing ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                                {signingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
                               </Button>
                             )}
                              {canUpdateContracts && !canEditContract(contract) && (
@@ -2102,21 +2110,21 @@ export function Contracts() {
                         size="icon"
                         variant="outline"
                         onClick={() => handleViewContract(contract)}
-                        disabled={loadingDetail}
+                        disabled={loadingDetailId === contract.id.toString()}
                         className="text-orange-600 border-orange-600 hover:bg-orange-50"
                       >
-                        {loadingDetail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                        {loadingDetailId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                       </Button>
                        {canUpdateContracts && contract.status === 'PENDENTE' && (
                          <Button
                            size="icon"
                            variant="outline"
                            onClick={() => handlePrepareForSigning(contract)}
-                           disabled={prepareForSigningMutation.isPending}
+                           disabled={preparingContractId === contract.id.toString()}
                            className="text-green-600 border-green-600 hover:bg-green-50"
                            title="Enviar para assinatura"
                          >
-                           {prepareForSigningMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                           {preparingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                          </Button>
                        )}
                        {canUserSignContract(contract) && (
@@ -2124,11 +2132,11 @@ export function Contracts() {
                            size="icon"
                            variant="outline"
                            onClick={() => handleSignContractFromList(contract)}
-                           disabled={signing}
+                           disabled={signingContractId === contract.id.toString()}
                            className="text-purple-600 border-purple-600 hover:bg-purple-50"
                            title="Assinar contrato"
                          >
-                           {signing ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                           {signingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
                          </Button>
                        )}
                        {canUpdateContracts && !canEditContract(contract) && (
@@ -2222,14 +2230,14 @@ export function Contracts() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewContract(contract)} disabled={loadingDetail}>
-                                {loadingDetail ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
-                                {loadingDetail ? 'Carregando...' : 'Visualizar'}
+                              <DropdownMenuItem onClick={() => handleViewContract(contract)} disabled={loadingDetailId === contract.id.toString()}>
+                                {loadingDetailId === contract.id.toString() ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
+                                {loadingDetailId === contract.id.toString() ? 'Carregando...' : 'Visualizar'}
                               </DropdownMenuItem>
                               {canUserSignContract(contract) && (
-                                <DropdownMenuItem onClick={() => handleSignContractFromList(contract)} disabled={signing}>
-                                  {signing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PenLine className="w-4 h-4 mr-2" />}
-                                  {signing ? 'Assinando...' : 'Assinar contrato'}
+                                <DropdownMenuItem onClick={() => handleSignContractFromList(contract)} disabled={signingContractId === contract.id.toString()}>
+                                  {signingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PenLine className="w-4 h-4 mr-2" />}
+                                  {signingContractId === contract.id.toString() ? 'Assinando...' : 'Assinar contrato'}
                                 </DropdownMenuItem>
                               )}
                               {contract.pdfPath && (
@@ -2801,14 +2809,14 @@ export function Contracts() {
                       variant="default"
                       size="sm"
                       onClick={handleSignContract}
-                      disabled={signing}
+                      disabled={signingContractId !== null}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
-                      {signing ? 'Assinando...' : 'Assinar digitalmente'}
+                      {signingContractId !== null ? 'Assinando...' : 'Assinar digitalmente'}
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" onClick={handleDownloadPreviewPDF} disabled={downloadingPdf} title="Baixar PDF">
-                    {downloadingPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                  <Button variant="ghost" size="icon" onClick={handleDownloadPreviewPDF} disabled={downloadingPdfId !== null} title="Baixar PDF">
+                    {downloadingPdfId !== null ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
                   </Button>
                   <Button variant="ghost" size="icon" onClick={handlePrintPreview} disabled={printing} title="Imprimir">
                     {printing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
@@ -3061,7 +3069,7 @@ export function Contracts() {
                   onGeolocationConsent={handleGeoConsentChange}
                   geolocationRequired={isSecureOrigin()}
                   label="Desenhe sua assinatura"
-                  disabled={signing}
+                  disabled={signingContractId !== null}
                 />
 
                 {geoLocation && (
@@ -3083,16 +3091,16 @@ export function Contracts() {
                     variant="outline"
                     className="flex-1"
                     onClick={closeSignModal}
-                    disabled={signing}
+                    disabled={signingContractId !== null}
                   >
                     Cancelar
                   </Button>
                   <Button
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     onClick={confirmSign}
-                    disabled={signing || !signature || (isSecureOrigin() && (!geoConsent || !geoLocation))}
+                    disabled={signingContractId !== null || !signature || (isSecureOrigin() && (!geoConsent || !geoLocation))}
                   >
-                    {signing ? 'Assinando...' : 'Confirmar Assinatura'}
+                    {signingContractId !== null ? 'Assinando...' : 'Confirmar Assinatura'}
                   </Button>
                 </div>
               </div>

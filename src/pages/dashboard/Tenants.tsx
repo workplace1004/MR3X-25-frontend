@@ -130,7 +130,7 @@ export function Tenants() {
   const [whatsappMessage, setWhatsappMessage] = useState('')
   const [creating, setCreating] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [loadingEdit, setLoadingEdit] = useState(false)
+  const [loadingEditId, setLoadingEditId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showEditPassword, setShowEditPassword] = useState(false)
@@ -575,7 +575,8 @@ export function Tenants() {
     setEmailError('')
     setEmailVerified(true)
     setCheckingEmail(false)
-    setLoadingEdit(true)
+    const tenantId = tenant.id.toString()
+    setLoadingEditId(tenantId)
     try {
       const fullTenantDetails = await usersAPI.getUserById(tenant.id)
       setSelectedTenant(fullTenantDetails)
@@ -601,7 +602,7 @@ export function Tenants() {
     } catch (error) {
       toast.error('Erro ao carregar detalhes do inquilino')
     } finally {
-      setLoadingEdit(false)
+      setLoadingEditId(null)
     }
   }
 
@@ -815,10 +816,10 @@ export function Tenants() {
                                 size="icon"
                                 variant="outline"
                                 onClick={() => handleEditTenant(tenant)}
-                                disabled={loadingEdit}
+                                disabled={loadingEditId === tenant.id.toString()}
                                 className="text-orange-600 border-orange-600 hover:bg-orange-50"
                               >
-                                <Edit className="w-4 h-4" />
+                                {loadingEditId === tenant.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                               </Button>
                             )}
                             {canUpdateUsers && tenant.isFrozen && (
@@ -894,9 +895,10 @@ export function Tenants() {
                           size="icon"
                           variant="outline"
                           onClick={() => handleEditTenant(tenant)}
+                          disabled={loadingEditId === tenant.id.toString()}
                           className="text-orange-600 border-orange-600 hover:bg-orange-50"
                         >
-                          <Edit className="w-4 h-4" />
+                          {loadingEditId === tenant.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
                         </Button>
                       )}
                       {canUpdateUsers && tenant.isFrozen && (
