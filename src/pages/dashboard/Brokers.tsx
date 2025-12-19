@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usersAPI } from '@/api'
+import { usersAPI, agenciesAPI } from '@/api'
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -125,10 +125,39 @@ export function Brokers() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [checkingPlanLimit, setCheckingPlanLimit] = useState(false)
 
   const handleSearch = useCallback(() => {
     setSearchQuery(searchTerm.trim())
   }, [searchTerm])
+
+  const checkPlanLimitAndOpenModal = useCallback(async () => {
+    if (!user?.agencyId) {
+      toast.error('Agência não encontrada')
+      return
+    }
+
+    setCheckingPlanLimit(true)
+    try {
+      const result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'BROKER')
+      if (result.allowed) {
+        closeAllModals()
+        setEmailError('')
+        setShowCreateModal(true)
+      } else {
+        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de usuários do seu plano.')
+        setShowUpgradeModal(true)
+      }
+    } catch (error: any) {
+      console.error('Error checking plan limit:', error)
+      // If error, try to open the modal anyway and let backend handle it
+      closeAllModals()
+      setEmailError('')
+      setShowCreateModal(true)
+    } finally {
+      setCheckingPlanLimit(false)
+    }
+  }, [user?.agencyId])
 
   const handleClearSearch = useCallback(() => {
     setSearchTerm('')
@@ -536,13 +565,14 @@ export function Brokers() {
             {canCreateUsers && (
               <Button
                 className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
-                onClick={() => {
-                  closeAllModals()
-                  setEmailError('')
-                  setShowCreateModal(true)
-                }}
+                onClick={checkPlanLimitAndOpenModal}
+                disabled={checkingPlanLimit}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                {checkingPlanLimit ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
                 <span className="hidden sm:inline">Cadastrar Corretor</span>
                 <span className="sm:hidden">Adicionar</span>
               </Button>
@@ -798,8 +828,12 @@ export function Brokers() {
               Comece adicionando seu primeiro corretor
             </p>
             {canCreateUsers && (
-              <Button onClick={() => { setEmailError(''); setShowCreateModal(true) }} className="bg-orange-600 hover:bg-orange-700 text-white">
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={checkPlanLimitAndOpenModal} disabled={checkingPlanLimit} className="bg-orange-600 hover:bg-orange-700 text-white">
+                {checkingPlanLimit ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
                 Cadastrar Corretor
               </Button>
             )}
@@ -1243,28 +1277,8 @@ export function Brokers() {
                   Você atingiu o limite do plano
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {upgradeErrorMessage || 'No plano gratuito, você pode cadastrar apenas 1 usuário.'}
+                  {upgradeErrorMessage || 'Você atingiu o limite de usuários do seu plano atual.'}
                 </p>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-amber-800">
-                  Com o plano gratuito você pode:
-                </p>
-                <ul className="text-sm text-amber-700 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Cadastrar 1 imóvel
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Cadastrar 1 usuário
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Criar 1 contrato
-                  </li>
-                </ul>
               </div>
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
@@ -1274,19 +1288,19 @@ export function Brokers() {
                 <ul className="text-sm text-green-700 space-y-1">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Imóveis ilimitados
+                    Mais corretores
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Usuários ilimitados
+                    Mais gerentes
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Contratos ilimitados
+                    Mais contratos
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Relatórios avançados
+                    Recursos avançados
                   </li>
                 </ul>
               </div>

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usersAPI } from '@/api'
+import { usersAPI, agenciesAPI } from '@/api'
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -138,6 +138,7 @@ export function Owners() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [checkingPlanLimit, setCheckingPlanLimit] = useState(false)
 
   const handleSearch = useCallback(() => {
     setSearchQuery(searchTerm.trim())
@@ -147,6 +148,31 @@ export function Owners() {
     setSearchTerm('')
     setSearchQuery('')
   }, [])
+
+  const checkPlanLimitAndOpenModal = useCallback(async () => {
+    if (!user?.agencyId) {
+      toast.error('Agência não encontrada')
+      return
+    }
+
+    setCheckingPlanLimit(true)
+    try {
+      const result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'PROPRIETARIO')
+      if (result.allowed) {
+        setEmailError('')
+        setShowCreateModal(true)
+      } else {
+        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de usuários do seu plano.')
+        setShowUpgradeModal(true)
+      }
+    } catch (error: any) {
+      console.error('Error checking plan limit:', error)
+      setEmailError('')
+      setShowCreateModal(true)
+    } finally {
+      setCheckingPlanLimit(false)
+    }
+  }, [user?.agencyId])
 
   const checkEmailExists = useCallback(async (email: string, currentEmail?: string) => {
     setEmailVerified(false)
@@ -548,13 +574,14 @@ export function Owners() {
             {canCreateUsers && (
               <Button
                 className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
-                onClick={() => {
-                  closeAllModals()
-                  setEmailError('')
-                  setShowCreateModal(true)
-                }}
+                onClick={checkPlanLimitAndOpenModal}
+                disabled={checkingPlanLimit}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                {checkingPlanLimit ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
                 <span className="hidden sm:inline">Cadastrar Proprietário</span>
                 <span className="sm:hidden">Adicionar</span>
               </Button>
@@ -815,8 +842,12 @@ export function Owners() {
               Comece adicionando seu primeiro proprietário
             </p>
             {canCreateUsers && (
-              <Button onClick={() => { setEmailError(''); setShowCreateModal(true) }} className="bg-orange-600 hover:bg-orange-700 text-white">
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={checkPlanLimitAndOpenModal} disabled={checkingPlanLimit} className="bg-orange-600 hover:bg-orange-700 text-white">
+                {checkingPlanLimit ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
                 Cadastrar Proprietário
               </Button>
             )}
@@ -1413,28 +1444,8 @@ export function Owners() {
                   Você atingiu o limite do plano
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {upgradeErrorMessage || 'No plano gratuito, você pode cadastrar apenas 1 usuário.'}
+                  {upgradeErrorMessage || 'Você atingiu o limite de usuários do seu plano atual.'}
                 </p>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-amber-800">
-                  Com o plano gratuito você pode:
-                </p>
-                <ul className="text-sm text-amber-700 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Cadastrar 1 imóvel
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Cadastrar 1 usuário
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Criar 1 contrato
-                  </li>
-                </ul>
               </div>
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
@@ -1444,19 +1455,19 @@ export function Owners() {
                 <ul className="text-sm text-green-700 space-y-1">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Imóveis ilimitados
+                    Mais proprietários
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Usuários ilimitados
+                    Mais imóveis
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Contratos ilimitados
+                    Mais contratos
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Relatórios avançados
+                    Recursos avançados
                   </li>
                 </ul>
               </div>

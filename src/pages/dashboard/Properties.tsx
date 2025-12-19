@@ -1350,11 +1350,11 @@ export function Properties() {
                           {property.token && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <p className="text-[12px] text-muted-foreground font-mono truncate w-full justify-end flex">
+                                <div className="text-[12px] text-muted-foreground font-mono truncate w-full justify-end flex">
                                   <div className='border border-gray-300 rounded-md px-2 py-1'>
                                     {property.token}
                                   </div>
-                                </p>
+                                </div>
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>{property.token}</p>

@@ -74,7 +74,6 @@ import {
 import { Inspections } from './pages/dashboard/Inspections';
 import ExtrajudicialNotifications from './pages/dashboard/ExtrajudicialNotifications';
 import { Agreements } from './pages/dashboard/Agreements';
-import { Invoices } from './pages/dashboard/Invoices';
 import { Audit } from './pages/dashboard/Audit';
 import { Notifications } from './pages/dashboard/Notifications';
 import { Chat } from './pages/dashboard/Chat';
@@ -156,8 +155,6 @@ function App() {
 
               <Route path="extrajudicial-notifications" element={<ExtrajudicialNotifications />} />
 
-              <Route path="invoices" element={<Invoices />} />
-              <Route path="invoices/:id" element={<PlaceholderPage title="Detalhes da Fatura" />} />
 
               <Route path="payments" element={<Payments />} />
               <Route path="payments/new" element={<PlaceholderPage title="Novo Pagamento" />} />

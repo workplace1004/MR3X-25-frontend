@@ -410,6 +410,9 @@ export function canEditAgreement(user: UserContext, agreement: AgreementContext)
     case AccessScope.AGENCY:
       if (!user.agencyId || agreement.agencyId !== user.agencyId) return false;
       
+      // Allow editing if status is AGUARDANDO_ASSINATURA (sent but not fully signed)
+      if (agreement.status === AgreementStatus.AGUARDANDO_ASSINATURA) return true;
+      
       if (user.role === UserRole.AGENCY_MANAGER && hasBeenSigned(agreement)) return false;
       return true;
 

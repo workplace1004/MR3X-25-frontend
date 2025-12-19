@@ -232,7 +232,7 @@ export default function ExtrajudicialNotifications() {
 
   useEffect(() => {
     loadData();
-  }, [statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter, searchQuery]);
 
   const loadData = async () => {
     try {
@@ -243,6 +243,7 @@ export default function ExtrajudicialNotifications() {
           extrajudicialNotificationsAPI.getNotifications({
             status: statusFilter || undefined,
             type: typeFilter || undefined,
+            search: searchQuery || undefined,
           }),
           extrajudicialNotificationsAPI.getStatistics(),
         ]);
@@ -254,6 +255,7 @@ export default function ExtrajudicialNotifications() {
           extrajudicialNotificationsAPI.getNotifications({
             status: statusFilter || undefined,
             type: typeFilter || undefined,
+            search: searchQuery || undefined,
           }),
           extrajudicialNotificationsAPI.getStatistics(),
           propertiesAPI.getProperties(),
@@ -523,12 +525,25 @@ export default function ExtrajudicialNotifications() {
 
   const filteredNotifications = notifications.filter(n => {
     if (searchQuery) {
-      const search = searchQuery.toLowerCase();
+      const search = searchQuery.toLowerCase().trim();
+      if (!search) return true;
+      
       return (
         n.notificationNumber?.toLowerCase().includes(search) ||
+        n.protocolNumber?.toLowerCase().includes(search) ||
+        n.notificationToken?.toLowerCase().includes(search) ||
         n.creditorName?.toLowerCase().includes(search) ||
+        n.creditorDocument?.toLowerCase().includes(search) ||
+        n.creditorEmail?.toLowerCase().includes(search) ||
         n.debtorName?.toLowerCase().includes(search) ||
-        n.title?.toLowerCase().includes(search)
+        n.debtorDocument?.toLowerCase().includes(search) ||
+        n.debtorEmail?.toLowerCase().includes(search) ||
+        n.title?.toLowerCase().includes(search) ||
+        n.subject?.toLowerCase().includes(search) ||
+        n.description?.toLowerCase().includes(search) ||
+        n.type?.toLowerCase().includes(search) ||
+        (n.property?.address?.toLowerCase().includes(search)) ||
+        (n.property?.city?.toLowerCase().includes(search))
       );
     }
     return true;

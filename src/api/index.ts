@@ -549,8 +549,9 @@ export const agenciesAPI = {
     return response.data;
   },
 
-  checkUserCreationAllowed: async (id: string) => {
-    const response = await apiClient.get(`/agencies/${id}/check-user-creation`);
+  checkUserCreationAllowed: async (id: string, role?: string) => {
+    const params = role ? `?role=${role}` : '';
+    const response = await apiClient.get(`/agencies/${id}/check-user-creation${params}`);
     return response.data;
   },
 
