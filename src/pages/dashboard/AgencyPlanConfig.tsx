@@ -194,38 +194,11 @@ export function AgencyPlanConfig() {
     }
   }, [agencyId, queryClient]);
 
-  // Check for pending payment on component mount
+  // Check for pending payment on component mount - DISABLED
   useEffect(() => {
-    const checkPendingPayment = async () => {
-      const pendingPaymentStr = localStorage.getItem(PENDING_PAYMENT_KEY);
-      if (!pendingPaymentStr || !agencyId) return;
-
-      try {
-        const pendingPayment = JSON.parse(pendingPaymentStr);
-        if (pendingPayment.agencyId === agencyId && pendingPayment.paymentId && pendingPayment.newPlan) {
-          // Auto-check payment status
-          const success = await checkPaymentStatus(pendingPayment.paymentId, pendingPayment.newPlan, false);
-          if (!success) {
-            // Show payment modal again if payment not confirmed
-            setPaymentData({
-              requiresPayment: true,
-              paymentId: pendingPayment.paymentId,
-              invoiceUrl: pendingPayment.invoiceUrl,
-              newPlan: pendingPayment.newPlan,
-              value: pendingPayment.value,
-            });
-            setSelectedPlan(pendingPayment.newPlan);
-            // Don't show modal automatically, just keep the data ready
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing pending payment:', error);
-        localStorage.removeItem(PENDING_PAYMENT_KEY);
-      }
-    };
-
-    checkPendingPayment();
-  }, [agencyId, checkPaymentStatus]);
+    // Clear any old pending payment data
+    localStorage.removeItem(PENDING_PAYMENT_KEY);
+  }, []);
 
   // Auto-check payment status when payment modal is open (polling every 5 seconds)
   useEffect(() => {
@@ -539,33 +512,6 @@ export function AgencyPlanConfig() {
           </p>
         </div>
       </div>
-
-      {/* Pending Payment Banner */}
-      {paymentData && paymentData.paymentId && selectedPlan && !showPaymentModal && (
-        <Alert className="border-yellow-400 bg-yellow-50">
-          <CreditCard className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="text-yellow-800 flex items-center gap-2">
-              <span className="font-medium">Pagamento pendente: </span>
-              Upgrade para plano {getPlanNameInPortuguese(selectedPlan)}
-              {checkingPayment && (
-                <span className="flex items-center text-sm text-yellow-600">
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  Verificando...
-                </span>
-              )}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-yellow-400 text-yellow-800 hover:bg-yellow-100"
-              onClick={() => setShowPaymentModal(true)}
-            >
-              Ver Detalhes do Pagamento
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesAPI, usersAPI, addressAPI, paymentsAPI } from '../../api';
+import { propertiesAPI, usersAPI, addressAPI, paymentsAPI, agenciesAPI } from '../../api';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -78,6 +78,7 @@ export function Properties() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeErrorMessage, setUpgradeErrorMessage] = useState('');
+  const [checkingPlanLimit, setCheckingPlanLimit] = useState(false);
 
   const [newProperty, setNewProperty] = useState({
     name: '',
@@ -278,6 +279,36 @@ export function Properties() {
     setImageRefreshTrigger(prev => prev + 1);
     setDeleting(false);
   };
+
+  const checkPlanLimitAndOpenModal = useCallback(async () => {
+    if (!user?.agencyId) {
+      toast.error('Agência não encontrada');
+      return;
+    }
+
+    setCheckingPlanLimit(true);
+    try {
+      const result = await agenciesAPI.checkPropertyCreationAllowed(user.agencyId.toString());
+      if (result.allowed) {
+        closeAllModals();
+        loadTenants();
+        loadOwners();
+        setShowCreateModal(true);
+      } else {
+        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de imóveis do seu plano.');
+        setShowUpgradeModal(true);
+      }
+    } catch (error: any) {
+      console.error('Error checking plan limit:', error);
+      // If error, try to open the modal anyway and let backend handle it
+      closeAllModals();
+      loadTenants();
+      loadOwners();
+      setShowCreateModal(true);
+    } finally {
+      setCheckingPlanLimit(false);
+    }
+  }, [user?.agencyId]);
 
   const loadTenants = async () => {
     try {
@@ -1284,14 +1315,14 @@ export function Properties() {
                 <TooltipTrigger asChild>
                   <Button
                     className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => {
-                      closeAllModals();
-                      loadTenants();
-                      loadOwners();
-                      setShowCreateModal(true);
-                    }}
+                    onClick={checkPlanLimitAndOpenModal}
+                    disabled={checkingPlanLimit}
                   >
-                    <Plus className="w-5 h-5" />
+                    {checkingPlanLimit ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Cadastrar Imóvel</TooltipContent>
@@ -2873,31 +2904,11 @@ export function Properties() {
 
               <div className="text-center space-y-2">
                 <p className="text-lg font-semibold text-gray-900">
-                  Você está no plano gratuito
+                  Você atingiu o limite do plano
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {upgradeErrorMessage || 'No plano gratuito, você pode cadastrar apenas 1 imóvel.'}
+                  {upgradeErrorMessage || 'Você atingiu o limite de imóveis do seu plano atual.'}
                 </p>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-amber-800">
-                  Com o plano gratuito você pode:
-                </p>
-                <ul className="text-sm text-amber-700 space-y-1">
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Cadastrar 1 imóvel
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Cadastrar 1 usuário
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Criar 1 contrato
-                  </li>
-                </ul>
               </div>
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
@@ -2907,19 +2918,15 @@ export function Properties() {
                 <ul className="text-sm text-green-700 space-y-1">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Imóveis ilimitados
+                    Mais imóveis
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Usuários ilimitados
+                    Mais contratos
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Contratos ilimitados
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    Relatórios avançados
+                    Recursos avançados
                   </li>
                 </ul>
               </div>

@@ -232,7 +232,7 @@ export default function ExtrajudicialNotifications() {
 
   useEffect(() => {
     loadData();
-  }, [statusFilter, typeFilter, searchQuery]);
+  }, [statusFilter, typeFilter]);
 
   const loadData = async () => {
     try {
@@ -243,19 +243,18 @@ export default function ExtrajudicialNotifications() {
           extrajudicialNotificationsAPI.getNotifications({
             status: statusFilter || undefined,
             type: typeFilter || undefined,
-            search: searchQuery || undefined,
           }),
           extrajudicialNotificationsAPI.getStatistics(),
         ]);
 
-        setNotifications(notificationsRes.data || []);
+        const notificationsData = Array.isArray(notificationsRes.data) ? notificationsRes.data : (notificationsRes.data?.data || notificationsRes.data || []);
+        setNotifications(notificationsData);
         setStatistics(statsRes);
       } else {
         const [notificationsRes, statsRes, propsRes, usersRes, tenantsRes] = await Promise.all([
           extrajudicialNotificationsAPI.getNotifications({
             status: statusFilter || undefined,
             type: typeFilter || undefined,
-            search: searchQuery || undefined,
           }),
           extrajudicialNotificationsAPI.getStatistics(),
           propertiesAPI.getProperties(),
@@ -263,7 +262,8 @@ export default function ExtrajudicialNotifications() {
           usersAPI.getTenants(),
         ]);
 
-        setNotifications(notificationsRes.data || []);
+        const notificationsData = Array.isArray(notificationsRes.data) ? notificationsRes.data : (notificationsRes.data?.data || notificationsRes.data || []);
+        setNotifications(notificationsData);
         setStatistics(statsRes);
         setProperties(propsRes || []);
         setTenants(tenantsRes || []);
@@ -524,26 +524,32 @@ export default function ExtrajudicialNotifications() {
   };
 
   const filteredNotifications = notifications.filter(n => {
-    if (searchQuery) {
+    if (searchQuery && searchQuery.trim()) {
       const search = searchQuery.toLowerCase().trim();
-      if (!search) return true;
       
+      // Convert all values to strings and handle null/undefined
+      const safeString = (val: any): string => {
+        if (val === null || val === undefined) return '';
+        return String(val).toLowerCase();
+      };
+      
+      // Search in all relevant fields
       return (
-        n.notificationNumber?.toLowerCase().includes(search) ||
-        n.protocolNumber?.toLowerCase().includes(search) ||
-        n.notificationToken?.toLowerCase().includes(search) ||
-        n.creditorName?.toLowerCase().includes(search) ||
-        n.creditorDocument?.toLowerCase().includes(search) ||
-        n.creditorEmail?.toLowerCase().includes(search) ||
-        n.debtorName?.toLowerCase().includes(search) ||
-        n.debtorDocument?.toLowerCase().includes(search) ||
-        n.debtorEmail?.toLowerCase().includes(search) ||
-        n.title?.toLowerCase().includes(search) ||
-        n.subject?.toLowerCase().includes(search) ||
-        n.description?.toLowerCase().includes(search) ||
-        n.type?.toLowerCase().includes(search) ||
-        (n.property?.address?.toLowerCase().includes(search)) ||
-        (n.property?.city?.toLowerCase().includes(search))
+        safeString(n.notificationNumber).includes(search) ||
+        safeString(n.protocolNumber).includes(search) ||
+        safeString(n.notificationToken).includes(search) ||
+        safeString(n.creditorName).includes(search) ||
+        safeString(n.creditorDocument).includes(search) ||
+        safeString(n.creditorEmail).includes(search) ||
+        safeString(n.debtorName).includes(search) ||
+        safeString(n.debtorDocument).includes(search) ||
+        safeString(n.debtorEmail).includes(search) ||
+        safeString(n.title).includes(search) ||
+        safeString(n.subject).includes(search) ||
+        safeString(n.description).includes(search) ||
+        safeString(n.type).includes(search) ||
+        safeString(n.property?.address).includes(search) ||
+        safeString(n.property?.city).includes(search)
       );
     }
     return true;
@@ -672,7 +678,8 @@ export default function ExtrajudicialNotifications() {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
                           <p className="font-mono text-xs text-muted-foreground">{n.notificationNumber}</p>
-                          <p className="font-medium text-sm">{n.debtorName}</p>
+                          <p className="font-medium text-sm">Credor: {n.creditorName}</p>
+                          <p className="font-medium text-sm">Devedor: {n.debtorName}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {getStatusBadge(n.status)}
@@ -750,6 +757,7 @@ export default function ExtrajudicialNotifications() {
                       <TableHead>Status</TableHead>
                       <TableHead>Prioridade</TableHead>
                   {showUserRoleColumn && <TableHead>Seu Papel</TableHead>}
+                      <TableHead>Credor</TableHead>
                       <TableHead>Devedor</TableHead>
                       <TableHead>Valor Total</TableHead>
                       <TableHead>Prazo</TableHead>
@@ -791,6 +799,10 @@ export default function ExtrajudicialNotifications() {
                             )}
                           </TableCell>
                         )}
+                        <TableCell>
+                          <div className="font-medium">{n.creditorName}</div>
+                          <div className="text-xs text-muted-foreground">{n.creditorDocument}</div>
+                        </TableCell>
                         <TableCell>
                           <div className="font-medium">{n.debtorName}</div>
                           <div className="text-xs text-muted-foreground">{n.debtorDocument}</div>
