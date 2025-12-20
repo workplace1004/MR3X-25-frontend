@@ -8,7 +8,7 @@ import {
   Crown, Package, Mail, Receipt, ClipboardCheck, FileSignature,
   Code, KeyRound, Activity, Webhook, BookOpen, UserCog2,
   Award, Inbox, TrendingUp, Kanban,
-  Database, GitCompare, Headphones, UserSearch, Gavel, UsersRound
+  Database, GitCompare, Headphones, UserSearch, Gavel, UsersRound, Handshake
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { chatAPI, notificationsAPI, extrajudicialNotificationsAPI, profileAPI } from '../api';
@@ -55,6 +55,7 @@ const baseNavigation = [
   { name: 'Relatórios', href: '/dashboard/reports', icon: BarChart3, perm: 'reports:read' },
   { name: 'Planos', href: '/dashboard/plans', icon: Package, perm: undefined, roles: ['CEO', 'ADMIN'] },
   { name: 'Faturamento', href: '/dashboard/billing', icon: Receipt, perm: 'billing:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
+  { name: 'Split Configuration', href: '/dashboard/split-configuration', icon: Handshake, perm: undefined, roles: ['CEO', 'ADMIN', 'AGENCY_ADMIN', 'AGENCY_MANAGER', 'INDEPENDENT_OWNER'] },
   { name: 'Comunicação', href: '/dashboard/communications', icon: Mail, perm: undefined, roles: ['CEO'] },
   { name: 'Auditorias', href: '/dashboard/audit', icon: ShieldCheck, perm: 'audit:read', roles: ['CEO', 'ADMIN'] },
   { name: 'Documentos', href: '/dashboard/documents', icon: FileDown, perm: 'documents:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
@@ -186,6 +187,7 @@ export function DashboardLayout() {
         '/dashboard/agencies',
         '/dashboard/plans',
         '/dashboard/billing',
+        '/dashboard/split-configuration',
         '/dashboard/audit',
         '/dashboard/chat',
         '/dashboard/notifications',

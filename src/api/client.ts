@@ -22,10 +22,16 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = '/auth/login';
+      // Don't redirect if this is a login request - let the Login component handle the error
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      const isAlreadyOnLoginPage = window.location.pathname.includes('/auth/login');
+
+      if (!isLoginRequest && !isAlreadyOnLoginPage) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/auth/login';
+      }
     }
     return Promise.reject(error);
   }

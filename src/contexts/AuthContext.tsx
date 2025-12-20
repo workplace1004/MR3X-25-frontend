@@ -291,17 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuth(response.user, response.accessToken, response.refreshToken);
       toast.success('Login realizado com sucesso!');
     } catch (error: any) {
-      let message = error?.response?.data?.message || error.message || 'Erro ao fazer login';
-
-      if (message.startsWith('FROZEN_USER:')) {
-        message = message.replace('FROZEN_USER:', '');
-        toast.error(message, {
-          duration: 8000,
-          description: 'Entre em contato com o administrador da sua agência para resolver esta situação.',
-        });
-      } else {
-        toast.error(message);
-      }
+      // Don't show toast - let Login component show modal instead
       throw error;
     } finally {
       setLoading(false);

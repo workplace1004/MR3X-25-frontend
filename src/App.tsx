@@ -88,6 +88,7 @@ import Documents from './pages/dashboard/Documents';
 import { CEOPayments } from './pages/dashboard/CEOPayments';
 import { PricingPage } from './pages/public/PricingPage';
 import { SubscriptionPage } from './pages/dashboard/SubscriptionPage';
+import { SplitConfiguration } from './pages/dashboard/SplitConfiguration';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -199,6 +200,7 @@ function App() {
               <Route path="plans" element={<Plans />} />
               <Route path="subscription" element={<SubscriptionPage />} />
               <Route path="billing" element={<Billing />} />
+              <Route path="split-configuration" element={<SplitConfiguration />} />
               <Route path="communications" element={<Communications />} />
               <Route path="audit" element={<Audit />} />
               <Route path="documents" element={<Documents />} />

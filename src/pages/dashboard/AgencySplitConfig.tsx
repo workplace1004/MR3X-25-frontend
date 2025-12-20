@@ -46,10 +46,12 @@ export function AgencySplitConfig() {
     enabled: !!agencyId && canViewSplit,
   });
 
+  // Only CEO and ADMIN can access payment config
+  const canAccessPaymentConfig = user?.role === 'CEO' || user?.role === 'ADMIN';
   const { data: paymentConfig, isLoading: configLoading } = useQuery({
     queryKey: ['paymentConfig'],
     queryFn: () => settingsAPI.getPaymentConfig(),
-    enabled: canViewSplit,
+    enabled: canAccessPaymentConfig,
   });
 
   useEffect(() => {

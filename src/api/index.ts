@@ -2016,5 +2016,382 @@ export const tenantAnalysisAPI = {
   },
 };
 
+// ============================================
+// SPLIT CONFIGURATION API
+// ============================================
+
+export const splitConfigAPI = {
+  getAll: async (params?: {
+    agencyId?: string;
+    ownerId?: string;
+    contractId?: string;
+    propertyId?: string;
+    status?: string;
+    scope?: string;
+    skip?: number;
+    take?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/split-configuration${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getById: async (id: string) => {
+    const response = await apiClient.get(`/split-configuration/${id}`);
+    return response.data;
+  },
+
+  getActive: async (params?: {
+    agencyId?: string;
+    ownerId?: string;
+    contractId?: string;
+    propertyId?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/split-configuration/active${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getAuditLogs: async (id: string, params?: { skip?: number; take?: number }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/split-configuration/${id}/audit-logs${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  create: async (data: {
+    name: string;
+    description?: string;
+    scope?: string;
+    agencyId?: number;
+    ownerId?: number;
+    contractId?: number;
+    propertyId?: number;
+    effectiveDate?: string;
+    changeReason?: string;
+    notes?: string;
+    receivers?: any[];
+  }) => {
+    const response = await apiClient.post('/split-configuration', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: any) => {
+    const response = await apiClient.put(`/split-configuration/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string, reason?: string) => {
+    const response = await apiClient.delete(`/split-configuration/${id}${reason ? `?reason=${encodeURIComponent(reason)}` : ''}`);
+    return response.data;
+  },
+
+  validate: async (id: string, data: { notes?: string }) => {
+    const response = await apiClient.patch(`/split-configuration/${id}/validate`, data);
+    return response.data;
+  },
+
+  activate: async (id: string, data: { reason?: string }) => {
+    const response = await apiClient.patch(`/split-configuration/${id}/activate`, data);
+    return response.data;
+  },
+
+  deactivate: async (id: string, data: { reason?: string }) => {
+    const response = await apiClient.patch(`/split-configuration/${id}/deactivate`, data);
+    return response.data;
+  },
+
+  createNewVersion: async (id: string) => {
+    const response = await apiClient.post(`/split-configuration/${id}/new-version`);
+    return response.data;
+  },
+
+  // Receivers
+  addReceiver: async (configId: string, data: any) => {
+    const response = await apiClient.post(`/split-configuration/${configId}/receivers`, data);
+    return response.data;
+  },
+
+  updateReceiver: async (configId: string, receiverId: string, data: any) => {
+    const response = await apiClient.put(`/split-configuration/${configId}/receivers/${receiverId}`, data);
+    return response.data;
+  },
+
+  deleteReceiver: async (configId: string, receiverId: string) => {
+    const response = await apiClient.delete(`/split-configuration/${configId}/receivers/${receiverId}`);
+    return response.data;
+  },
+
+  // Rules
+  addRule: async (configId: string, receiverId: string, data: any) => {
+    const response = await apiClient.post(`/split-configuration/${configId}/receivers/${receiverId}/rules`, data);
+    return response.data;
+  },
+
+  updateRule: async (configId: string, ruleId: string, data: any) => {
+    const response = await apiClient.put(`/split-configuration/${configId}/rules/${ruleId}`, data);
+    return response.data;
+  },
+
+  deleteRule: async (configId: string, ruleId: string) => {
+    const response = await apiClient.delete(`/split-configuration/${configId}/rules/${ruleId}`);
+    return response.data;
+  },
+
+  // Split calculation
+  calculate: async (id: string, amount: number, chargeType?: string) => {
+    const qs = new URLSearchParams({ amount: String(amount) });
+    if (chargeType) qs.append('chargeType', chargeType);
+    const response = await apiClient.get(`/split-configuration/${id}/calculate?${qs.toString()}`);
+    return response.data;
+  },
+
+  preview: async (params: {
+    agencyId?: string;
+    ownerId?: string;
+    contractId?: string;
+    propertyId?: string;
+    amount: number;
+    chargeType?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+    });
+    const response = await apiClient.get(`/split-configuration/preview?${qs.toString()}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// ASAAS WALLET API
+// ============================================
+
+export const asaasWalletAPI = {
+  getAll: async (params?: {
+    agencyId?: string;
+    userId?: string;
+    status?: string;
+    skip?: number;
+    take?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/asaas-wallets${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getById: async (id: string) => {
+    const response = await apiClient.get(`/asaas-wallets/${id}`);
+    return response.data;
+  },
+
+  getConnectionStatus: async (params?: { agencyId?: string; userId?: string }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/asaas-wallets/connection-status${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  create: async (data: {
+    asaasAccountId: string;
+    asaasWalletId: string;
+    ownerName: string;
+    ownerDocument: string;
+    ownerEmail?: string;
+    ownerPhone?: string;
+    agencyId?: number;
+    userId?: number;
+    bankCode?: string;
+    bankName?: string;
+    bankBranch?: string;
+    bankAccount?: string;
+    bankAccountType?: string;
+    pixKey?: string;
+  }) => {
+    const response = await apiClient.post('/asaas-wallets', data);
+    return response.data;
+  },
+
+  link: async (data: { apiKey: string; agencyId?: number; userId?: number }) => {
+    const response = await apiClient.post('/asaas-wallets/link', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: any) => {
+    const response = await apiClient.put(`/asaas-wallets/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: string) => {
+    const response = await apiClient.delete(`/asaas-wallets/${id}`);
+    return response.data;
+  },
+
+  verify: async (id: string, notes?: string) => {
+    const response = await apiClient.post(`/asaas-wallets/${id}/verify`, { notes });
+    return response.data;
+  },
+
+  sync: async (id: string) => {
+    const response = await apiClient.post(`/asaas-wallets/${id}/sync`);
+    return response.data;
+  },
+};
+
+// ============================================
+// BILLING CYCLE API
+// ============================================
+
+export const billingAPI = {
+  // Billing Cycles
+  getCycles: async (params?: {
+    agencyId?: string;
+    ownerId?: string;
+    billingMonth?: string;
+    status?: string;
+    skip?: number;
+    take?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/billing/cycles${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getCurrentCycle: async (params?: { agencyId?: string; ownerId?: string }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/billing/cycles/current${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getCycleById: async (id: string) => {
+    const response = await apiClient.get(`/billing/cycles/${id}`);
+    return response.data;
+  },
+
+  closeCycle: async (id: string) => {
+    const response = await apiClient.post(`/billing/cycles/${id}/close`);
+    return response.data;
+  },
+
+  getCycleOverages: async (id: string) => {
+    const response = await apiClient.get(`/billing/cycles/${id}/overages`);
+    return response.data;
+  },
+
+  // Billing Charges
+  getCharges: async (params?: {
+    agencyId?: string;
+    ownerId?: string;
+    contractId?: string;
+    tenantId?: string;
+    chargeType?: string;
+    status?: string;
+    billingMonth?: string;
+    skip?: number;
+    take?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/billing/charges${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  getChargeById: async (id: string) => {
+    const response = await apiClient.get(`/billing/charges/${id}`);
+    return response.data;
+  },
+
+  createCharge: async (data: {
+    chargeType: 'RENT' | 'OVERUSE' | 'OPERATIONAL_FEE' | 'DEPOSIT' | 'PENALTY';
+    description: string;
+    grossValue: number;
+    dueDate: string;
+    contractId?: string;
+    propertyId?: string;
+    tenantId?: string;
+  }) => {
+    const response = await apiClient.post('/billing/charges', data);
+    return response.data;
+  },
+
+  createPaymentForCharge: async (id: string) => {
+    const response = await apiClient.post(`/billing/charges/${id}/create-payment`);
+    return response.data;
+  },
+
+  refundCharge: async (id: string, reason: string) => {
+    const response = await apiClient.post(`/billing/charges/${id}/refund`, { reason });
+    return response.data;
+  },
+
+  // Usage Tracking
+  trackUsage: async (data: {
+    feature: string;
+    quantity?: number;
+    referenceId?: string;
+    referenceType?: string;
+  }) => {
+    const response = await apiClient.post('/billing/usage/track', data);
+    return response.data;
+  },
+
+  getOverages: async (params?: { agencyId?: string; billingMonth?: string }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/billing/usage/overages${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+};
+
 export { authApi } from './auth';
 export { default as apiClient } from './client';
