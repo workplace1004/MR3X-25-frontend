@@ -16,6 +16,11 @@ export const dashboardAPI = {
     return response.data;
   },
 
+  getBillingData: async () => {
+    const response = await apiClient.get('/dashboard/billing');
+    return response.data;
+  },
+
   getTenantAlerts: async () => {
     const response = await apiClient.get('/dashboard/tenant-alerts');
     return response.data;
@@ -766,6 +771,42 @@ export const plansAPI = {
 
   getUserUsage: async (userId: string) => {
     const response = await apiClient.get(`/plans/user/${userId}/usage`);
+    return response.data;
+  },
+
+  // Independent Owner Plan Management
+  getOwnerPlanUsage: async (userId: string) => {
+    const response = await apiClient.get(`/plans/owner/${userId}/plan-usage`);
+    return response.data;
+  },
+
+  previewOwnerPlanChange: async (userId: string, targetPlan: string) => {
+    const response = await apiClient.get(`/plans/owner/${userId}/preview-change/${targetPlan}`);
+    return response.data;
+  },
+
+  changeOwnerPlan: async (userId: string, newPlan: string) => {
+    const response = await apiClient.post(`/plans/owner/${userId}/change-plan`, { newPlan });
+    return response.data;
+  },
+
+  createOwnerPlanPayment: async (userId: string, newPlan: string) => {
+    const response = await apiClient.post(`/plans/owner/${userId}/create-plan-payment`, { newPlan });
+    return response.data;
+  },
+
+  confirmOwnerPlanPayment: async (userId: string, paymentId: string, newPlan: string) => {
+    const response = await apiClient.post(`/plans/owner/${userId}/confirm-plan-payment`, { paymentId, newPlan });
+    return response.data;
+  },
+
+  getOwnerFrozenEntities: async (userId: string) => {
+    const response = await apiClient.get(`/plans/owner/${userId}/frozen-entities`);
+    return response.data;
+  },
+
+  checkOwnerPropertyCreationAllowed: async (userId: string) => {
+    const response = await apiClient.get(`/plans/owner/${userId}/check-property-creation`);
     return response.data;
   },
 };

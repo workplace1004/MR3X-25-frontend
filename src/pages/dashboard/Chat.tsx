@@ -42,6 +42,7 @@ export function Chat() {
   const [message, setMessage] = useState('')
   const [showNewChat, setShowNewChat] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<any[]>([])
+  const [loadingAvailableUsers, setLoadingAvailableUsers] = useState(false)
   const [creatingChat, setCreatingChat] = useState(false)
   const [chatToDelete, setChatToDelete] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -152,16 +153,19 @@ export function Chat() {
   const handleOpenNewChat = async () => {
     setShowNewChat(true)
     setAvailableUsers([])
+    setLoadingAvailableUsers(true)
     try {
       const users = await chatAPI.getAvailableUsers()
       setAvailableUsers(users || [])
 
       if (!users || users.length === 0) {
-        toast.info('Nenhum usuário disponível para chat. Verifique se você tem inquilinos cadastrados (se for proprietário) ou se está vinculado a um proprietário (se for inquilino).')
+        // Don't show toast if there are genuinely no users - the UI will show a message
       }
     } catch (error) {
       console.error('Error loading available users:', error)
       toast.error('Erro ao carregar usuários disponíveis')
+    } finally {
+      setLoadingAvailableUsers(false)
     }
   }
 
@@ -519,20 +523,32 @@ export function Chat() {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            {availableUsers.length === 0 ? (
+            {loadingAvailableUsers ? (
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex justify-between items-center p-2 border border-border rounded-lg">
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-48" />
+                    </div>
+                    <Skeleton className="h-8 w-16" />
+                  </div>
+                ))}
+              </div>
+            ) : availableUsers.length === 0 ? (
               <div className="text-center py-4">
                 <div className="text-muted-foreground text-sm mb-2">
                   Nenhum usuário disponível para chat
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <p className="mb-1">• Se você é <strong>proprietário</strong>: cadastre inquilinos primeiro</p>
-                  <p>• Se você é <strong>inquilino</strong>: verifique se está vinculado a um proprietário</p>
+                  <p className="mb-1">• Se você é <strong>proprietário</strong>: cadastre inquilinos e crie contratos primeiro</p>
+                  <p>• Se você é <strong>inquilino</strong>: verifique se está vinculado a um proprietário através de um contrato</p>
                 </div>
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-2 max-h-96 overflow-y-auto">
                 {availableUsers.map((u: any) => (
-                  <li key={u.id} className="flex justify-between items-center p-2 border border-border rounded-lg">
+                  <li key={u.id} className="flex justify-between items-center p-2 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex-1">
                       <div className="text-sm font-medium">{u.name || 'Usuário'}</div>
                       <div className="text-xs text-muted-foreground">{u.email}</div>

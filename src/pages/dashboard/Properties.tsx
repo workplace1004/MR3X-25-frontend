@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesAPI, usersAPI, addressAPI, paymentsAPI, agenciesAPI } from '../../api';
+import { propertiesAPI, usersAPI, addressAPI, paymentsAPI, agenciesAPI, plansAPI } from '../../api';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -281,34 +281,66 @@ export function Properties() {
   };
 
   const checkPlanLimitAndOpenModal = useCallback(async () => {
-    if (!user?.agencyId) {
-      toast.error('Agência não encontrada');
-      return;
-    }
+    // Handle INDEPENDENT_OWNER differently - use userId instead of agencyId
+    const isIndependentOwner = user?.role === 'INDEPENDENT_OWNER';
 
-    setCheckingPlanLimit(true);
-    try {
-      const result = await agenciesAPI.checkPropertyCreationAllowed(user.agencyId.toString());
-      if (result.allowed) {
+    if (isIndependentOwner) {
+      if (!user?.id) {
+        toast.error('Usuário não encontrado');
+        return;
+      }
+
+      setCheckingPlanLimit(true);
+      try {
+        const result = await plansAPI.checkOwnerPropertyCreationAllowed(user.id.toString());
+        if (result.allowed) {
+          closeAllModals();
+          loadTenants();
+          loadOwners();
+          setShowCreateModal(true);
+        } else {
+          setUpgradeErrorMessage(result.message || 'Você atingiu o limite de imóveis do seu plano.');
+          setShowUpgradeModal(true);
+        }
+      } catch (error: any) {
+        console.error('Error checking plan limit:', error);
         closeAllModals();
         loadTenants();
         loadOwners();
         setShowCreateModal(true);
-      } else {
-        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de imóveis do seu plano.');
-        setShowUpgradeModal(true);
+      } finally {
+        setCheckingPlanLimit(false);
       }
-    } catch (error: any) {
-      console.error('Error checking plan limit:', error);
-      // If error, try to open the modal anyway and let backend handle it
-      closeAllModals();
-      loadTenants();
-      loadOwners();
-      setShowCreateModal(true);
-    } finally {
-      setCheckingPlanLimit(false);
+    } else {
+      // Agency users
+      if (!user?.agencyId) {
+        toast.error('Agência não encontrada');
+        return;
+      }
+
+      setCheckingPlanLimit(true);
+      try {
+        const result = await agenciesAPI.checkPropertyCreationAllowed(user.agencyId.toString());
+        if (result.allowed) {
+          closeAllModals();
+          loadTenants();
+          loadOwners();
+          setShowCreateModal(true);
+        } else {
+          setUpgradeErrorMessage(result.message || 'Você atingiu o limite de imóveis do seu plano.');
+          setShowUpgradeModal(true);
+        }
+      } catch (error: any) {
+        console.error('Error checking plan limit:', error);
+        closeAllModals();
+        loadTenants();
+        loadOwners();
+        setShowCreateModal(true);
+      } finally {
+        setCheckingPlanLimit(false);
+      }
     }
-  }, [user?.agencyId]);
+  }, [user?.agencyId, user?.id, user?.role]);
 
   const loadTenants = async () => {
     try {

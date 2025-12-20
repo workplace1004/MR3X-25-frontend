@@ -2387,6 +2387,9 @@ export function Contracts() {
                         !template.allowedUserTypes ||
                         template.allowedUserTypes.some((type: string) => allowedUserTypes.includes(type as ContractUserType))
                       )
+                      .filter((template: any, index: number, self: any[]) => 
+                        index === self.findIndex((t: any) => t.id === template.id)
+                      )
                       .map((template: any) => (
                         <SelectItem key={template.id} value={template.id}>
                           {template.name}

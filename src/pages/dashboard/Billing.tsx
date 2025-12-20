@@ -1,62 +1,63 @@
 import { useState } from 'react'
-import { Download, TrendingUp, FileText } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { FileText, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Badge } from '../../components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
-import { formatCurrency } from '../../lib/utils'
+import { Skeleton } from '../../components/ui/skeleton'
+import { formatCurrency, formatDate } from '../../lib/utils'
 import { useAuth } from '../../contexts/AuthContext'
+import { dashboardAPI } from '../../api'
+
+interface Invoice {
+  id: string;
+  transactionId: string;
+  agencyName: string;
+  agencyId: string | null;
+  plan: string;
+  type: string;
+  description: string | null;
+  amount: number;
+  issueDate: string;
+  dueDate: string | null;
+  status: 'paid' | 'pending' | 'overdue';
+  paymentDate: string | null;
+  asaasPaymentId: string | null;
+}
+
+interface BillingData {
+  stats: {
+    totalRevenue: number;
+    thisMonth: number;
+    pending: number;
+    overdue: number;
+    paid: number;
+    currentMonth: string;
+  };
+  invoices: Invoice[];
+  summary: {
+    totalTransactions: number;
+    paidCount: number;
+    pendingCount: number;
+    overdueCount: number;
+  };
+}
 
 export default function BillingPage() {
   const { hasPermission } = useAuth()
-
   const canViewBilling = hasPermission('billing:read')
 
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const invoices = [
-    {
-      id: 'INV-001',
-      agencyName: 'Imóveis Central',
-      plan: 'Pro',
-      amount: 99.90,
-      issueDate: new Date('2024-01-15'),
-      dueDate: new Date('2024-01-30'),
-      status: 'paid',
-      paymentDate: new Date('2024-01-18'),
-    },
-    {
-      id: 'INV-002',
-      agencyName: 'Real Estate Premium',
-      plan: 'Unlimited',
-      amount: 299.90,
-      issueDate: new Date('2024-01-15'),
-      dueDate: new Date('2024-01-30'),
-      status: 'pending',
-      paymentDate: null,
-    },
-    {
-      id: 'INV-003',
-      agencyName: 'Casa & Cia',
-      plan: 'Free',
-      amount: 0,
-      issueDate: new Date('2024-01-15'),
-      dueDate: new Date('2024-01-30'),
-      status: 'paid',
-      paymentDate: new Date('2024-01-15'),
-    },
-  ]
-
-  const stats = {
-    totalRevenue: 45870.50,
-    thisMonth: 12450.80,
-    pending: 899.80,
-    paid: 43970.70,
-  }
+  const { data: billingData, isLoading, error } = useQuery<BillingData>({
+    queryKey: ['billing-data'],
+    queryFn: () => dashboardAPI.getBillingData(),
+    enabled: canViewBilling,
+  });
 
   if (!canViewBilling) {
     return (
@@ -68,6 +69,74 @@ export default function BillingPage() {
       </div>
     )
   }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96 mt-2" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="h-3 w-20 mt-2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full mb-2" />
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
+          <h2 className="text-xl font-semibold text-muted-foreground">Erro ao carregar dados</h2>
+          <p className="text-muted-foreground">Não foi possível carregar os dados de faturamento.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const stats = billingData?.stats || {
+    totalRevenue: 0,
+    thisMonth: 0,
+    pending: 0,
+    overdue: 0,
+    paid: 0,
+    currentMonth: 'Mês atual',
+  };
+
+  const invoices = billingData?.invoices || [];
+
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesStatus = filterStatus === 'all' || invoice.status === filterStatus;
+    const matchesSearch = searchQuery === '' ||
+      invoice.agencyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -82,6 +151,23 @@ export default function BillingPage() {
     }
   }
 
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case 'PLAN_UPGRADE':
+        return <Badge variant="outline" className="bg-purple-50">Upgrade de Plano</Badge>
+      case 'EXTRA_CONTRACT':
+        return <Badge variant="outline" className="bg-blue-50">Contrato Extra</Badge>
+      case 'INSPECTION':
+        return <Badge variant="outline" className="bg-orange-50">Vistoria</Badge>
+      case 'SETTLEMENT':
+        return <Badge variant="outline" className="bg-green-50">Acordo</Badge>
+      case 'SCREENING':
+        return <Badge variant="outline" className="bg-cyan-50">Análise</Badge>
+      default:
+        return <Badge variant="outline">{type}</Badge>
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -93,7 +179,6 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -110,7 +195,7 @@ export default function BillingPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(stats.thisMonth)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Janeiro 2024</p>
+            <p className="text-xs text-muted-foreground mt-1 capitalize">{stats.currentMonth}</p>
           </CardContent>
         </Card>
         <Card>
@@ -135,7 +220,7 @@ export default function BillingPage() {
 
       <Tabs defaultValue="invoices" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="invoices">Faturas</TabsTrigger>
+          <TabsTrigger value="invoices">Faturas ({filteredInvoices.length})</TabsTrigger>
           <TabsTrigger value="revenue">Receitas</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
@@ -146,7 +231,11 @@ export default function BillingPage() {
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                   <CardTitle>Faturas</CardTitle>
-                  <CardDescription>Lista de todas as faturas emitidas</CardDescription>
+                  <CardDescription>
+                    {invoices.length === 0
+                      ? 'Nenhuma fatura encontrada no sistema'
+                      : `Total de ${invoices.length} transações registradas`}
+                  </CardDescription>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Input
@@ -170,81 +259,96 @@ export default function BillingPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0 sm:p-6">
-              <div className="block sm:hidden divide-y divide-border">
-                {invoices.map((invoice) => (
-                  <div key={invoice.id} className="p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm">{invoice.id}</span>
-                      {getStatusBadge(invoice.status)}
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Agência</span>
-                        <span className="font-medium">{invoice.agencyName}</span>
+              {filteredInvoices.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {invoices.length === 0
+                      ? 'Nenhuma transação registrada ainda'
+                      : 'Nenhuma fatura corresponde aos filtros selecionados'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="block sm:hidden divide-y divide-border">
+                    {filteredInvoices.map((invoice) => (
+                      <div key={invoice.id} className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-sm">{invoice.id}</span>
+                          {getStatusBadge(invoice.status)}
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Agência</span>
+                            <span className="font-medium">{invoice.agencyName}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Tipo</span>
+                            {getTypeBadge(invoice.type)}
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Plano</span>
+                            <Badge variant="outline">{invoice.plan}</Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Valor</span>
+                            <span className="font-semibold">{formatCurrency(invoice.amount)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Emissão</span>
+                            <span>{formatDate(invoice.issueDate)}</span>
+                          </div>
+                          {invoice.dueDate && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Vencimento</span>
+                              <span>{formatDate(invoice.dueDate)}</span>
+                            </div>
+                          )}
+                          {invoice.paymentDate && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Pagamento</span>
+                              <span className="text-green-600">{formatDate(invoice.paymentDate)}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Plano</span>
-                        <Badge variant="outline">{invoice.plan}</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Valor</span>
-                        <span className="font-semibold">{formatCurrency(invoice.amount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Emissão</span>
-                        <span>{invoice.issueDate.toLocaleDateString('pt-BR')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Vencimento</span>
-                        <span>{invoice.dueDate.toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                    <div className="pt-2">
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Download className="w-4 h-4 mr-2" />
-                        Baixar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="hidden sm:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID Fatura</TableHead>
-                      <TableHead>Agência</TableHead>
-                      <TableHead>Plano</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Emissão</TableHead>
-                      <TableHead>Vencimento</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
-                        <TableCell>{invoice.agencyName}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{invoice.plan}</Badge>
-                        </TableCell>
-                        <TableCell>{formatCurrency(invoice.amount)}</TableCell>
-                        <TableCell>{invoice.issueDate.toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{invoice.dueDate.toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm">
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  </div>
+
+                  <div className="hidden sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Agência</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Plano</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Emissão</TableHead>
+                          <TableHead>Vencimento</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredInvoices.map((invoice) => (
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium">{invoice.id}</TableCell>
+                            <TableCell>{invoice.agencyName}</TableCell>
+                            <TableCell>{getTypeBadge(invoice.type)}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{invoice.plan}</Badge>
+                            </TableCell>
+                            <TableCell className="font-semibold">{formatCurrency(invoice.amount)}</TableCell>
+                            <TableCell>{formatDate(invoice.issueDate)}</TableCell>
+                            <TableCell>{invoice.dueDate ? formatDate(invoice.dueDate) : '-'}</TableCell>
+                            <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -253,13 +357,30 @@ export default function BillingPage() {
           <Card>
             <CardHeader>
               <CardTitle>Análise de Receitas</CardTitle>
-              <CardDescription>Gráficos e estatísticas de receitas</CardDescription>
+              <CardDescription>Resumo das receitas da plataforma</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Gráficos de receitas serão implementados em breve</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <p className="text-sm text-green-600 font-medium">Transações Pagas</p>
+                  <p className="text-2xl font-bold text-green-700">{billingData?.summary?.paidCount || 0}</p>
+                </div>
+                <div className="p-4 bg-yellow-50 rounded-lg">
+                  <p className="text-sm text-yellow-600 font-medium">Transações Pendentes</p>
+                  <p className="text-2xl font-bold text-yellow-700">{billingData?.summary?.pendingCount || 0}</p>
+                </div>
+                <div className="p-4 bg-red-50 rounded-lg">
+                  <p className="text-sm text-red-600 font-medium">Transações Vencidas</p>
+                  <p className="text-2xl font-bold text-red-700">{billingData?.summary?.overdueCount || 0}</p>
+                </div>
               </div>
+              {stats.overdue > 0 && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">
+                    <strong>Atenção:</strong> Você possui {formatCurrency(stats.overdue)} em pagamentos vencidos.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

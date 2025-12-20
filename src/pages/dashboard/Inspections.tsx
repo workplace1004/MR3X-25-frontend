@@ -204,7 +204,9 @@ export function Inspections() {
   const [properties, setProperties] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [_inspectors, setInspectors] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
+  const [inspectionDetailLoading, setInspectionDetailLoading] = useState(false);
+  const [inspectionEditLoading, setInspectionEditLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -437,7 +439,10 @@ export function Inspections() {
 
   const handleViewInspection = async (inspection: Inspection) => {
     closeAllModals();
-    setLoading(true);
+    setInspectionDetailLoading(true);
+    setInspectionDetail(null);
+    setDetailMedia([]);
+    setShowDetailModal(true);
     try {
       const fullDetails = await inspectionsAPI.getInspectionById(inspection.id);
       setInspectionDetail(fullDetails);
@@ -450,18 +455,18 @@ export function Inspections() {
       } catch (mediaError) {
         console.error('Error loading media:', mediaError);
       }
-
-      setShowDetailModal(true);
     } catch (error: any) {
       toast.error(error?.message || 'Erro ao carregar detalhes da vistoria');
     } finally {
-      setLoading(false);
+      setInspectionDetailLoading(false);
     }
   };
 
   const handleEditInspection = async (inspection: Inspection) => {
     closeAllModals();
-    setLoading(true);
+    setInspectionEditLoading(true);
+    setSelectedInspection(null);
+    setShowEditModal(true);
     try {
       const fullDetails = await inspectionsAPI.getInspectionById(inspection.id);
       setSelectedInspection(fullDetails);
@@ -492,12 +497,10 @@ export function Inspections() {
       } catch (mediaError) {
         console.error('Error loading media:', mediaError);
       }
-
-      setShowEditModal(true);
     } catch (error: any) {
       toast.error(error?.message || 'Erro ao carregar vistoria');
     } finally {
-      setLoading(false);
+      setInspectionEditLoading(false);
     }
   };
 
@@ -2143,9 +2146,30 @@ export function Inspections() {
             <DialogHeader>
               <DialogTitle>Editar Vistoria</DialogTitle>
             </DialogHeader>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            {inspectionEditLoading ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-32 w-full" />
+                </div>
               </div>
             ) : (
               <form className="space-y-4" onSubmit={handleUpdateInspection}>
@@ -2499,7 +2523,31 @@ export function Inspections() {
                 </div>
               </div>
             </DialogHeader>
-            {inspectionDetail && (
+            {inspectionDetailLoading ? (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-48 mb-2" />
+                  <Skeleton className="h-32 w-full rounded-md" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-40 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-36 mb-2" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                  </div>
+                </div>
+              </div>
+            ) : inspectionDetail ? (
               <div id="inspection-detail-content" className="space-y-4 sm:space-y-6">
                 {inspectionDetail.token && (
                   <>
@@ -2936,7 +2984,7 @@ export function Inspections() {
                   </div>
                 )}
               </div>
-            )}
+            ) : null}
           </DialogContent>
         </Dialog>
 

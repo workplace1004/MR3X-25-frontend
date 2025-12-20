@@ -497,24 +497,62 @@ export function Tenants() {
 
     setCreating(true)
     try {
+      // Validate required fields
+      if (!newTenant.email?.trim()) {
+        toast.error('Email é obrigatório')
+        setCreating(false)
+        return
+      }
+      if (!newTenant.name?.trim()) {
+        toast.error('Nome é obrigatório')
+        setCreating(false)
+        return
+      }
+      if (!newTenant.password || newTenant.password.length < 6) {
+        toast.error('Senha deve ter pelo menos 6 caracteres')
+        setCreating(false)
+        return
+      }
       const docResult = validateDocument(newTenant.document)
       if (!docResult.isValid) {
         toast.error(docResult.error || 'Documento invalido (CPF/CNPJ)')
         setCreating(false)
         return
       }
-      if (!isValidCEPFormat(newTenant.cep)) {
+      if (newTenant.cep && !isValidCEPFormat(newTenant.cep)) {
         toast.error('CEP invalido')
         setCreating(false)
         return
       }
-      const tenantToSend = {
-        ...newTenant,
+      // Remove empty strings and convert to undefined for optional fields
+      const tenantToSend: any = {
+        email: newTenant.email.trim(),
+        password: newTenant.password,
+        name: newTenant.name.trim(),
         role: 'INQUILINO',
         plan: 'FREE',
-        birthDate: newTenant.birthDate ? new Date(newTenant.birthDate) : null,
-        agencyId: newTenant.agencyId || undefined,
       }
+
+      // Add optional fields only if they have values
+      if (newTenant.document?.trim()) tenantToSend.document = newTenant.document.trim()
+      if (newTenant.phone?.trim()) tenantToSend.phone = newTenant.phone.trim()
+      if (newTenant.birthDate?.trim()) tenantToSend.birthDate = newTenant.birthDate.trim()
+      if (newTenant.agencyId?.trim()) tenantToSend.agencyId = newTenant.agencyId.trim()
+      if (newTenant.brokerId?.trim()) tenantToSend.brokerId = newTenant.brokerId.trim()
+      if (newTenant.address?.trim()) tenantToSend.address = newTenant.address.trim()
+      if (newTenant.complement?.trim()) tenantToSend.complement = newTenant.complement.trim()
+      if (newTenant.cep?.trim()) tenantToSend.cep = newTenant.cep.trim()
+      if (newTenant.neighborhood?.trim()) tenantToSend.neighborhood = newTenant.neighborhood.trim()
+      if (newTenant.city?.trim()) tenantToSend.city = newTenant.city.trim()
+      if (newTenant.state?.trim()) tenantToSend.state = newTenant.state.trim()
+      if (newTenant.nationality?.trim()) tenantToSend.nationality = newTenant.nationality.trim()
+      if (newTenant.maritalStatus?.trim()) tenantToSend.maritalStatus = newTenant.maritalStatus.trim()
+      if (newTenant.profession?.trim()) tenantToSend.profession = newTenant.profession.trim()
+      if (newTenant.rg?.trim()) tenantToSend.rg = newTenant.rg.trim()
+      if (newTenant.employerName?.trim()) tenantToSend.employerName = newTenant.employerName.trim()
+      if (newTenant.emergencyContactName?.trim()) tenantToSend.emergencyContactName = newTenant.emergencyContactName.trim()
+      if (newTenant.emergencyContactPhone?.trim()) tenantToSend.emergencyContactPhone = newTenant.emergencyContactPhone.trim()
+
       createTenantMutation.mutate(tenantToSend)
     } finally {
       setCreating(false)
@@ -768,19 +806,27 @@ export function Tenants() {
                 <Button
                   className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
                   onClick={async () => {
-                    if (!user?.agencyId) {
-                      toast.error('Agência não encontrada')
-                      return
-                    }
                     setCheckingPlanLimit(true)
                     try {
-                      const result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'TENANT')
+                      let result: { allowed: boolean; message?: string }
+
+                      if (isOwnerUser && user?.id) {
+                        // INDEPENDENT_OWNER uses userId-based check
+                        result = await plansAPI.canCreateTenantForOwner(user.id.toString())
+                      } else if (user?.agencyId) {
+                        // Agency users use agencyId-based check
+                        result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'TENANT')
+                      } else {
+                        toast.error('Usuário não encontrado')
+                        return
+                      }
+
                       if (result.allowed) {
                         closeAllModals()
                         setEmailError('')
                         setShowAnalysisSearchModal(true)
                       } else {
-                        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de usuários do seu plano.')
+                        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de inquilinos do seu plano.')
                         setShowUpgradeModal(true)
                       }
                     } catch (error) {
@@ -1154,18 +1200,26 @@ export function Tenants() {
             {showCreateTenantButton && (
               <Button
                 onClick={async () => {
-                  if (!user?.agencyId) {
-                    toast.error('Agência não encontrada')
-                    return
-                  }
                   setCheckingPlanLimit(true)
                   try {
-                    const result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString())
+                    let result: { allowed: boolean; message?: string }
+
+                    if (isOwnerUser && user?.id) {
+                      // INDEPENDENT_OWNER uses userId-based check
+                      result = await plansAPI.canCreateTenantForOwner(user.id.toString())
+                    } else if (user?.agencyId) {
+                      // Agency users use agencyId-based check
+                      result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'TENANT')
+                    } else {
+                      toast.error('Usuário não encontrado')
+                      return
+                    }
+
                     if (result.allowed) {
                       setEmailError('')
                       setShowAnalysisSearchModal(true)
                     } else {
-                      setUpgradeErrorMessage(result.message || 'Você atingiu o limite de usuários do seu plano.')
+                      setUpgradeErrorMessage(result.message || 'Você atingiu o limite de inquilinos do seu plano.')
                       setShowUpgradeModal(true)
                     }
                   } catch (error) {

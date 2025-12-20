@@ -314,7 +314,6 @@ export function DashboardLayout() {
         '/dashboard/plans', 
         '/dashboard/communications', 
         '/dashboard/audit', 
-        '/dashboard/chat', 
       ];
       if (excludeForIndependentOwner.includes(item.href)) return false;
     }
