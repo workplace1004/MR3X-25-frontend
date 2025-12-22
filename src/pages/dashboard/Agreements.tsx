@@ -30,6 +30,7 @@ import {
   Lock,
   Search,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../lib/utils';
 import { safeGetCurrentPosition, isSecureOrigin } from '../../hooks/use-geolocation';
@@ -440,6 +441,7 @@ export function Agreements() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
   const [showWaitingModal, setShowWaitingModal] = useState(false);
+  const [showSendErrorModal, setShowSendErrorModal] = useState(false);
   const [signAgreementData, setSignAgreementData] = useState<{ agreement: Agreement | null; type: 'agency' | 'owner' | 'tenant' | null }>({ agreement: null, type: null });
   const [signature, setSignature] = useState<string | null>(null);
   const [geoConsent, setGeoConsent] = useState(false);
@@ -843,6 +845,18 @@ export function Agreements() {
   };
 
   const handleSendForSignature = (agreement: Agreement) => {
+    // Check if agreement has at least one signature before sending (for INDEPENDENT_OWNER)
+    if (user?.role === 'INDEPENDENT_OWNER') {
+      const hasAnySignature = 
+        agreement.tenantSignature || 
+        agreement.ownerSignature;
+      
+      if (!hasAnySignature) {
+        setShowSendErrorModal(true);
+        return;
+      }
+    }
+    
     sendForSignatureMutation.mutate(agreement.id);
   };
 
@@ -1884,56 +1898,66 @@ export function Agreements() {
                 {}
                 <div className="border-t pt-3 sm:pt-4">
                   <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Assinaturas</h4>
-                  <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                    <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.tenantSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
-                      {agreementDetail.tenantSignature ? (
-                        <img src={agreementDetail.tenantSignature} alt="Assinatura Inquilino" className="h-10 sm:h-12 mx-auto object-contain mb-1" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs block text-muted-foreground">Inquilino</Label>
-                      {agreementDetail.tenantSignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
-                    <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.ownerSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
-                      {agreementDetail.ownerSignature ? (
-                        <img src={agreementDetail.ownerSignature} alt="Assinatura Proprietário" className="h-10 sm:h-12 mx-auto object-contain mb-1" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs block text-muted-foreground">Proprietário</Label>
-                      {agreementDetail.ownerSignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
-                    <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.agencySignedAt ? 'border-green-300 bg-green-50' : ''}`}>
-                      {agreementDetail.agencySignature ? (
-                        <img src={agreementDetail.agencySignature} alt="Assinatura Agência" className="h-10 sm:h-12 mx-auto object-contain mb-1" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs block text-muted-foreground">Agência</Label>
-                      {agreementDetail.agencySignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
-                  </div>
+                  {(() => {
+                    // Check if this is an independent owner agreement (no agency)
+                    const isIndependentOwnerAgreement = !agreementDetail.agencyId && !agreementDetail.property?.agencyId;
+                    const showAgencyBox = !isIndependentOwnerAgreement;
+                    
+                    return (
+                      <div className={`grid gap-2 sm:gap-4 ${showAgencyBox ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.tenantSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
+                          {agreementDetail.tenantSignature ? (
+                            <img src={agreementDetail.tenantSignature} alt="Assinatura Inquilino" className="h-10 sm:h-12 mx-auto object-contain mb-1" />
+                          ) : (
+                            <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                          )}
+                          <Label className="text-[10px] sm:text-xs block text-muted-foreground">Inquilino</Label>
+                          {agreementDetail.tenantSignedAt ? (
+                            <p className="text-[10px] sm:text-xs text-green-600">
+                              <CheckCircle className="w-3 h-3 inline mr-1" />
+                              Assinado
+                            </p>
+                          ) : (
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                          )}
+                        </div>
+                        <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.ownerSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
+                          {agreementDetail.ownerSignature ? (
+                            <img src={agreementDetail.ownerSignature} alt="Assinatura Proprietário" className="h-10 sm:h-12 mx-auto object-contain mb-1" />
+                          ) : (
+                            <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                          )}
+                          <Label className="text-[10px] sm:text-xs block text-muted-foreground">Proprietário</Label>
+                          {agreementDetail.ownerSignedAt ? (
+                            <p className="text-[10px] sm:text-xs text-green-600">
+                              <CheckCircle className="w-3 h-3 inline mr-1" />
+                              Assinado
+                            </p>
+                          ) : (
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                          )}
+                        </div>
+                        {showAgencyBox && (
+                          <div className={`p-2 sm:p-3 border rounded-lg text-center ${agreementDetail.agencySignedAt ? 'border-green-300 bg-green-50' : ''}`}>
+                            {agreementDetail.agencySignature ? (
+                              <img src={agreementDetail.agencySignature} alt="Assinatura Agência" className="h-10 sm:h-12 mx-auto object-contain mb-1" />
+                            ) : (
+                              <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                            )}
+                            <Label className="text-[10px] sm:text-xs block text-muted-foreground">Agência</Label>
+                            {agreementDetail.agencySignedAt ? (
+                              <p className="text-[10px] sm:text-xs text-green-600">
+                                <CheckCircle className="w-3 h-3 inline mr-1" />
+                                Assinado
+                              </p>
+                            ) : (
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {}
@@ -2114,6 +2138,34 @@ export function Agreements() {
               </div>
               <div className="flex justify-end">
                 <Button onClick={() => setShowWaitingModal(false)}>
+                  Entendi
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Send Error Modal */}
+        <Dialog open={showSendErrorModal} onOpenChange={setShowSendErrorModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                Erro ao Enviar
+              </DialogTitle>
+              <DialogDescription>
+                Não é possível enviar o acordo sem assinaturas
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-orange-800">
+                  <p className="font-medium mb-1">Assinatura necessária</p>
+                  <p>Primeiro, clique no botão "Ver" (ícone de olho) e assine o acordo antes de enviar.</p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowSendErrorModal(false)}>
                   Entendi
                 </Button>
               </div>

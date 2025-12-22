@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import Barcode from 'react-barcode';
@@ -10,14 +10,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { extrajudicialNotificationsAPI, propertiesAPI, usersAPI } from '@/api';
+import { extrajudicialNotificationsAPI, propertiesAPI, usersAPI, profileAPI } from '@/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { safeGetCurrentPosition, isSecureOrigin } from '@/hooks/use-geolocation';
-import SignatureCanvas from 'react-signature-canvas';
+import { SignatureCapture } from '@/components/contracts/SignatureCapture';
 import {
   Plus,
   Search,
@@ -76,6 +82,8 @@ interface Notification {
   };
   creditorSignedAt?: string;
   debtorSignedAt?: string;
+  creditorSignature?: string;
+  debtorSignature?: string;
   sentAt?: string;
   viewedAt?: string;
   responseAt?: string;
@@ -144,10 +152,10 @@ const formatDateTime = (date: string | null | undefined) => {
 };
 
 export default function ExtrajudicialNotifications() {
-  const signatureRef = useRef<SignatureCanvas>(null);
   const { user } = useAuth();
   const isInquilino = user?.role === 'INQUILINO';
   const isProprietario = user?.role === 'PROPRIETARIO';
+  const isIndependentOwner = user?.role === 'INDEPENDENT_OWNER';
   const showUserRoleColumn = user?.role !== 'AGENCY_ADMIN';
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -175,6 +183,7 @@ export default function ExtrajudicialNotifications() {
   const [showSignModal, setShowSignModal] = useState(false);
   const [showJudicialModal, setShowJudicialModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSendErrorModal, setShowSendErrorModal] = useState(false);
   const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
 
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
@@ -217,12 +226,10 @@ export default function ExtrajudicialNotifications() {
     notes: '',
   });
 
-  const [signData, setSignData] = useState({
-    signerType: 'creditor' as 'creditor' | 'debtor',
-    geoLat: 0,
-    geoLng: 0,
-    geoConsent: false,
-  });
+  const [signature, setSignature] = useState<string | null>(null);
+  const [geoConsent, setGeoConsent] = useState(false);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [signing, setSigning] = useState(false);
 
   const [judicialData, setJudicialData] = useState({
     judicialProcessNumber: '',
@@ -233,6 +240,54 @@ export default function ExtrajudicialNotifications() {
   useEffect(() => {
     loadData();
   }, [statusFilter, typeFilter]);
+
+  // Auto-fill creditorId when modal opens for INDEPENDENT_OWNER
+  useEffect(() => {
+    if (showCreateModal && isIndependentOwner && user?.id) {
+      // Fetch profile data using the same API as MyAccount page
+      profileAPI.getProfile()
+        .then((profileData) => {
+          console.log('Profile data fetched:', profileData);
+          setFormData(prev => {
+            const newData = {
+              ...prev,
+              creditorId: user.id,
+              creditorName: profileData.name || user.name || prev.creditorName || '',
+              creditorDocument: profileData.document || prev.creditorDocument || '',
+              creditorEmail: profileData.email || user.email || prev.creditorEmail || '',
+              creditorPhone: profileData.phone || prev.creditorPhone || '',
+            };
+            console.log('Form data updated:', newData);
+            return newData;
+          });
+        })
+        .catch((error) => {
+          console.error('Error fetching profile data:', error);
+          // Fallback to owners list
+          const currentOwner = owners.find((o: any) => {
+            return String(o.id) === String(user.id) || o.id === user.id;
+          });
+          setFormData(prev => ({
+            ...prev,
+            creditorId: user.id,
+            creditorName: currentOwner?.name || user.name || prev.creditorName || '',
+            creditorDocument: currentOwner?.document || prev.creditorDocument || '',
+            creditorEmail: currentOwner?.email || user.email || prev.creditorEmail || '',
+            creditorPhone: currentOwner?.phone || prev.creditorPhone || '',
+          }));
+        });
+    } else if (showCreateModal && !isIndependentOwner) {
+      // Reset form when modal opens for non-independent owners
+      setFormData(prev => ({
+        ...prev,
+        creditorId: '',
+        creditorName: '',
+        creditorDocument: '',
+        creditorEmail: '',
+        creditorPhone: '',
+      }));
+    }
+  }, [showCreateModal, isIndependentOwner, user, owners]);
 
   const loadData = async () => {
     try {
@@ -248,7 +303,19 @@ export default function ExtrajudicialNotifications() {
         ]);
 
         const notificationsData = Array.isArray(notificationsRes.data) ? notificationsRes.data : (notificationsRes.data?.data || notificationsRes.data || []);
-        setNotifications(notificationsData);
+        // Ensure userRole is set for each notification
+        const notificationsWithRole = notificationsData.map((n: Notification) => {
+          if (!n.userRole && user?.id) {
+            // If userRole is not set, determine it based on the logged-in user
+            if (n.creditorId === user.id || String(n.creditorId) === String(user.id)) {
+              return { ...n, userRole: 'CREDITOR' as const };
+            } else if (n.debtorId === user.id || String(n.debtorId) === String(user.id)) {
+              return { ...n, userRole: 'DEBTOR' as const };
+            }
+          }
+          return n;
+        });
+        setNotifications(notificationsWithRole);
         setStatistics(statsRes);
       } else {
         const [notificationsRes, statsRes, propsRes, usersRes, tenantsRes] = await Promise.all([
@@ -263,7 +330,19 @@ export default function ExtrajudicialNotifications() {
         ]);
 
         const notificationsData = Array.isArray(notificationsRes.data) ? notificationsRes.data : (notificationsRes.data?.data || notificationsRes.data || []);
-        setNotifications(notificationsData);
+        // Ensure userRole is set for each notification
+        const notificationsWithRole = notificationsData.map((n: Notification) => {
+          if (!n.userRole && user?.id) {
+            // If userRole is not set, determine it based on the logged-in user
+            if (n.creditorId === user.id || String(n.creditorId) === String(user.id)) {
+              return { ...n, userRole: 'CREDITOR' as const };
+            } else if (n.debtorId === user.id || String(n.debtorId) === String(user.id)) {
+              return { ...n, userRole: 'DEBTOR' as const };
+            }
+          }
+          return n;
+        });
+        setNotifications(notificationsWithRole);
         setStatistics(statsRes);
         setProperties(propsRes || []);
         setTenants(tenantsRes || []);
@@ -271,6 +350,38 @@ export default function ExtrajudicialNotifications() {
         const ownerRoles = ['PROPRIETARIO', 'INDEPENDENT_OWNER'];
         const filteredOwners = (usersRes.items || []).filter((u: any) => ownerRoles.includes(u.role));
         setOwners(filteredOwners);
+        
+        // If modal is open and user is INDEPENDENT_OWNER, update form data with profile API
+        if (showCreateModal && isIndependentOwner && user?.id) {
+          profileAPI.getProfile()
+            .then((profileData) => {
+              setFormData(prev => ({
+                ...prev,
+                creditorId: user.id,
+                creditorName: profileData.name || user.name || prev.creditorName || '',
+                creditorDocument: profileData.document || prev.creditorDocument || '',
+                creditorEmail: profileData.email || user.email || prev.creditorEmail || '',
+                creditorPhone: profileData.phone || prev.creditorPhone || '',
+              }));
+            })
+            .catch((error) => {
+              console.error('Error fetching profile data in loadData:', error);
+              // Fallback to owners list
+              const currentOwner = filteredOwners.find((o: any) => {
+                return String(o.id) === String(user.id) || o.id === user.id;
+              });
+              if (currentOwner) {
+                setFormData(prev => ({
+                  ...prev,
+                  creditorId: user.id,
+                  creditorName: currentOwner.name || user.name || prev.creditorName || '',
+                  creditorDocument: currentOwner.document || prev.creditorDocument || '',
+                  creditorEmail: currentOwner.email || user.email || prev.creditorEmail || '',
+                  creditorPhone: currentOwner.phone || prev.creditorPhone || '',
+                }));
+              }
+            });
+        }
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -339,6 +450,21 @@ export default function ExtrajudicialNotifications() {
   };
 
   const handleSend = async (id: string) => {
+    // Check if notification has at least one signature before sending (for INDEPENDENT_OWNER)
+    if (isIndependentOwner) {
+      const notification = notifications.find(n => n.id === id);
+      if (notification) {
+        const hasAnySignature = 
+          notification.creditorSignedAt || 
+          notification.debtorSignedAt;
+        
+        if (!hasAnySignature) {
+          setShowSendErrorModal(true);
+          return;
+        }
+      }
+    }
+    
     try {
       await extrajudicialNotificationsAPI.sendNotification(id, 'EMAIL');
       toast.success('Notificacao enviada com sucesso!');
@@ -349,61 +475,96 @@ export default function ExtrajudicialNotifications() {
     }
   };
 
-  const handleSign = async () => {
-    if (!selectedNotification || !signatureRef.current) return;
+  const openSignatureModal = (notification: Notification) => {
+    setSelectedNotification(notification);
+    setSignature(null);
+    setGeoConsent(false);
+    setGeoLocation(null);
+    setShowSignModal(true);
+  };
+
+  const closeSignatureModal = () => {
+    setShowSignModal(false);
+    setSignature(null);
+    setGeoConsent(false);
+    setGeoLocation(null);
+  };
+
+  const handleGeoConsentChange = (consent: boolean) => {
+    setGeoConsent(consent);
+    if (consent) {
+      // Check if on secure origin first
+      if (!isSecureOrigin()) {
+        toast.warning('Geolocalização requer HTTPS. Continuando sem localização.');
+        setGeoLocation(null);
+        return;
+      }
+
+      toast.info('Obtendo localização...');
+      safeGetCurrentPosition(
+        (position) => {
+          if (position) {
+            setGeoLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            toast.success('Localização obtida com sucesso!');
+          } else {
+            setGeoLocation(null);
+            toast.warning('Continuando sem localização.');
+          }
+        },
+        (error) => {
+          console.error('Error getting geolocation:', error);
+          toast.error('Erro ao obter localização.');
+          setGeoConsent(false);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    } else {
+      setGeoLocation(null);
+    }
+  };
+
+  const handleSubmitSignature = async () => {
+    if (!selectedNotification || !signature) {
+      toast.error('Por favor, desenhe sua assinatura');
+      return;
+    }
+
+    if (!geoConsent || !geoLocation) {
+      toast.error('Por favor, autorize o compartilhamento da localização');
+      return;
+    }
 
     if (!selectedNotification.userRole || selectedNotification.userRole === 'VIEWER') {
       toast.error('Voce nao tem permissao para assinar esta notificacao');
       return;
     }
 
+    setSigning(true);
     try {
-      setSaving(true);
-
-      let geoLat = signData.geoLat;
-      let geoLng = signData.geoLng;
-      if (signData.geoConsent && isSecureOrigin()) {
-        try {
-          await new Promise<void>((resolve) => {
-            safeGetCurrentPosition(
-              (position) => {
-                if (position) {
-                  geoLat = position.coords.latitude;
-                  geoLng = position.coords.longitude;
-                }
-                resolve();
-              },
-              () => {
-                resolve();
-              },
-              { timeout: 10000 }
-            );
-          });
-        } catch (geoError) {
-          console.warn('Geolocation error:', geoError);
-        }
-      }
-
-      const signature = signatureRef.current.toDataURL('image/png');
-
       const signatureField = selectedNotification.userRole === 'CREDITOR' ? 'creditorSignature' : 'debtorSignature';
 
       await extrajudicialNotificationsAPI.signNotification(selectedNotification.id, {
         [signatureField]: signature,
-        geoLat,
-        geoLng,
+        geoLat: geoLocation.lat,
+        geoLng: geoLocation.lng,
       });
 
-      toast.success('Notificacao assinada com sucesso!');
-      setShowSignModal(false);
+      toast.success('Assinatura registrada com sucesso!');
+      closeSignatureModal();
       loadData();
     } catch (error: any) {
-      console.error('Error signing notification:', error);
-      const message = error?.response?.data?.message || 'Erro ao assinar notificacao';
-      toast.error(message);
+      toast.error(error?.response?.data?.message || 'Erro ao registrar assinatura');
     } finally {
-      setSaving(false);
+      setSigning(false);
     }
+  };
+
+  const getSignerTypeLabel = (): string => {
+    if (!selectedNotification?.userRole) return '';
+    return selectedNotification.userRole === 'CREDITOR' ? 'Credor' : 'Devedor';
   };
 
   const handleForwardToJudicial = async () => {
@@ -571,12 +732,12 @@ export default function ExtrajudicialNotifications() {
             </p>
           </div>
         </div>
-        {!isInquilino && !isProprietario && (
+        {(!isInquilino && !isProprietario) || isIndependentOwner ? (
           <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Nova Notificacao
           </Button>
-        )}
+        ) : null}
       </div>
 
       {statistics && (
@@ -727,10 +888,10 @@ export default function ExtrajudicialNotifications() {
                             </Button>
                           </>
                         )}
-                        {['ENVIADO', 'VISUALIZADO'].includes(n.status) &&
+                        {(['ENVIADO', 'VISUALIZADO', 'RASCUNHO'].includes(n.status)) &&
                          n.userRole && n.userRole !== 'VIEWER' &&
                          !((n.userRole === 'CREDITOR' && n.creditorSignedAt) || (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedNotification(n); setShowSignModal(true); }}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSignatureModal(n)}>
                             <PenTool className="h-4 w-4" />
                           </Button>
                         )}
@@ -846,7 +1007,7 @@ export default function ExtrajudicialNotifications() {
                               </>
                             )}
 
-                            {['ENVIADO', 'VISUALIZADO'].includes(n.status) &&
+                            {(['ENVIADO', 'VISUALIZADO', 'RASCUNHO'].includes(n.status)) &&
                              n.userRole &&
                              n.userRole !== 'VIEWER' &&
                              !((n.userRole === 'CREDITOR' && n.creditorSignedAt) ||
@@ -854,10 +1015,7 @@ export default function ExtrajudicialNotifications() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => {
-                                  setSelectedNotification(n);
-                                  setShowSignModal(true);
-                                }}
+                                onClick={() => openSignatureModal(n)}
                                 title={`Assinar como ${n.userRole === 'CREDITOR' ? 'Credor' : 'Devedor'}`}
                               >
                                 <PenTool className="h-4 w-4" />
@@ -898,7 +1056,47 @@ export default function ExtrajudicialNotifications() {
         </CardContent>
       </Card>
 
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+      <Dialog open={showCreateModal} onOpenChange={async (open) => {
+        setShowCreateModal(open);
+        if (open && isIndependentOwner && user?.id) {
+          // Fetch user profile data using the same API as MyAccount page
+          try {
+            const profileData = await profileAPI.getProfile();
+            console.log('Profile data from onOpenChange:', profileData);
+            setFormData(prev => {
+              const newData = {
+                ...prev,
+                creditorId: user.id,
+                creditorName: profileData.name || user.name || prev.creditorName || '',
+                creditorDocument: profileData.document || prev.creditorDocument || '',
+                creditorEmail: profileData.email || user.email || prev.creditorEmail || '',
+                creditorPhone: profileData.phone || prev.creditorPhone || '',
+              };
+              console.log('Form data updated in onOpenChange:', newData);
+              return newData;
+            });
+          } catch (error) {
+            console.error('Error fetching profile data:', error);
+            // Fallback to owners list or user context data
+            const currentOwner = owners.find((o: any) => {
+              return String(o.id) === String(user.id) || o.id === user.id;
+            });
+            setFormData(prev => ({
+              ...prev,
+              creditorId: user.id,
+              creditorName: currentOwner?.name || user.name || prev.creditorName || '',
+              creditorDocument: currentOwner?.document || prev.creditorDocument || '',
+              creditorEmail: currentOwner?.email || user.email || prev.creditorEmail || '',
+              creditorPhone: currentOwner?.phone || prev.creditorPhone || '',
+            }));
+          }
+        } else if (!open) {
+          // Reset form when modal closes (only for non-independent owners)
+          if (!isIndependentOwner) {
+            resetForm();
+          }
+        }
+      }}>
         <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-base sm:text-lg">Nova Notificacao Extrajudicial</DialogTitle>
@@ -922,54 +1120,74 @@ export default function ExtrajudicialNotifications() {
                     <User className="h-4 w-4" />
                     Notificante (Credor)
                   </h3>
-                  <div>
-                    <Label className="text-xs sm:text-sm">Proprietario</Label>
-                    <Select
-                      value={formData.creditorId}
-                      onValueChange={(v) => {
-                        const user = owners.find(u => u.id === v);
-                        setFormData(prev => ({
-                          ...prev,
-                          creditorId: v,
-                          creditorName: user?.name || '',
-                          creditorDocument: user?.document || '',
-                          creditorEmail: user?.email || '',
-                          creditorPhone: user?.phone || '',
-                        }));
-                      }}
-                    >
-                      <SelectTrigger className="text-xs sm:text-sm">
-                        <SelectValue placeholder="Selecione o proprietario" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {owners.map(u => (
-                          <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {!isIndependentOwner && (
+                    <div>
+                      <Label className="text-xs sm:text-sm">Proprietario</Label>
+                      <Select
+                        value={formData.creditorId}
+                        onValueChange={(v) => {
+                          const user = owners.find(u => u.id === v);
+                          setFormData(prev => ({
+                            ...prev,
+                            creditorId: v,
+                            creditorName: user?.name || '',
+                            creditorDocument: user?.document || '',
+                            creditorEmail: user?.email || '',
+                            creditorPhone: user?.phone || '',
+                          }));
+                        }}
+                      >
+                        <SelectTrigger className="text-xs sm:text-sm">
+                          <SelectValue placeholder="Selecione o proprietario" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {owners.map(u => (
+                            <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div>
                     <Label className="text-xs sm:text-sm">Nome</Label>
                     <Input
                       value={formData.creditorName}
                       onChange={(e) => setFormData({ ...formData, creditorName: e.target.value })}
                       className="text-xs sm:text-sm"
+                      disabled={isIndependentOwner}
+                      readOnly={isIndependentOwner}
                     />
                   </div>
                   <div>
                     <Label className="text-xs sm:text-sm">CPF/CNPJ</Label>
                     <Input
-                      value={formData.creditorDocument}
+                      value={formData.creditorDocument ?? ''}
                       onChange={(e) => setFormData({ ...formData, creditorDocument: e.target.value })}
                       className="text-xs sm:text-sm"
+                      placeholder="Digite o CPF/CNPJ"
+                      disabled={isIndependentOwner}
+                      readOnly={isIndependentOwner}
                     />
                   </div>
                   <div>
                     <Label className="text-xs sm:text-sm">Email</Label>
                     <Input
-                      value={formData.creditorEmail}
+                      value={formData.creditorEmail ?? ''}
                       onChange={(e) => setFormData({ ...formData, creditorEmail: e.target.value })}
                       className="text-xs sm:text-sm"
+                      disabled={isIndependentOwner}
+                      readOnly={isIndependentOwner}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs sm:text-sm">Telefone</Label>
+                    <Input
+                      value={formData.creditorPhone ?? ''}
+                      onChange={(e) => setFormData({ ...formData, creditorPhone: e.target.value })}
+                      className="text-xs sm:text-sm"
+                      placeholder="Digite o telefone"
+                      disabled={isIndependentOwner}
+                      readOnly={isIndependentOwner}
                     />
                   </div>
                 </div>
@@ -1245,7 +1463,7 @@ export default function ExtrajudicialNotifications() {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 mt-5">
             <Button variant="outline" onClick={() => setShowCreateModal(false)} className="w-full sm:w-auto order-2 sm:order-1">
               Cancelar
             </Button>
@@ -1507,35 +1725,53 @@ export default function ExtrajudicialNotifications() {
                 <div className="mb-6">
                   <h2 className="text-sm sm:text-base font-bold border-b border-gray-300 pb-1 mb-3">ASSINATURAS</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="text-center border-t pt-3">
-                      <div className="h-12 flex items-end justify-center mb-1">
-                        {selectedNotification.creditorSignedAt && (
-                          <CheckCircle className="h-8 w-8 text-green-500" />
+                    <div className={`text-center border-t pt-3 ${selectedNotification.creditorSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
+                      <div className="h-12 sm:h-16 flex items-end justify-center mb-2">
+                        {selectedNotification.creditorSignature ? (
+                          <img 
+                            src={selectedNotification.creditorSignature} 
+                            alt="Assinatura Credor" 
+                            className="h-10 sm:h-12 mx-auto object-contain" 
+                          />
+                        ) : (
+                          <PenTool className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                         )}
                       </div>
                       <div className="border-t border-gray-800 pt-1">
                         <p className="font-bold text-sm">{selectedNotification.creditorName}</p>
                         <p className="text-xs text-gray-500">NOTIFICANTE - {selectedNotification.creditorDocument}</p>
-                        {selectedNotification.creditorSignedAt && (
-                          <p className="text-xs text-gray-400 mt-1">
+                        {selectedNotification.creditorSignedAt ? (
+                          <p className="text-xs text-green-600 mt-1">
+                            <CheckCircle className="w-3 h-3 inline mr-1" />
                             Assinado em: {formatDateTime(selectedNotification.creditorSignedAt)}
                           </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">Pendente</p>
                         )}
                       </div>
                     </div>
-                    <div className="text-center border-t pt-3">
-                      <div className="h-12 flex items-end justify-center mb-1">
-                        {selectedNotification.debtorSignedAt && (
-                          <CheckCircle className="h-8 w-8 text-green-500" />
+                    <div className={`text-center border-t pt-3 ${selectedNotification.debtorSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
+                      <div className="h-12 sm:h-16 flex items-end justify-center mb-2">
+                        {selectedNotification.debtorSignature ? (
+                          <img 
+                            src={selectedNotification.debtorSignature} 
+                            alt="Assinatura Devedor" 
+                            className="h-10 sm:h-12 mx-auto object-contain" 
+                          />
+                        ) : (
+                          <PenTool className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                         )}
                       </div>
                       <div className="border-t border-gray-800 pt-1">
                         <p className="font-bold text-sm">{selectedNotification.debtorName}</p>
                         <p className="text-xs text-gray-500">NOTIFICADO - {selectedNotification.debtorDocument}</p>
-                        {selectedNotification.debtorSignedAt && (
-                          <p className="text-xs text-gray-400 mt-1">
+                        {selectedNotification.debtorSignedAt ? (
+                          <p className="text-xs text-green-600 mt-1">
+                            <CheckCircle className="w-3 h-3 inline mr-1" />
                             Assinado em: {formatDateTime(selectedNotification.debtorSignedAt)}
                           </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">Pendente</p>
                         )}
                       </div>
                     </div>
@@ -1585,113 +1821,48 @@ export default function ExtrajudicialNotifications() {
       </Dialog>
 
 
-      <Dialog open={showSignModal} onOpenChange={setShowSignModal}>
-        <DialogContent className="w-[95vw] max-w-lg p-3 sm:p-6">
+      <Dialog open={showSignModal} onOpenChange={(open) => !open && closeSignatureModal()}>
+        <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg">Assinar Notificacao</DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm">
-              Sua assinatura tem valor juridico e sera registrada com data, hora, IP e geolocalizacao
+            <DialogTitle>Assinar Notificação</DialogTitle>
+            <DialogDescription>
+              Assinatura como: <strong>{getSignerTypeLabel()}</strong>
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <SignatureCapture
+              onSignatureChange={setSignature}
+              onGeolocationConsent={handleGeoConsentChange}
+              geolocationRequired={true}
+              label="Desenhe sua assinatura"
+              disabled={signing}
+            />
 
-          <div className="space-y-3 sm:space-y-4">
-            <div className="p-3 sm:p-4 bg-muted rounded-lg">
-              <Label className="text-xs sm:text-sm text-muted-foreground">Voce esta assinando como:</Label>
-              <p className="text-base sm:text-lg font-semibold mt-1">
-                {selectedNotification?.userRole === 'CREDITOR' && 'Credor (Notificante)'}
-                {selectedNotification?.userRole === 'DEBTOR' && 'Devedor (Notificado)'}
-                {!selectedNotification?.userRole && 'Carregando...'}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorName}
-                {selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorName}
-              </p>
-            </div>
-
-            {selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt && (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800 text-xs sm:text-sm">
-                  Voce ja assinou esta notificacao como Credor.
-                </AlertDescription>
-              </Alert>
-            )}
-            {selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt && (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800 text-xs sm:text-sm">
-                  Voce ja assinou esta notificacao como Devedor.
-                </AlertDescription>
-              </Alert>
+            {geoLocation && (
+              <div className="text-xs text-green-600 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Localização capturada: {geoLocation.lat.toFixed(6)}, {geoLocation.lng.toFixed(6)}
+              </div>
             )}
 
-            {!(
-              (selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt) ||
-              (selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt)
-            ) && (
-              <>
-                <div>
-                  <Label className="text-xs sm:text-sm">Assinatura</Label>
-                  <div className="border rounded-lg p-2 bg-white">
-                    <SignatureCanvas
-                      ref={signatureRef}
-                      canvasProps={{
-                        className: 'signature-canvas w-full',
-                        style: { width: '100%', height: '120px' },
-                      }}
-                    />
-                  </div>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => signatureRef.current?.clear()}
-                    className="text-xs sm:text-sm"
-                  >
-                    Limpar
-                  </Button>
-                </div>
-
-                <div className="flex items-start space-x-2">
-                  <input
-                    type="checkbox"
-                    id="geoConsent"
-                    checked={signData.geoConsent}
-                    onChange={(e) => setSignData({ ...signData, geoConsent: e.target.checked })}
-                    className="mt-1"
-                  />
-                  <Label htmlFor="geoConsent" className="text-xs sm:text-sm leading-tight">
-                    Autorizo a captura da minha localizacao para fins de validacao juridica
-                  </Label>
-                </div>
-
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs sm:text-sm">
-                    Ao assinar, voce declara ciencia do conteudo desta notificacao e aceita
-                    que esta assinatura tem validade juridica equivalente a uma assinatura fisica.
-                  </AlertDescription>
-                </Alert>
-              </>
-            )}
-          </div>
-
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowSignModal(false)} className="w-full sm:w-auto order-2 sm:order-1">
-              {(selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt) ||
-              (selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt)
-                ? 'Fechar'
-                : 'Cancelar'}
-            </Button>
-            {!(
-              (selectedNotification?.userRole === 'CREDITOR' && selectedNotification?.creditorSignedAt) ||
-              (selectedNotification?.userRole === 'DEBTOR' && selectedNotification?.debtorSignedAt)
-            ) && (
-              <Button onClick={handleSign} disabled={saving} className="w-full sm:w-auto order-1 sm:order-2">
-                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Assinar
+            <div className="flex flex-row gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={closeSignatureModal}
+                disabled={signing}
+              >
+                Cancelar
               </Button>
-            )}
-          </DialogFooter>
+              <Button
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                onClick={handleSubmitSignature}
+                disabled={signing || !signature || !geoConsent || !geoLocation}
+              >
+                {signing ? 'Assinando...' : 'Confirmar Assinatura'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -1748,6 +1919,34 @@ export default function ExtrajudicialNotifications() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showSendErrorModal} onOpenChange={setShowSendErrorModal}>
+        <AlertDialogContent className="w-[95vw] max-w-md p-3 sm:p-6">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-orange-600 text-base sm:text-lg">
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              Assinatura necessária
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Não é possível enviar a notificação sem assinaturas
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-orange-800">
+                <p className="font-medium mb-1">Assinatura necessária</p>
+                <p>Primeiro, clique no botão "Ver" (ícone de olho) e assine a notificação antes de enviar.</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowSendErrorModal(false)}>
+                Entendi
+              </Button>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent className="w-[95vw] max-w-md p-3 sm:p-6">
