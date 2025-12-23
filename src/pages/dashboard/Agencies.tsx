@@ -35,6 +35,7 @@ import {
 import {
   TooltipProvider,
 } from '@/components/ui/tooltip'
+import { Building } from 'lucide-react'
 
 export function Agencies() {
   const { hasPermission, user } = useAuth()
@@ -284,7 +285,10 @@ export function Agencies() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-blue-100 rounded-lg">
+            <Building className="w-6 h-6 text-blue-700" />
+          </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Agencias</h1>
             <p className="text-muted-foreground">Visualize e gerencie proprietarios independentes que trabalham diretamente com MR3X</p>

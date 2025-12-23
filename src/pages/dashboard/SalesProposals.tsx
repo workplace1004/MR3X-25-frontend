@@ -81,8 +81,6 @@ export function SalesProposals() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
-  const [dateRangeStart, setDateRangeStart] = useState<string>('');
-  const [dateRangeEnd, setDateRangeEnd] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -209,12 +207,7 @@ export function SalesProposals() {
     const matchesStatus = statusFilter === 'all' || proposal.status === statusFilter;
     const matchesPlan = planFilter === 'all' || proposal.planType === planFilter;
     const matchesOwner = ownerFilter === 'all' || proposal.ownerName === ownerFilter;
-    const matchesDateRange = (!dateRangeStart && !dateRangeEnd) || (() => {
-      const created = new Date(proposal.createdAt);
-      const start = dateRangeStart ? new Date(dateRangeStart) : null;
-      const end = dateRangeEnd ? new Date(dateRangeEnd + 'T23:59:59') : null;
-      return (!start || created >= start) && (!end || created <= end);
-    })();
+    const matchesDateRange = true;
     return matchesSearch && matchesStatus && matchesPlan && matchesOwner && matchesDateRange;
   });
 
@@ -590,7 +583,6 @@ export function SalesProposals() {
           {/* Mobile cards */}
           <div className="sm:hidden space-y-3">
             {filteredProposals.map((proposal: Proposal) => {
-              const lastUpdate = proposal.respondedAt || proposal.viewedAt || proposal.sentAt || proposal.updatedAt || proposal.createdAt;
               const followUpDate = proposal.followUpDate;
               const overdueFollowUp = followUpDate ? new Date(followUpDate) < new Date() : false;
               const expiringSoon = proposal.validUntil && new Date(proposal.validUntil) < new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) && proposal.status !== 'accepted';

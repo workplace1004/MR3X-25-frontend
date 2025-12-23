@@ -350,8 +350,8 @@ export const profileAPI = {
 };
 
 export const usersAPI = {
-  listUsers: async (params: { search?: string; role?: string; status?: string; plan?: string; page?: number; pageSize?: number; excludeCurrentUser?: boolean; excludeFrozen?: boolean } = {}) => {
-    const { page = 1, pageSize = 10, excludeCurrentUser = true, ...otherParams } = params;
+  listUsers: async (params: { search?: string; role?: string; roles?: string[]; status?: string; plan?: string; page?: number; pageSize?: number; excludeCurrentUser?: boolean; excludeFrozen?: boolean; createdById?: string } = {}) => {
+    const { page = 1, pageSize = 10, excludeCurrentUser = true, roles, ...otherParams } = params;
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
@@ -360,6 +360,9 @@ export const usersAPI = {
     qs.append('take', String(take));
     if (excludeCurrentUser) {
       qs.append('excludeCurrentUser', 'true');
+    }
+    if (roles && roles.length > 0) {
+      qs.append('roles', roles.join(','));
     }
     Object.entries(otherParams).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));

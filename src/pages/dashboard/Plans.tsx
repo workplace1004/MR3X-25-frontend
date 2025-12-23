@@ -318,14 +318,19 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Planos e Upsells</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Gerencie os planos de assinatura da plataforma
-          </p>
-        </div>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <Package className="w-6 h-6 text-purple-700" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Planos e Upsells</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Gerencie os planos de assinatura da plataforma
+              </p>
+            </div>
+          </div>
         <div className="flex gap-2">
           {isCEO && pendingRequests.length > 0 && (
             <Button

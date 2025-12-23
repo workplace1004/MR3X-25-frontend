@@ -18,6 +18,7 @@ import {
   Phone,
   MapPin,
   Building,
+  Crown,
   FileText,
   CheckCircle,
   XCircle,
@@ -282,9 +283,14 @@ export function AgencyAdmin() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Diretor Agencia</h1>
-          <p className="text-muted-foreground">Visualize e gerencie os diretores de agencias imobiliarias</p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-orange-100 rounded-lg">
+            <Crown className="w-6 h-6 text-orange-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Diretor Agencia</h1>
+            <p className="text-muted-foreground">Visualize e gerencie os diretores de agencias imobiliarias</p>
+          </div>
         </div>
 
         {isLoading ? (

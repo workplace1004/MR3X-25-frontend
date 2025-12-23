@@ -418,6 +418,14 @@ export function DashboardLayout() {
     return true;
   });
 
+  // Override specific links based on role (e.g., admins go to admin-users)
+  const navigationWithOverrides = navigation.map((item) => {
+    if (item.href === '/dashboard/users' && user?.role === 'ADMIN') {
+      return { ...item, href: '/dashboard/admin-users' };
+    }
+    return item;
+  });
+
   return (
     <div className="min-h-screen bg-background">
       {}
@@ -515,7 +523,7 @@ export function DashboardLayout() {
           </div>
 
           <nav className="flex-1 p-3 lg:p-4 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
+            {navigationWithOverrides.map((item) => {
               const isActive = item.href === '/dashboard'
                 ? location.pathname === '/dashboard'
                 : location.pathname?.startsWith(item.href);

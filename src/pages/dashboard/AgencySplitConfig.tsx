@@ -171,11 +171,16 @@ export function AgencySplitConfig() {
   return (
     <div className="space-y-6">
       {}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Configuração de Divisão</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Configure a divisão de pagamentos entre plataforma, agência e proprietário
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-orange-100 rounded-lg">
+          <Handshake className="w-6 h-6 text-orange-700" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Configuração de Divisão</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            Configure a divisão de pagamentos entre plataforma, agência e proprietário
+          </p>
+        </div>
       </div>
 
       {}

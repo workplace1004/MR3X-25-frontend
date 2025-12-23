@@ -14,20 +14,12 @@ export function SalesReports() {
 
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ['sales-metrics'],
-    queryFn: async () => {
-      const response = await salesRepAPI.getMetrics();
-      return response || {};
-    },
+    queryFn: salesRepAPI.getStats,
   });
 
   const { data: agenciesMetrics, isLoading: agenciesLoading } = useQuery({
     queryKey: ['sales-agencies-metrics'],
     queryFn: salesRepAPI.getAgenciesMetrics,
-  });
-
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['sales-rep', 'stats'],
-    queryFn: salesRepAPI.getStats,
   });
 
   const formatCurrency = (value: number) => {
@@ -114,7 +106,7 @@ export function SalesReports() {
     exportToCSV(csvData, 'relatorio_vendas');
   };
 
-  if (metricsLoading || agenciesLoading || statsLoading) {
+  if (metricsLoading || agenciesLoading) {
     return (
       <div className="space-y-6">
         {/* Header Skeleton */}

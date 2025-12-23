@@ -28,7 +28,20 @@ const getPhotoUrl = (photoUrl: string | null | undefined) => {
   return `${getStaticBaseUrl()}${photoUrl}`;
 };
 
-type UserItem = { id: string; name: string | null; email: string; role: string; status: string; plan?: string; createdAt?: string; isFrozen?: boolean; frozenReason?: string; photoUrl?: string | null; token?: string | null };
+type UserItem = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  status: string;
+  plan?: string;
+  createdAt?: string;
+  isFrozen?: boolean;
+  frozenReason?: string;
+  photoUrl?: string | null;
+  token?: string | null;
+  createdBy?: string | null;
+};
 
 interface UserDetails {
   id: string;
@@ -95,6 +108,8 @@ export function UsersPage() {
   const [plan, setPlan] = useState('');
   const [page, setPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [hierarchyPath, setHierarchyPath] = useState<UserItem[]>([]);
+  const [childRoleFilter, setChildRoleFilter] = useState<string>('');
   const pageSize = 10;
 
   const handleSearch = useCallback(() => {
@@ -121,24 +136,77 @@ export function UsersPage() {
     }
   }, [user, allowAccess]);
 
-  const load = async () => {
+  const currentParent = useMemo(() => (hierarchyPath.length ? hierarchyPath[hierarchyPath.length - 1] : null), [hierarchyPath]);
+  const allowedRootRoles = useMemo(() => ['ADMIN', 'AGENCY_ADMIN', 'INDEPENDENT_OWNER'], []);
+  const derivedRoleFilter = useMemo(() => {
+    if (childRoleFilter) return childRoleFilter;
+    if (currentParent?.role === 'INDEPENDENT_OWNER') {
+      return 'INQUILINO';
+    }
+    return role;
+  }, [childRoleFilter, currentParent?.role, role]);
+
+  const applyHierarchyFilter = useCallback((list: UserItem[]) => {
+    if (!list) return [];
+    if (!currentParent) {
+      // root: show only top-level registry starters
+      return list.filter((u) => allowedRootRoles.includes(u.role));
+    }
+    if (currentParent.role === 'INDEPENDENT_OWNER') {
+      // tenants only; exclude owner/broker when viewing an independent owner registry
+      return list.filter((u) => u.role !== 'PROPRIETARIO' && u.role !== 'BROKER');
+    }
+    return list;
+  }, [allowedRootRoles, currentParent]);
+
+  const handleEnterRegistry = useCallback((u: UserItem) => {
+    setHierarchyPath((prev) => [...prev, u]);
+    setChildRoleFilter('');
+    setPage(1);
+  }, []);
+
+  const handleBackRegistry = useCallback(() => {
+    setHierarchyPath((prev) => prev.slice(0, -1));
+    setChildRoleFilter('');
+    setPage(1);
+  }, []);
+
+  const handleResetRegistry = useCallback(() => {
+    setHierarchyPath([]);
+    setChildRoleFilter('');
+    setPage(1);
+  }, []);
+
+  const load = useCallback(async () => {
     if (!allowAccess) return;
 
     setLoading(true);
     try {
-      const res = await usersAPI.listUsers({ search: searchQuery, role, status, plan, page, pageSize, excludeCurrentUser: true });
-      setItems(res.items || []);
-      setTotal(res.total || 0);
+      const baseRoles = currentParent ? undefined : allowedRootRoles;
+      const res = await usersAPI.listUsers({
+        search: searchQuery,
+        role: derivedRoleFilter,
+        roles: baseRoles,
+        status,
+        plan,
+        page,
+        pageSize,
+        excludeCurrentUser: true,
+        createdById: currentParent?.id,
+      });
+      const filtered = applyHierarchyFilter(res.items || []);
+      setItems(filtered);
+      setTotal(res.total || filtered.length || 0);
     } catch (error: any) {
       toast.error(error.message || 'Falha ao carregar usuários');
     } finally {
       setLoading(false);
     }
-  };
+  }, [allowAccess, searchQuery, derivedRoleFilter, status, plan, page, pageSize, currentParent?.id, applyHierarchyFilter]);
 
   useEffect(() => {
     load();
-  }, [page, allowAccess, searchQuery, role, status, plan]);
+  }, [load]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -210,6 +278,12 @@ export function UsersPage() {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const canDrillDown = (u: UserItem) => ['ADMIN', 'AGENCY_ADMIN', 'INDEPENDENT_OWNER'].includes(u.role);
+  const handleSelectChildRole = useCallback((r: string) => {
+    setChildRoleFilter(r);
+    setPage(1);
+  }, []);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -355,6 +429,77 @@ export function UsersPage() {
             <SelectItem value="PREMIUM">PREMIUM</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="border border-border rounded-lg p-3 bg-muted/30 space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <p className="text-xs text-muted-foreground uppercase">Registro atual</p>
+            {hierarchyPath.length === 0 ? (
+              <p className="text-sm text-foreground">
+                Raiz: Admin / Diretor de Agência / Proprietário Independente
+              </p>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                {hierarchyPath.map((p, idx) => (
+                  <div key={p.id} className="flex items-center gap-1">
+                    {idx > 0 && <span className="text-muted-foreground">/</span>}
+                    <Badge variant="outline">{getRoleLabel(p.role)}</Badge>
+                    <span className="text-foreground truncate max-w-[140px]">{p.name || p.email}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {hierarchyPath.length > 0 && (
+              <Button variant="outline" size="sm" onClick={handleBackRegistry}>
+                Voltar
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={handleResetRegistry}>
+              Ir para raiz
+            </Button>
+          </div>
+        </div>
+        {(currentParent?.role === 'AGENCY_ADMIN' || currentParent?.role === 'ADMIN') && (
+          <div className="flex flex-wrap gap-2 pt-2">
+            {[
+              ...(currentParent?.role === 'ADMIN'
+                ? [
+                    { label: 'Auditor Legal', role: 'LEGAL_AUDITOR' },
+                    { label: 'Representante', role: 'REPRESENTATIVE' },
+                    { label: 'Gerente Interno MR3X - Suporte e Estatísticas', role: 'PLATFORM_MANAGER' },
+                    { label: 'Cliente API - Integração', role: 'API_CLIENT' },
+                  ]
+                : []),
+              ...(currentParent?.role === 'AGENCY_ADMIN'
+                ? [
+                    { label: 'Corretores', role: 'BROKER' },
+                    { label: 'Proprietários', role: 'PROPRIETARIO' },
+                    { label: 'Inquilinos', role: 'INQUILINO' },
+                    { label: 'Branch Manager', role: 'AGENCY_MANAGER' },
+                  ]
+                : []),
+            ].map((opt) => (
+              <Button
+                key={opt.role}
+                variant={childRoleFilter === opt.role ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleSelectChildRole(opt.role)}
+              >
+                {opt.label}
+              </Button>
+            ))}
+            <Button
+              variant={!childRoleFilter ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => handleSelectChildRole('')}
+            >
+              Todos
+            </Button>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -508,6 +653,16 @@ export function UsersPage() {
                   {loadingDetailsId === u.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
                   Detalhes
                 </Button>
+                {canDrillDown(u) && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleEnterRegistry(u)}
+                  >
+                    Ver registro
+                  </Button>
+                )}
               </div>
               {canDeleteUsers && !u.isFrozen && (
                 <div className="flex gap-2">
@@ -624,6 +779,16 @@ export function UsersPage() {
                         >
                           {loadingDetailsId === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                         </Button>
+                        {canDrillDown(u) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEnterRegistry(u)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Users className="w-4 h-4" />
+                          </Button>
+                        )}
                         {canDeleteUsers && !u.isFrozen &&
                           (u.status === 'ACTIVE' ? (
                             <Button

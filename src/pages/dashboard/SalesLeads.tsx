@@ -14,7 +14,6 @@ import {
 import { Skeleton } from '../../components/ui/skeleton';
 import apiClient from '../../api/client';
 import { toast } from 'sonner';
-import { useAuth } from '../../contexts/AuthContext';
 import { usersAPI } from '../../api';
 import {
   Building2,
@@ -22,12 +21,10 @@ import {
   Search,
   Phone,
   Mail,
-  MapPin,
   Edit,
   Eye,
   MessageSquare,
   FileText,
-  Download,
   Clock,
   CheckCircle,
   XCircle,
@@ -36,8 +33,6 @@ import {
   Filter,
   ArrowRight,
   Shield,
-  Paperclip,
-  History,
   Trash2,
   Loader2,
 } from 'lucide-react';
@@ -113,7 +108,6 @@ const sourceConfig = {
 
 export function SalesLeads() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
@@ -154,7 +148,7 @@ export function SalesLeads() {
     queryKey: ['sales-leads'],
     queryFn: async () => {
       const response = await apiClient.get('/sales-rep/prospects');
-      return (response.data || []).map((p: any, index: number) => ({
+      return (response.data || []).map((p: any) => ({
         ...p,
         token: p.token || deriveToken(p.id),
         companyName: p.name,
@@ -365,11 +359,6 @@ export function SalesLeads() {
   const formatDate = (date: string | null | undefined) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('pt-BR');
-  };
-
-  const formatDateTime = (date: string | null | undefined) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleString('pt-BR');
   };
 
   const getStatusBadge = (status: Lead['status']) => {

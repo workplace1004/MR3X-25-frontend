@@ -161,11 +161,16 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Geração de Documentos</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Gere automaticamente recibos e faturas em PDF
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-orange-100 rounded-lg">
+          <ReceiptText className="w-6 h-6 text-orange-700" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Geração de Documentos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Gere automaticamente recibos e faturas em PDF
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
@@ -181,7 +186,7 @@ export default function DocumentsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-1">
-            <div className="space-y-4 flex-1 overflow-y-auto max-h-[650px]">
+            <div className="space-y-4 flex-1 overflow-visible max-h-[650px]">
             <div className="space-y-2">
               <Label htmlFor="receiptNumber">Número do Recibo</Label>
               <Input
@@ -321,7 +326,7 @@ export default function DocumentsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-1">
-            <div className="space-y-4 flex-1 overflow-y-auto max-h-[650px]">
+            <div className="space-y-4 flex-1 overflow-visible max-h-[650px]">
             <div className="space-y-2">
               <Label htmlFor="invoiceNumber">Número da Fatura</Label>
               <Input

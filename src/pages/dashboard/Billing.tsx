@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { FileText, AlertCircle } from 'lucide-react'
+import { FileText, AlertCircle, Receipt } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
 import { Badge } from '../../components/ui/badge'
@@ -74,9 +74,14 @@ export default function BillingPage() {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-96 mt-2" />
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <Receipt className="w-6 h-6 text-orange-700" />
+            </div>
+            <div>
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96 mt-2" />
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -171,11 +176,16 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Faturamento e Invoices</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Gerencie faturas e receitas da plataforma
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-orange-100 rounded-lg">
+            <Receipt className="w-6 h-6 text-orange-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Faturamento e Invoices</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Gerencie faturas e receitas da plataforma
+            </p>
+          </div>
         </div>
       </div>
 

@@ -198,9 +198,14 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       {}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Administrativo</h1>
-        <p className="text-muted-foreground">Visão geral completa do sistema</p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-blue-100 rounded-lg">
+          <Home className="w-6 h-6 text-blue-700" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Administrativo</h1>
+          <p className="text-muted-foreground">Visão geral completa do sistema</p>
+        </div>
       </div>
 
       {}

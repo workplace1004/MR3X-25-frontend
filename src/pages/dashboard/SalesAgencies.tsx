@@ -12,7 +12,7 @@ import {
 import { salesRepAPI } from '../../api';
 import {
   Building2, Search, Phone, Mail, MapPin, Calendar,
-  Users, Package, CheckCircle, XCircle, TrendingUp, Building
+  Users, Package, CheckCircle, XCircle, Building
 } from 'lucide-react';
 
 interface Agency {

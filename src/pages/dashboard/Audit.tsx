@@ -10,7 +10,8 @@ import {
   User,
   Clock,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -174,11 +175,16 @@ export function Audit() {
     <div className="space-y-6">
       {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Logs de Auditoria</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Visualize atividades e alteracoes do sistema
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-orange-100 rounded-lg">
+            <ShieldCheck className="w-6 h-6 text-orange-700" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Logs de Auditoria</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Visualize atividades e alteracoes do sistema
+            </p>
+          </div>
         </div>
         <Button
           onClick={exportToCSV}
