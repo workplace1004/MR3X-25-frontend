@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  Eye,
-  EyeOff,
   Mail,
   Shield,
   User,
@@ -26,6 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { PasswordInput } from '@/components/ui/password-input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
 
@@ -66,8 +65,6 @@ export function Register() {
   const [cooldown, setCooldown] = useState<number>(0);
   const [requesting, setRequesting] = useState<boolean>(false);
   const [registrationToken, setRegistrationToken] = useState<string>('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (step !== 'code') return;
@@ -460,55 +457,31 @@ export function Register() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Senha</Label>
-                        <div className="relative">
-                          <Input
-                            id="password"
-                            type={showPassword ? 'text' : 'password'}
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            minLength={6}
-                            autoComplete="new-password"
-                            className="pr-10"
-                            placeholder="Mínimo 6 caracteres"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
+                      <PasswordInput
+                        id="password"
+                        label="Senha"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        autoComplete="new-password"
+                        placeholder="Digite a senha"
+                        showStrengthIndicator={true}
+                      />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                        <div className="relative">
-                          <Input
-                            id="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            minLength={6}
-                            autoComplete="new-password"
-                            className="pr-10"
-                            placeholder="Repita a senha"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
+                      <PasswordInput
+                        id="confirmPassword"
+                        label="Confirmar Senha"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        autoComplete="new-password"
+                        placeholder="Confirme a senha"
+                        showStrengthIndicator={false}
+                        showGenerateButton={false}
+                        error={formData.confirmPassword && formData.password !== formData.confirmPassword ? 'As senhas não coincidem' : undefined}
+                      />
                     </div>
                   </div>
 
@@ -751,7 +724,13 @@ export function Register() {
           </Link>
           .
         </p>
+      <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border/50">
+        <p className="text-xs text-muted-foreground text-center leading-relaxed">
+          <strong>MR3X</strong> é uma plataforma de tecnologia para gestão de aluguéis e não presta serviços jurídicos, advocatícios ou de intermediação judicial.
+        </p>
       </div>
+      </div>
+      
     </div>
   );
 }

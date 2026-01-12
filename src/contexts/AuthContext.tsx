@@ -189,7 +189,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     'dashboard:read',
     'properties:read', 
     'contracts:read', 
-    'payments:read', 'payments:create', 
+    'payments:read',
     'reports:read',
     'chat:read', 'chat:create', 
     'notifications:read',

@@ -10,7 +10,6 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   MoreHorizontal,
   MapPin,
   Grid3X3,
@@ -44,6 +43,7 @@ import { CEPInput } from '@/components/ui/cep-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { PasswordInput } from '@/components/ui/password-input'
 import { validateDocument, isValidCEPFormat } from '@/lib/validation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -117,8 +117,6 @@ export function Brokers() {
   const [updating, setUpdating] = useState(false)
   const [loadingDetailsId, setLoadingDetailsId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showEditPassword, setShowEditPassword] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [emailVerified, setEmailVerified] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
@@ -922,19 +920,16 @@ export function Brokers() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="password">Senha *</Label>
-                    <div className="relative">
-                      <Input id="password" name="password" type={showNewPassword ? 'text' : 'password'} value={newBroker.password} onChange={handleInputChange} placeholder="Digite a senha" required className="pr-10" />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                  <PasswordInput
+                    id="password"
+                    name="password"
+                    label="Senha"
+                    value={newBroker.password}
+                    onChange={handleInputChange}
+                    placeholder="Digite a senha"
+                    required
+                    showStrengthIndicator={true}
+                  />
                   <div>
                     <Label htmlFor="birthDate">Data de Nascimento</Label>
                     <Input id="birthDate" name="birthDate" type="date" value={newBroker.birthDate} onChange={handleInputChange} />
@@ -1041,19 +1036,15 @@ export function Brokers() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-password">Senha</Label>
-                    <div className="relative">
-                      <Input id="edit-password" name="password" type={showEditPassword ? 'text' : 'password'} value={editForm.password} onChange={handleEditInputChange} placeholder="Digite a senha" className="pr-10" />
-                      <button
-                        type="button"
-                        onClick={() => setShowEditPassword(!showEditPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                  <PasswordInput
+                    id="edit-password"
+                    name="password"
+                    label="Senha"
+                    value={editForm.password}
+                    onChange={handleEditInputChange}
+                    placeholder="Digite a senha (deixe em branco para não alterar)"
+                    showStrengthIndicator={true}
+                  />
                   <div>
                     <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
                     <Input id="edit-birthDate" name="birthDate" type="date" value={editForm.birthDate} onChange={handleEditInputChange} />

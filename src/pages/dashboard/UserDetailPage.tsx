@@ -235,10 +235,12 @@ export function UserDetailPage() {
                     <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Status</Label>
                     <div><Badge className={`${getStatusColor(user.status)} text-xs whitespace-nowrap`}>{user.status}</Badge></div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Plano</Label>
-                    <div><Badge variant="outline" className="text-xs whitespace-nowrap">{user.plan}</Badge></div>
-                  </div>
+                  {['AGENCY_ADMIN', 'INDEPENDENT_OWNER'].includes(user.role) && (
+                    <div className="space-y-1">
+                      <Label className="text-xs sm:text-sm font-medium text-muted-foreground">Plano</Label>
+                      <div><Badge variant="outline" className="text-xs whitespace-nowrap">{user.plan}</Badge></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

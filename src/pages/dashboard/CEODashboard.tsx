@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Skeleton } from '../../components/ui/skeleton';
 import { dashboardAPI } from '../../api';
 import { formatCurrency } from '../../lib/utils';
+import { ApiConsumptionWidget } from '../../components/dashboard/ApiConsumptionWidget';
 import {
-  Building2, Users, FileText, DollarSign,
-  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox
+  Building2, FileText, DollarSign,
+  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User
 } from 'lucide-react';
 
 export function CEODashboard() {
@@ -110,10 +111,10 @@ export function CEODashboard() {
           color="indigo"
         />
         <KPICard
-          title="Usuários Registrados"
-          value={overview.totalUsers ?? 0}
-          icon={Users}
-          color="cyan"
+          title="Proprietários Independentes"
+          value={overview.totalIndependentOwners ?? 0}
+          icon={User}
+          color="green"
         />
         <KPICard
           title="Total de Imóveis"
@@ -208,6 +209,9 @@ export function CEODashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* API Consumption Widget */}
+      <ApiConsumptionWidget />
 
       {}
       {dashboard?.topAgencies && dashboard.topAgencies.length > 0 && (

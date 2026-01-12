@@ -6,6 +6,7 @@ import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { ContractVerification } from './pages/public/ContractVerification';
+import { GlobalVerification } from './pages/public/GlobalVerification';
 import { ExternalSigning } from './pages/public/ExternalSigning';
 import { DashboardHome } from './pages/dashboard/DashboardHome';
 import { Properties } from './pages/dashboard/Properties';
@@ -30,6 +31,7 @@ import { OwnerPlanConfig } from './pages/dashboard/OwnerPlanConfig';
 import { TenantDashboard } from './pages/dashboard/TenantDashboard';
 import { TenantContract } from './pages/dashboard/TenantContract';
 import { TenantPayments } from './pages/dashboard/TenantPayments';
+import { TenantProperties } from './pages/dashboard/TenantProperties';
 import { ExtrajudicialAcknowledgment } from './pages/dashboard/ExtrajudicialAcknowledgment';
 import { BrokerDashboard } from './pages/dashboard/BrokerDashboard';
 import { ApiClientDashboard } from './pages/dashboard/ApiClientDashboard';
@@ -148,8 +150,9 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
 
             {}
-            <Route path="/verify" element={<ContractVerification />} />
-            <Route path="/verify/:token" element={<ContractVerification />} />
+            <Route path="/verify" element={<GlobalVerification />} />
+            <Route path="/verify/:token" element={<GlobalVerification />} />
+            <Route path="/verify/contract/:token" element={<ContractVerification />} />
             <Route path="/sign/:linkToken" element={<ExternalSigning />} />
 
             {}
@@ -237,6 +240,7 @@ function App() {
               <Route path="tenant-dashboard" element={<TenantDashboard />} />
               <Route path="tenant-contract" element={<TenantContract />} />
               <Route path="tenant-payments" element={<TenantPayments />} />
+              <Route path="tenant-properties" element={<TenantProperties />} />
               <Route path="extrajudicial-acknowledgment/:notificationId" element={<ExtrajudicialAcknowledgment />} />
 
               {}

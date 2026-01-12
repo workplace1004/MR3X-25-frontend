@@ -32,6 +32,7 @@ import {
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { safeGetCurrentPosition, isSecureOrigin } from '../../hooks/use-geolocation';
+import { MandatoryTenantBanner } from '../../components/tenant/MandatoryTenantBanner';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
@@ -457,7 +458,13 @@ export function TenantDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner - Must be first */}
+      {/* Mandatory Banner - Must be first, cannot be dismissed without acknowledgment */}
+      <MandatoryTenantBanner 
+        upcomingDueDate={dashboard?.upcomingDueDate ? new Date(dashboard.upcomingDueDate) : null}
+        daysUntilUpcoming={dashboard?.daysUntilUpcoming ?? null}
+      />
+
+      {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <Shield className="w-8 h-8" />
@@ -618,33 +625,64 @@ export function TenantDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600 font-medium">Pagamentos</p>
-                <p className="text-2xl font-bold text-blue-700">
-                  {chartData.totalPayments}
+                <p className="text-sm text-red-600 font-medium">Pendente</p>
+                <p className="text-2xl font-bold text-red-700">
+                  {formatCurrency(dashboard?.financialOverview?.totalPending || 0)}
                 </p>
+                {dashboard?.financialOverview?.pendingCount ? (
+                  <p className="text-xs text-red-500 mt-1">
+                    {dashboard.financialOverview.pendingCount} {dashboard.financialOverview.pendingCount === 1 ? 'fatura' : 'faturas'}
+                  </p>
+                ) : null}
               </div>
-              <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
-                <Receipt className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-600 font-medium">Média Mensal</p>
-                <p className="text-2xl font-bold text-purple-700">
-                  {formatCurrency(chartData.avgPayment)}
+                <p className="text-sm text-orange-600 font-medium">Em Atraso</p>
+                <p className="text-2xl font-bold text-orange-700">
+                  {formatCurrency(dashboard?.financialOverview?.totalOverdue || 0)}
                 </p>
+                {dashboard?.financialOverview?.overdueCount ? (
+                  <p className="text-xs text-orange-500 mt-1">
+                    {dashboard.financialOverview.overdueCount} {dashboard.financialOverview.overdueCount === 1 ? 'fatura' : 'faturas'}
+                  </p>
+                ) : null}
               </div>
-              <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
+                <Clock className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-600 font-medium">Média de Pagamento</p>
+                <p className="text-2xl font-bold text-blue-700">
+                  {formatCurrency(dashboard?.financialOverview?.averagePayment || chartData.avgPayment)}
+                </p>
+                {dashboard?.financialOverview?.totalPayments ? (
+                  <p className="text-xs text-blue-500 mt-1">
+                    {dashboard.financialOverview.totalPayments} {dashboard.financialOverview.totalPayments === 1 ? 'pagamento' : 'pagamentos'}
+                  </p>
+                ) : null}
+              </div>
+              <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </CardContent>

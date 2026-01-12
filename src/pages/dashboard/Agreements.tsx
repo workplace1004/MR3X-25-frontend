@@ -32,7 +32,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '../../lib/utils';
+import { formatDate, formatCurrency, cn } from '../../lib/utils';
 import { safeGetCurrentPosition, isSecureOrigin } from '../../hooks/use-geolocation';
 import { SignatureCapture } from '../../components/contracts/SignatureCapture';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -67,6 +67,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../../components/ui/tooltip';
+import { Calendar } from '../../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale/pt-BR';
 
 interface Agreement {
   id: string;
@@ -480,6 +485,9 @@ export function Agreements() {
     originalAmount: '',
     negotiatedAmount: '',
     fineAmount: '',
+    finePercent: '', // New: percentage-based penalty
+    interestPercent: '', // New: percentage-based interest
+    interestAmount: '', // Calculated automatically
     discountAmount: '',
     installments: '',
     installmentValue: '',
@@ -523,6 +531,35 @@ export function Agreements() {
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+
+  // Helper function to calculate interest amount
+  const calculateInterestAmount = (principal: string, interestPercent: string, effectiveDate?: string): string => {
+    if (!principal || !interestPercent) return '';
+    
+    const principalValue = parseFloat(principal) || 0;
+    const percentValue = parseFloat(interestPercent) || 0;
+    
+    if (principalValue === 0 || percentValue === 0) return '0.00';
+    
+    // Calculate days overdue
+    let daysOverdue = 0;
+    if (effectiveDate) {
+      const effective = new Date(effectiveDate);
+      const now = new Date();
+      daysOverdue = Math.max(0, Math.floor((now.getTime() - effective.getTime()) / (1000 * 60 * 60 * 24)));
+    } else {
+      // If no effective date provided, use a default of 30 days for calculation
+      // This allows the user to see the calculation even before setting the date
+      // The user can adjust the date later to get the accurate calculation
+      daysOverdue = 30; // Default to 30 days
+    }
+    
+    const monthlyRate = percentValue / 100;
+    const dailyRate = monthlyRate / 30;
+    const interestAmount = (principalValue * dailyRate * daysOverdue).toFixed(2);
+    
+    return interestAmount;
+  };
 
   if (!permissions.canView) {
     return (
@@ -607,8 +644,12 @@ export function Agreements() {
 
   const createAgreementMutation = useMutation({
     mutationFn: (data: any) => agreementsAPI.createAgreement(data),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['agreements'] });
+      if (user?.agencyId) {
+        await queryClient.invalidateQueries({ queryKey: ['agency-plan-usage', user.agencyId] });
+        await queryClient.refetchQueries({ queryKey: ['agency-plan-usage', user.agencyId] });
+      }
       closeAllModals();
       toast.success('Acordo criado com sucesso');
       setNewAgreement({
@@ -623,6 +664,9 @@ export function Agreements() {
         originalAmount: '',
         negotiatedAmount: '',
         fineAmount: '',
+        finePercent: '',
+        interestPercent: '',
+        interestAmount: '',
         discountAmount: '',
         installments: '',
         installmentValue: '',
@@ -720,21 +764,50 @@ export function Agreements() {
 
   const handleCreateAgreement = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!newAgreement.propertyId) {
+      toast.error('Selecione um imóvel');
+      return;
+    }
+    if (!newAgreement.title || newAgreement.title.trim() === '') {
+      toast.error('O título do acordo é obrigatório');
+      return;
+    }
+    
     setCreating(true);
     try {
+      // Only send fields that are valid in the DTO
       const data: any = {
-        ...newAgreement,
-        originalAmount: newAgreement.originalAmount ? parseFloat(newAgreement.originalAmount) : undefined,
-        negotiatedAmount: newAgreement.negotiatedAmount ? parseFloat(newAgreement.negotiatedAmount) : undefined,
-        fineAmount: newAgreement.fineAmount ? parseFloat(newAgreement.fineAmount) : undefined,
-        discountAmount: newAgreement.discountAmount ? parseFloat(newAgreement.discountAmount) : undefined,
-        installments: newAgreement.installments ? parseInt(newAgreement.installments) : undefined,
-        installmentValue: newAgreement.installmentValue ? parseFloat(newAgreement.installmentValue) : undefined,
+        propertyId: newAgreement.propertyId,
+        type: newAgreement.type,
+        title: newAgreement.title.trim(),
       };
-      Object.keys(data).forEach(key => {
-        if (data[key] === '') delete data[key];
-      });
+      
+      // Optional fields
+      if (newAgreement.contractId) data.contractId = newAgreement.contractId;
+      if (newAgreement.description?.trim()) data.description = newAgreement.description.trim();
+      if (newAgreement.content?.trim()) data.content = newAgreement.content.trim();
+      if (newAgreement.tenantId) data.tenantId = newAgreement.tenantId;
+      if (newAgreement.ownerId) data.ownerId = newAgreement.ownerId;
+      if (newAgreement.originalAmount) data.originalAmount = parseFloat(newAgreement.originalAmount);
+      if (newAgreement.negotiatedAmount) data.negotiatedAmount = parseFloat(newAgreement.negotiatedAmount);
+      if (newAgreement.fineAmount) data.fineAmount = parseFloat(newAgreement.fineAmount);
+      if (newAgreement.interestPercent) data.interestPercent = parseFloat(newAgreement.interestPercent);
+      if (newAgreement.interestAmount) data.interestAmount = parseFloat(newAgreement.interestAmount);
+      if (newAgreement.discountAmount) data.discountAmount = parseFloat(newAgreement.discountAmount);
+      if (newAgreement.installments) data.installments = parseInt(newAgreement.installments);
+      if (newAgreement.installmentValue) data.installmentValue = parseFloat(newAgreement.installmentValue);
+      if (newAgreement.effectiveDate) data.effectiveDate = newAgreement.effectiveDate;
+      if (newAgreement.expirationDate) data.expirationDate = newAgreement.expirationDate;
+      if (newAgreement.newDueDate) data.newDueDate = newAgreement.newDueDate;
+      if (newAgreement.moveOutDate) data.moveOutDate = newAgreement.moveOutDate;
+      if (newAgreement.notes?.trim()) data.notes = newAgreement.notes.trim();
+      
       await createAgreementMutation.mutateAsync(data);
+    } catch (error: any) {
+      console.error('Error creating agreement:', error);
+      toast.error(error?.response?.data?.message || error?.message || 'Erro ao criar acordo');
     } finally {
       setCreating(false);
     }
@@ -1375,10 +1448,10 @@ export function Agreements() {
                     <SelectContent>
                       {properties
                         .filter((property) => {
-                          // Only show properties with status DISPONIVEL
+                          // Only show properties with status ALUGADO (rented)
                           if (!property || !property.status) return false;
                           const status = String(property.status).toUpperCase().trim();
-                          return status === 'DISPONIVEL' || status === 'AVAILABLE';
+                          return status === 'ALUGADO' || status === 'RENTED';
                         })
                         .map((property) => (
                           <SelectItem key={property.id} value={property.id?.toString()}>
@@ -1488,55 +1561,166 @@ export function Agreements() {
 
               {}
               <div className="border-t pt-3 sm:pt-4">
-                <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Valores Financeiros (Opcional)</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-                  <div>
-                    <Label htmlFor="originalAmount" className="text-xs sm:text-sm" truncate>Valor Original</Label>
-                    <Input
-                      id="originalAmount"
-                      type="number"
-                      step="0.01"
-                      className="text-sm"
-                      value={newAgreement.originalAmount}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, originalAmount: e.target.value })}
-                      placeholder="0.00"
-                    />
+                <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Valores Financeiros</h4>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+                    <div>
+                      <Label htmlFor="originalAmount" className="text-xs sm:text-sm">Valor Principal (R$)</Label>
+                      <Input
+                        id="originalAmount"
+                        type="number"
+                        step="0.01"
+                        className="text-sm"
+                        value={newAgreement.originalAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const principal = parseFloat(value) || 0;
+                          
+                          // Calculate fine amount if percentage is set
+                          let fineAmount = '';
+                          if (newAgreement.finePercent && principal > 0) {
+                            fineAmount = (principal * parseFloat(newAgreement.finePercent) / 100).toFixed(2);
+                          }
+                          
+                          // Calculate interest amount if percentage is set
+                          const interestAmount = calculateInterestAmount(value, newAgreement.interestPercent, newAgreement.effectiveDate);
+                          
+                          setNewAgreement(prev => ({ 
+                            ...prev, 
+                            originalAmount: value, 
+                            fineAmount, 
+                            interestAmount 
+                          }));
+                        }}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="finePercent" className="text-xs sm:text-sm">Multa (%)</Label>
+                      <Input
+                        id="finePercent"
+                        type="number"
+                        step="0.01"
+                        className="text-sm"
+                        value={newAgreement.finePercent}
+                        onChange={(e) => {
+                          const percent = e.target.value;
+                          setNewAgreement({ ...newAgreement, finePercent: percent });
+                          // Auto-calculate fine amount
+                          if (percent && newAgreement.originalAmount) {
+                            const principal = parseFloat(newAgreement.originalAmount) || 0;
+                            const fineAmount = (principal * parseFloat(percent) / 100).toFixed(2);
+                            setNewAgreement(prev => ({ ...prev, finePercent: percent, fineAmount }));
+                          }
+                        }}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="fineAmount" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Multa (R$) - Calculado</Label>
+                      <Input
+                        id="fineAmount"
+                        type="number"
+                        step="0.01"
+                        className="text-sm bg-muted"
+                        value={newAgreement.fineAmount}
+                        readOnly
+                        placeholder="Calculado automaticamente"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="negotiatedAmount" className="text-xs sm:text-sm" truncate>Valor Negociado</Label>
-                    <Input
-                      id="negotiatedAmount"
-                      type="number"
-                      step="0.01"
-                      className="text-sm"
-                      value={newAgreement.negotiatedAmount}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, negotiatedAmount: e.target.value })}
-                      placeholder="0.00"
-                    />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+                    <div>
+                      <Label htmlFor="interestPercent" className="text-xs sm:text-sm">Juros (%) ao mês</Label>
+                      <Input
+                        id="interestPercent"
+                        type="number"
+                        step="0.01"
+                        className="text-sm"
+                        value={newAgreement.interestPercent}
+                        onChange={(e) => {
+                          const percent = e.target.value;
+                          // Calculate interest amount automatically
+                          const interestAmount = calculateInterestAmount(newAgreement.originalAmount, percent, newAgreement.effectiveDate);
+                          setNewAgreement(prev => ({ 
+                            ...prev, 
+                            interestPercent: percent, 
+                            interestAmount 
+                          }));
+                        }}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="interestAmount" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Juros (R$) - Calculado</Label>
+                      <Input
+                        id="interestAmount"
+                        type="number"
+                        step="0.01"
+                        className="text-sm bg-muted"
+                        value={newAgreement.interestAmount}
+                        readOnly
+                        placeholder="Calculado automaticamente"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="negotiatedAmount" className="text-xs sm:text-sm">Valor Total Negociado (R$)</Label>
+                      <Input
+                        id="negotiatedAmount"
+                        type="number"
+                        step="0.01"
+                        className="text-sm font-semibold"
+                        value={newAgreement.negotiatedAmount}
+                        onChange={(e) => setNewAgreement({ ...newAgreement, negotiatedAmount: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="fineAmount" className="text-xs sm:text-sm">Multa</Label>
-                    <Input
-                      id="fineAmount"
-                      type="number"
-                      step="0.01"
-                      className="text-sm"
-                      value={newAgreement.fineAmount}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, fineAmount: e.target.value })}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="discountAmount" className="text-xs sm:text-sm">Desconto</Label>
-                    <Input
-                      id="discountAmount"
-                      type="number"
-                      step="0.01"
-                      className="text-sm"
-                      value={newAgreement.discountAmount}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, discountAmount: e.target.value })}
-                      placeholder="0.00"
-                    />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+                    <div>
+                      <Label htmlFor="discountAmount" className="text-xs sm:text-sm">Desconto (R$)</Label>
+                      <Input
+                        id="discountAmount"
+                        type="number"
+                        step="0.01"
+                        className="text-sm"
+                        value={newAgreement.discountAmount}
+                        onChange={(e) => setNewAgreement({ ...newAgreement, discountAmount: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="installments" className="text-xs sm:text-sm">Parcelas</Label>
+                      <Input
+                        id="installments"
+                        type="number"
+                        className="text-sm"
+                        value={newAgreement.installments}
+                        onChange={(e) => {
+                          const installments = e.target.value;
+                          setNewAgreement({ ...newAgreement, installments });
+                          // Auto-calculate installment value
+                          if (installments && newAgreement.negotiatedAmount) {
+                            const total = parseFloat(newAgreement.negotiatedAmount) || 0;
+                            const installmentValue = (total / parseFloat(installments)).toFixed(2);
+                            setNewAgreement(prev => ({ ...prev, installments, installmentValue }));
+                          }
+                        }}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="installmentValue" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Valor da Parcela (R$) - Calculado</Label>
+                      <Input
+                        id="installmentValue"
+                        type="number"
+                        step="0.01"
+                        className="text-sm bg-muted"
+                        value={newAgreement.installmentValue}
+                        readOnly
+                        placeholder="Calculado automaticamente"
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2 sm:mt-3">
@@ -1566,49 +1750,315 @@ export function Agreements() {
                 </div>
               </div>
 
-              {}
+              {} 
               <div className="border-t pt-3 sm:pt-4">
                 <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">Datas (Opcional)</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                   <div>
-                    <Label htmlFor="effectiveDate" className="text-xs sm:text-sm" truncate>Data de Vigencia</Label>
-                    <Input
-                      id="effectiveDate"
-                      type="date"
-                      className="text-sm"
-                      value={newAgreement.effectiveDate}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, effectiveDate: e.target.value })}
-                    />
+                    <Label htmlFor="effectiveDate" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Data de Vigencia</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-sm h-9",
+                            !newAgreement.effectiveDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newAgreement.effectiveDate && newAgreement.effectiveDate.trim() !== '' ? (
+                            (() => {
+                              try {
+                                const date = new Date(newAgreement.effectiveDate);
+                                if (isNaN(date.getTime())) return <span>Selecione a data</span>;
+                                return format(date, "dd/MM/yyyy", { locale: ptBR });
+                              } catch {
+                                return <span>Selecione a data</span>;
+                              }
+                            })()
+                          ) : (
+                            <span>Selecione a data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 shadow-lg border border-gray-200 bg-white rounded-lg overflow-hidden" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newAgreement.effectiveDate && newAgreement.effectiveDate.trim() !== '' ? (() => {
+                            try {
+                              const date = new Date(newAgreement.effectiveDate);
+                              return isNaN(date.getTime()) ? undefined : date;
+                            } catch {
+                              return undefined;
+                            }
+                          })() : undefined}
+                          onSelect={(date) => {
+                            const dateString = date ? format(date, "yyyy-MM-dd") : '';
+                            // Recalculate interest when effective date changes
+                            const interestAmount = calculateInterestAmount(newAgreement.originalAmount, newAgreement.interestPercent, dateString);
+                            setNewAgreement(prev => ({ 
+                              ...prev, 
+                              effectiveDate: dateString || '', 
+                              interestAmount 
+                            }));
+                          }}
+                          initialFocus
+                          locale={ptBR}
+                          className="bg-white text-gray-900 p-4"
+                          classNames={{
+                            months: "flex flex-col space-y-4",
+                            month: "space-y-4",
+                            caption: "flex justify-center pt-1 relative items-center mb-4",
+                            caption_label: "text-lg font-semibold text-gray-900",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: cn(
+                              "h-8 w-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-md transition-all duration-200 hover:scale-105 flex items-center justify-center"
+                            ),
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex mb-2 gap-1",
+                            head_cell: "text-gray-600 rounded-md w-10 h-10 flex items-center justify-center font-medium text-xs uppercase tracking-wider",
+                            row: "flex w-full mt-1 gap-1",
+                            cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: cn(
+                              "h-10 w-10 p-0 font-normal text-gray-900 rounded-md transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 aria-selected:opacity-100"
+                            ),
+                            day_selected: "bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white border-2 border-blue-600 shadow-md",
+                            day_today: "bg-gray-100 text-gray-900 font-semibold border border-gray-300",
+                            day_outside: "text-gray-400 opacity-50",
+                            day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
+                            day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-gray-900",
+                            day_hidden: "invisible",
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
-                    <Label htmlFor="expirationDate" className="text-xs sm:text-sm" truncate>Data de Expiracao</Label>
-                    <Input
-                      id="expirationDate"
-                      type="date"
-                      className="text-sm"
-                      value={newAgreement.expirationDate}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, expirationDate: e.target.value })}
-                    />
+                    <Label htmlFor="expirationDate" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Data de Expiracao</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-sm h-9",
+                            !newAgreement.expirationDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newAgreement.expirationDate && newAgreement.expirationDate.trim() !== '' ? (
+                            (() => {
+                              try {
+                                const date = new Date(newAgreement.expirationDate);
+                                if (isNaN(date.getTime())) return <span>Selecione a data</span>;
+                                return format(date, "dd/MM/yyyy", { locale: ptBR });
+                              } catch {
+                                return <span>Selecione a data</span>;
+                              }
+                            })()
+                          ) : (
+                            <span>Selecione a data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 shadow-lg border border-gray-200 bg-white rounded-lg overflow-hidden" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newAgreement.expirationDate && newAgreement.expirationDate.trim() !== '' ? (() => {
+                            try {
+                              const date = new Date(newAgreement.expirationDate);
+                              return isNaN(date.getTime()) ? undefined : date;
+                            } catch {
+                              return undefined;
+                            }
+                          })() : undefined}
+                          onSelect={(date) => {
+                            const dateString = date ? format(date, "yyyy-MM-dd") : '';
+                            setNewAgreement(prev => ({ ...prev, expirationDate: dateString || '' }));
+                          }}
+                          initialFocus
+                          locale={ptBR}
+                          className="bg-white text-gray-900 p-4"
+                          classNames={{
+                            months: "flex flex-col space-y-4",
+                            month: "space-y-4",
+                            caption: "flex justify-center pt-1 relative items-center mb-4",
+                            caption_label: "text-lg font-semibold text-gray-900",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: cn(
+                              "h-8 w-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-md transition-all duration-200 hover:scale-105 flex items-center justify-center"
+                            ),
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex mb-2 gap-1",
+                            head_cell: "text-gray-600 rounded-md w-10 h-10 flex items-center justify-center font-medium text-xs uppercase tracking-wider",
+                            row: "flex w-full mt-1 gap-1",
+                            cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: cn(
+                              "h-10 w-10 p-0 font-normal text-gray-900 rounded-md transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 aria-selected:opacity-100"
+                            ),
+                            day_selected: "bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white border-2 border-blue-600 shadow-md",
+                            day_today: "bg-gray-100 text-gray-900 font-semibold border border-gray-300",
+                            day_outside: "text-gray-400 opacity-50",
+                            day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
+                            day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-gray-900",
+                            day_hidden: "invisible",
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
-                    <Label htmlFor="newDueDate" className="text-xs sm:text-sm" truncate>Nova Data Venc.</Label>
-                    <Input
-                      id="newDueDate"
-                      type="date"
-                      className="text-sm"
-                      value={newAgreement.newDueDate}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, newDueDate: e.target.value })}
-                    />
+                    <Label htmlFor="newDueDate" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Nova Data Venc.</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-sm h-9",
+                            !newAgreement.newDueDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newAgreement.newDueDate && newAgreement.newDueDate.trim() !== '' ? (
+                            (() => {
+                              try {
+                                const date = new Date(newAgreement.newDueDate);
+                                if (isNaN(date.getTime())) return <span>Selecione a data</span>;
+                                return format(date, "dd/MM/yyyy", { locale: ptBR });
+                              } catch {
+                                return <span>Selecione a data</span>;
+                              }
+                            })()
+                          ) : (
+                            <span>Selecione a data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 shadow-lg border border-gray-200 bg-white rounded-lg overflow-hidden" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newAgreement.newDueDate && newAgreement.newDueDate.trim() !== '' ? (() => {
+                            try {
+                              const date = new Date(newAgreement.newDueDate);
+                              return isNaN(date.getTime()) ? undefined : date;
+                            } catch {
+                              return undefined;
+                            }
+                          })() : undefined}
+                          onSelect={(date) => {
+                            const dateString = date ? format(date, "yyyy-MM-dd") : '';
+                            setNewAgreement(prev => ({ ...prev, newDueDate: dateString || '' }));
+                          }}
+                          initialFocus
+                          locale={ptBR}
+                          className="bg-white text-gray-900 p-4"
+                          classNames={{
+                            months: "flex flex-col space-y-4",
+                            month: "space-y-4",
+                            caption: "flex justify-center pt-1 relative items-center mb-4",
+                            caption_label: "text-lg font-semibold text-gray-900",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: cn(
+                              "h-8 w-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-md transition-all duration-200 hover:scale-105 flex items-center justify-center"
+                            ),
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex mb-2 gap-1",
+                            head_cell: "text-gray-600 rounded-md w-10 h-10 flex items-center justify-center font-medium text-xs uppercase tracking-wider",
+                            row: "flex w-full mt-1 gap-1",
+                            cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: cn(
+                              "h-10 w-10 p-0 font-normal text-gray-900 rounded-md transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 aria-selected:opacity-100"
+                            ),
+                            day_selected: "bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white border-2 border-blue-600 shadow-md",
+                            day_today: "bg-gray-100 text-gray-900 font-semibold border border-gray-300",
+                            day_outside: "text-gray-400 opacity-50",
+                            day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
+                            day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-gray-900",
+                            day_hidden: "invisible",
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
-                    <Label htmlFor="moveOutDate" className="text-xs sm:text-sm" truncate>Data de Saida</Label>
-                    <Input
-                      id="moveOutDate"
-                      type="date"
-                      className="text-sm"
-                      value={newAgreement.moveOutDate}
-                      onChange={(e) => setNewAgreement({ ...newAgreement, moveOutDate: e.target.value })}
-                    />
+                    <Label htmlFor="moveOutDate" className="text-xs sm:text-sm truncate block whitespace-nowrap overflow-hidden">Data de Saida</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal text-sm h-9",
+                            !newAgreement.moveOutDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newAgreement.moveOutDate && newAgreement.moveOutDate.trim() !== '' ? (
+                            (() => {
+                              try {
+                                const date = new Date(newAgreement.moveOutDate);
+                                if (isNaN(date.getTime())) return <span>Selecione a data</span>;
+                                return format(date, "dd/MM/yyyy", { locale: ptBR });
+                              } catch {
+                                return <span>Selecione a data</span>;
+                              }
+                            })()
+                          ) : (
+                            <span>Selecione a data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 shadow-lg border border-gray-200 bg-white rounded-lg overflow-hidden" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newAgreement.moveOutDate && newAgreement.moveOutDate.trim() !== '' ? (() => {
+                            try {
+                              const date = new Date(newAgreement.moveOutDate);
+                              return isNaN(date.getTime()) ? undefined : date;
+                            } catch {
+                              return undefined;
+                            }
+                          })() : undefined}
+                          onSelect={(date) => {
+                            const dateString = date ? format(date, "yyyy-MM-dd") : '';
+                            setNewAgreement(prev => ({ ...prev, moveOutDate: dateString || '' }));
+                          }}
+                          initialFocus
+                          locale={ptBR}
+                          className="bg-white text-gray-900 p-4"
+                          classNames={{
+                            months: "flex flex-col space-y-4",
+                            month: "space-y-4",
+                            caption: "flex justify-center pt-1 relative items-center mb-4",
+                            caption_label: "text-lg font-semibold text-gray-900",
+                            nav: "space-x-1 flex items-center",
+                            nav_button: cn(
+                              "h-8 w-8 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-md transition-all duration-200 hover:scale-105 flex items-center justify-center"
+                            ),
+                            nav_button_previous: "absolute left-1",
+                            nav_button_next: "absolute right-1",
+                            table: "w-full border-collapse space-y-1",
+                            head_row: "flex mb-2 gap-1",
+                            head_cell: "text-gray-600 rounded-md w-10 h-10 flex items-center justify-center font-medium text-xs uppercase tracking-wider",
+                            row: "flex w-full mt-1 gap-1",
+                            cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-blue-50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                            day: cn(
+                              "h-10 w-10 p-0 font-normal text-gray-900 rounded-md transition-all duration-200 hover:bg-gray-100 hover:text-gray-900 aria-selected:opacity-100"
+                            ),
+                            day_selected: "bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:text-white focus:bg-blue-600 focus:text-white border-2 border-blue-600 shadow-md",
+                            day_today: "bg-gray-100 text-gray-900 font-semibold border border-gray-300",
+                            day_outside: "text-gray-400 opacity-50",
+                            day_disabled: "text-gray-300 opacity-30 cursor-not-allowed",
+                            day_range_middle: "aria-selected:bg-blue-50 aria-selected:text-gray-900",
+                            day_hidden: "invisible",
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
               </div>

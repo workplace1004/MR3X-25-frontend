@@ -36,6 +36,12 @@ import {
   AlertDescription,
 } from '../../components/ui/alert';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../components/ui/tooltip';
+import {
   UserSearch,
   Shield,
   AlertTriangle,
@@ -60,6 +66,7 @@ import {
   Calendar,
   Hash,
   ClipboardList,
+  Info,
 } from 'lucide-react';
 import { tenantAnalysisAPI } from '../../api';
 import { toast } from 'sonner';
@@ -262,6 +269,26 @@ const formatDate = (date: string) => {
   });
 };
 
+// LGPD Legal Basis Helper Component
+const LgpdTooltip = ({ field, basis, description }: { field: string; basis: string; description: string }) => {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Info className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground hover:text-primary cursor-help inline-block ml-1" />
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          <div className="space-y-1">
+            <p className="font-semibold text-xs">{field}</p>
+            <p className="text-xs"><strong>Base Legal LGPD:</strong> {basis}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
 const RiskGauge = ({ score, level }: { score: number; level: string }) => {
   const percentage = score / 10;
   const rotation = (percentage / 100) * 180 - 90;
@@ -323,11 +350,25 @@ const AnalysisDetailModal = ({
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Nome</p>
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center">
+                  Nome
+                  <LgpdTooltip
+                    field="Nome"
+                    basis="Art. 7º, V - Execução de contrato"
+                    description="Dado necessário para identificação e execução do contrato de locação."
+                  />
+                </p>
                 <p className="font-medium text-sm sm:text-base">{data.name || '-'}</p>
               </div>
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Status</p>
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center">
+                  Status
+                  <LgpdTooltip
+                    field="Status CPF"
+                    basis="Art. 7º, V - Execução de contrato"
+                    description="Verificação de regularidade necessária para análise de risco."
+                  />
+                </p>
                 <Badge variant={data.status === 'REGULAR' ? 'default' : 'destructive'} className="text-xs">
                   {data.status || '-'}
                 </Badge>
@@ -335,6 +376,11 @@ const AnalysisDetailModal = ({
               <div className="col-span-1 sm:col-span-2">
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                   <MapPin className="w-3 h-3 sm:w-4 sm:h-4" /> Endereço
+                  <LgpdTooltip
+                    field="Endereço"
+                    basis="Art. 7º, V - Execução de contrato"
+                    description="Necessário para comunicação e identificação do locatário."
+                  />
                 </p>
                 <p className="font-medium text-xs sm:text-sm">
                   {data.address ? `${data.address}, ${data.city || ''} - ${data.state || ''} ${data.zipCode ? `CEP: ${data.zipCode}` : ''}` : '-'}
@@ -343,12 +389,22 @@ const AnalysisDetailModal = ({
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                   <Phone className="w-3 h-3 sm:w-4 sm:h-4" /> Telefone
+                  <LgpdTooltip
+                    field="Telefone"
+                    basis="Art. 7º, V - Execução de contrato"
+                    description="Necessário para comunicação relacionada ao contrato de locação."
+                  />
                 </p>
                 <p className="font-medium text-sm sm:text-base">{data.phone || '-'}</p>
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3 h-3 sm:w-4 sm:h-4" /> Data de Nascimento
+                  <LgpdTooltip
+                    field="Data de Nascimento"
+                    basis="Art. 7º, V - Execução de contrato"
+                    description="Necessária para verificação de capacidade civil e identificação."
+                  />
                 </p>
                 <p className="font-medium text-sm sm:text-base">{data.birthDate ? data.birthDate.split('T')[0] : '-'}</p>
               </div>
@@ -421,6 +477,9 @@ const AnalysisDetailModal = ({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base sm:text-lg">Score de Risco</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-1">
+                Esta análise é apenas informativa. A plataforma não bloqueia registros com base no score ou dívidas externas.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -491,15 +550,36 @@ const AnalysisDetailModal = ({
             <CardContent>
               <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Score de Crédito</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground flex items-center">
+                    Score de Crédito
+                    <LgpdTooltip
+                      field="Score de Crédito"
+                      basis="Art. 7º, V - Execução de contrato e Art. 7º, IX - Legítimo interesse"
+                      description="Avaliação de risco creditício necessária para análise de capacidade de pagamento."
+                    />
+                  </p>
                   <p className="text-lg sm:text-2xl font-bold">{analysis.financial.creditScore || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Dívidas Totais</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground flex items-center">
+                    Dívidas Totais
+                    <LgpdTooltip
+                      field="Dívidas Totais"
+                      basis="Art. 7º, V - Execução de contrato"
+                      description="Informação financeira necessária para análise de risco de inadimplência."
+                    />
+                  </p>
                   <p className="text-sm sm:text-2xl font-bold">{formatCurrency(analysis.financial.totalDebts)}</p>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Dívidas Ativas</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground flex items-center">
+                    Dívidas Ativas
+                    <LgpdTooltip
+                      field="Dívidas Ativas"
+                      basis="Art. 7º, V - Execução de contrato"
+                      description="Quantidade de dívidas em aberto para avaliação de risco."
+                    />
+                  </p>
                   <p className="text-lg sm:text-2xl font-bold">{analysis.financial.activeDebts}</p>
                 </div>
               </div>
@@ -903,9 +983,9 @@ export function TenantAnalysis() {
           <UserSearch className="w-6 h-6 text-blue-700" />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Análise de Inquilinos</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Análise de Clientes</h1>
           <p className="text-muted-foreground mt-1">
-            Verificação completa de candidatos a inquilinos
+            Análise de risco para agências e proprietários independentes - Informação apenas, sem bloqueio automático
           </p>
         </div>
       </div>
@@ -973,7 +1053,7 @@ export function TenantAnalysis() {
       {permissions.canCreate ? (
         <Card>
           <CardHeader className="pb-3 sm:pb-6">
-            <CardTitle className="text-lg sm:text-xl">Nova Análise</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Nova Análise de Cliente</CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               Digite o CPF ou CNPJ do candidato para realizar uma análise completa
             </CardDescription>
@@ -1162,7 +1242,7 @@ export function TenantAnalysis() {
                             <ClipboardList className="w-16 h-16 text-muted-foreground mb-4" />
                             <h3 className="text-lg font-semibold mb-2">Nenhuma análise encontrada</h3>
                             <p className="text-muted-foreground">
-                              Comece realizando uma nova análise de inquilino
+                              Comece realizando uma nova análise de cliente
                             </p>
                           </div>
                         </TableCell>

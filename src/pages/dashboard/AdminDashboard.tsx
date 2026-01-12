@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { dashboardAPI } from '../../api';
 import { formatCurrency } from '../../lib/utils';
+import { ApiConsumptionWidget } from '../../components/dashboard/ApiConsumptionWidget';
 import {
-  Building2, FileText, DollarSign,
+  Building2, FileText,
   AlertCircle, CheckCircle, Clock, Home,
-  PieChart as PieChartIcon, Inbox
+  PieChart as PieChartIcon, Inbox, Briefcase, User
 } from 'lucide-react';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
@@ -25,26 +26,44 @@ const COLORS = {
 };
 
 function ChartContainer({ children, height = 280 }: { children: React.ReactNode; height?: number }) {
-  const [isMounted, setIsMounted] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(timer);
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { offsetWidth, offsetHeight } = containerRef.current;
+        if (offsetWidth > 0 && offsetHeight > 0) {
+          setDimensions({ width: offsetWidth, height: offsetHeight });
+        }
+      }
+    };
+
+    const timer = setTimeout(updateDimensions, 100);
+
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateDimensions);
+    };
   }, []);
 
-  if (!isMounted) {
-    return (
-      <div style={{ height }} className="flex items-center justify-center">
-        <Skeleton className="w-full h-full rounded" />
-      </div>
-    );
-  }
-
   return (
-    <div style={{ width: '100%', height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        {children}
-      </ResponsiveContainer>
+    <div 
+      ref={containerRef} 
+      style={{ width: '100%', height: `${height}px`, minHeight: `${height}px`, minWidth: '0' }} 
+      className="w-full"
+    >
+      {dimensions.width > 0 && dimensions.height > 0 ? (
+        <ResponsiveContainer width="100%" height={height} minWidth={100} minHeight={height}>
+          {children}
+        </ResponsiveContainer>
+      ) : (
+        <div style={{ height: `${height}px` }} className="flex items-center justify-center text-muted-foreground">
+          <Skeleton className="w-full h-full rounded" />
+        </div>
+      )}
     </div>
   );
 }
@@ -173,8 +192,6 @@ export function AdminDashboard() {
   ].filter(item => item.value > 0);
 
   const totalProperties = overview.totalProperties ?? 0;
-  const occupiedProperties = overview.occupiedProperties ?? 0;
-  const occupancyRate = totalProperties > 0 ? Math.round((occupiedProperties / totalProperties) * 100) : 0;
 
   const overdueUnits = overview.overdueUnits ?? 0;
   const defaultRate = overview.defaultRate ?? (totalProperties > 0 ? ((overdueUnits / totalProperties) * 100).toFixed(1) : 0);
@@ -211,30 +228,28 @@ export function AdminDashboard() {
       {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <KPICard
-          title="Total de Imóveis"
-          value={totalProperties}
-          icon={Building2}
+          title="Agências Ativas"
+          value={overview.totalAgencies ?? 0}
+          icon={Briefcase}
           color="blue"
         />
         <KPICard
-          title="Imóveis Ocupados"
-          value={occupiedProperties}
-          icon={Home}
+          title="Proprietários Independentes"
+          value={overview.totalIndependentOwners ?? 0}
+          icon={User}
           color="green"
-          subtitle={`${occupancyRate}% ocupação`}
+        />
+        <KPICard
+          title="Total de Imóveis"
+          value={totalProperties}
+          icon={Building2}
+          color="purple"
         />
         <KPICard
           title="Contratos Ativos"
           value={activeContracts}
           icon={FileText}
-          color="purple"
-        />
-        <KPICard
-          title="Receita Mensal"
-          value={formatCurrency(overview.monthlyRevenue || 0)}
-          icon={DollarSign}
-          color="yellow"
-          isAmount
+          color="cyan"
         />
       </div>
 
@@ -429,6 +444,9 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* API Consumption Widget */}
+      <ApiConsumptionWidget />
 
       {}
       {dashboard?.topAgencies && dashboard.topAgencies.length > 0 && (

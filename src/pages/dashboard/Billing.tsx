@@ -44,6 +44,10 @@ interface BillingData {
     pendingCount: number;
     overdueCount: number;
   };
+  agencies?: {
+    total: number;
+    withPayments: number;
+  };
 }
 
 export default function BillingPage() {
@@ -363,27 +367,48 @@ export default function BillingPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="revenue">
+        <TabsContent value="revenue" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Análise de Receitas</CardTitle>
-              <CardDescription>Resumo das receitas da plataforma</CardDescription>
+              <CardDescription>Resumo consolidado das receitas da plataforma</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-green-600 font-medium">Transações Pagas</p>
                   <p className="text-2xl font-bold text-green-700">{billingData?.summary?.paidCount || 0}</p>
+                  <p className="text-xs text-green-600 mt-1">Total: {formatCurrency(stats.paid)}</p>
                 </div>
                 <div className="p-4 bg-yellow-50 rounded-lg">
                   <p className="text-sm text-yellow-600 font-medium">Transações Pendentes</p>
                   <p className="text-2xl font-bold text-yellow-700">{billingData?.summary?.pendingCount || 0}</p>
+                  <p className="text-xs text-yellow-600 mt-1">Total: {formatCurrency(stats.pending)}</p>
                 </div>
                 <div className="p-4 bg-red-50 rounded-lg">
                   <p className="text-sm text-red-600 font-medium">Transações Vencidas</p>
                   <p className="text-2xl font-bold text-red-700">{billingData?.summary?.overdueCount || 0}</p>
+                  <p className="text-xs text-red-600 mt-1">Total: {formatCurrency(stats.overdue)}</p>
                 </div>
               </div>
+              
+              {/* Financial History Summary */}
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="text-lg font-semibold mb-4">Histórico Financeiro Consolidado</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Receita Total Histórica</p>
+                    <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Todas as transações desde o início</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Receita do Mês Atual</p>
+                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(stats.thisMonth)}</p>
+                    <p className="text-xs text-muted-foreground mt-1 capitalize">{stats.currentMonth}</p>
+                  </div>
+                </div>
+              </div>
+
               {stats.overdue > 0 && (
                 <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-sm text-red-700">
@@ -393,18 +418,73 @@ export default function BillingPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Client-level Breakdown */}
+          {billingData?.agencies && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Receitas por Cliente</CardTitle>
+                <CardDescription>Breakdown de receitas por agência/usuário</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground mb-4">
+                  Total de agências ativas: {billingData.agencies.total} | 
+                  Com pagamentos: {billingData.agencies.withPayments}
+                </div>
+                <div className="text-center py-4 text-muted-foreground">
+                  <p className="text-sm">Detalhamento por cliente será exibido aqui</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>Configurações de Faturamento</CardTitle>
-              <CardDescription>Configure parâmetros de faturamento e pagamento</CardDescription>
+              <CardTitle>Configurações de Faturamento e Fiscal</CardTitle>
+              <CardDescription>Configure parâmetros de faturamento, pagamento e configurações fiscais</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Configurações serão implementadas em breve</p>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-2">Configurações Fiscais</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Configure os parâmetros de numeração fiscal para faturas e recibos
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Formato de Token para Faturas:</span>
+                      <Badge variant="outline">MR3X-FAT-{new Date().getFullYear()}-XXXX-XXXX</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Formato de Token para Recibos:</span>
+                      <Badge variant="outline">MR3X-REC-{new Date().getFullYear()}-XXXX-XXXX</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-2">Configurações de Split</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Taxa fixa de transação: 2% (Asaas)
+                  </p>
+                  <div className="text-sm text-muted-foreground">
+                    <p>• A plataforma cobra uma taxa fixa de 2% sobre todas as transações</p>
+                    <p>• O split de pagamentos é configurado individualmente por agência/proprietário</p>
+                    <p>• Acesse "Split Configuration" para ajustar porcentagens individuais</p>
+                  </div>
+                </div>
+
+                <div className="p-4 border rounded-lg bg-blue-50">
+                  <h3 className="font-semibold mb-2 text-blue-900">Informações Importantes</h3>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Todas as faturas e recibos são gerados automaticamente</li>
+                    <li>• Os tokens seguem o padrão fiscal brasileiro</li>
+                    <li>• O histórico financeiro é mantido para auditoria e compliance</li>
+                    <li>• Exportações de relatórios incluem hash de integridade</li>
+                  </ul>
+                </div>
               </div>
             </CardContent>
           </Card>

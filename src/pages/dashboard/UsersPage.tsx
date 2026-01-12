@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { usersAPI } from '../../api';
-import { Plus, Search, Eye, UserCheck, UserX, Users, Loader2, Mail, Phone, Shield, Calendar, Activity, User, MapPin, CreditCard } from 'lucide-react';
+import { Plus, Search, Eye, UserCheck, UserX, Users, Loader2, Mail, Phone, Shield, Calendar, Activity, User, MapPin, CreditCard, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
@@ -280,6 +280,41 @@ export function UsersPage() {
   };
 
   const canDrillDown = (u: UserItem) => ['ADMIN', 'AGENCY_ADMIN', 'INDEPENDENT_OWNER'].includes(u.role);
+  
+  // Helper function to determine if plan should be shown
+  // Only show plans for AGENCY_ADMIN and INDEPENDENT_OWNER
+  // Hide for CEO, ADMIN, PLATFORM_MANAGER, PROPRIETARIO, INQUILINO
+  const shouldShowPlan = (userRole: string) => {
+    return ['AGENCY_ADMIN', 'INDEPENDENT_OWNER'].includes(userRole);
+  };
+  
+  // Helper function to determine if user can be deleted
+  // Only internal platform users can be deleted (CEO, ADMIN, PLATFORM_MANAGER, LEGAL_AUDITOR, REPRESENTATIVE, API_CLIENT)
+  // Agency users (AGENCY_ADMIN, AGENCY_MANAGER, BROKER, PROPRIETARIO, INDEPENDENT_OWNER, INQUILINO) cannot be deleted, only suspended
+  const canDeleteUser = (userRole: string) => {
+    const internalPlatformRoles = ['CEO', 'ADMIN', 'PLATFORM_MANAGER', 'LEGAL_AUDITOR', 'REPRESENTATIVE', 'API_CLIENT'];
+    return internalPlatformRoles.includes(userRole);
+  };
+  
+  const handleDeleteUser = async (userId: string, userName: string, userRole: string) => {
+    if (!canDeleteUser(userRole)) {
+      toast.error('Usuários de agência não podem ser excluídos, apenas suspensos');
+      return;
+    }
+    
+    if (!window.confirm(`Tem certeza que deseja excluir o usuário ${userName || userId}? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+    
+    try {
+      await usersAPI.deleteUser(userId);
+      toast.success('Usuário excluído com sucesso');
+      load();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Falha ao excluir usuário');
+    }
+  };
+  
   const handleSelectChildRole = useCallback((r: string) => {
     setChildRoleFilter(r);
     setPage(1);
@@ -630,10 +665,12 @@ export function UsersPage() {
                 <span className="font-medium text-muted-foreground">Função:</span>
                 <Badge className={getRoleColor(u.role)}>{getRoleLabel(u.role)}</Badge>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium text-muted-foreground">Plano:</span>
-                <Badge variant="outline">{getPlanLabel(u.plan)}</Badge>
-              </div>
+              {shouldShowPlan(u.role) && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-muted-foreground">Plano:</span>
+                  <Badge variant="outline">{getPlanLabel(u.plan)}</Badge>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium text-muted-foreground">Status:</span>
                 {u.isFrozen ? (
@@ -669,7 +706,7 @@ export function UsersPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full"
+                    className="flex-1"
                     onClick={() => handleStatusChange(u.id, u.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE')}
                   >
                     {u.status === 'ACTIVE' ? (
@@ -682,6 +719,17 @@ export function UsersPage() {
                       </span>
                     )}
                   </Button>
+                  {canDeleteUser(u.role) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteUser(u.id, u.name || '', u.role)}
+                      title="Excluir usuário (apenas usuários internos da plataforma)"
+                    >
+                      <Trash2 className="w-4 h-4" /> Excluir
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -701,9 +749,11 @@ export function UsersPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Função
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Plano
-                </th>
+                {items.some(u => shouldShowPlan(u.role)) && (
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Plano
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
@@ -715,7 +765,7 @@ export function UsersPage() {
             <tbody className="bg-card divide-y divide-border">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12">
+                  <td colSpan={items.some(u => shouldShowPlan(u.role)) ? 6 : 5} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center text-center">
                       <div className="p-4 bg-muted rounded-full mb-4">
                         <Users className="w-12 h-12 text-muted-foreground" />
@@ -757,9 +807,15 @@ export function UsersPage() {
                     <td className="px-4 py-2">
                       <Badge className={getRoleColor(u.role)}>{getRoleLabel(u.role)}</Badge>
                     </td>
-                    <td className="px-4 py-2">
-                      <Badge variant="outline">{getPlanLabel(u.plan)}</Badge>
-                    </td>
+                    {items.some(u2 => shouldShowPlan(u2.role)) && (
+                      <td className="px-4 py-2">
+                        {shouldShowPlan(u.role) ? (
+                          <Badge variant="outline">{getPlanLabel(u.plan)}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
                         {u.isFrozen ? (
@@ -789,26 +845,42 @@ export function UsersPage() {
                             <Users className="w-4 h-4" />
                           </Button>
                         )}
-                        {canDeleteUsers && !u.isFrozen &&
-                          (u.status === 'ACTIVE' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleStatusChange(u.id, 'SUSPENDED')}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <UserX className="w-4 h-4" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleStatusChange(u.id, 'ACTIVE')}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                            </Button>
-                          ))}
+                        {canDeleteUsers && !u.isFrozen && (
+                          <>
+                            {u.status === 'ACTIVE' ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleStatusChange(u.id, 'SUSPENDED')}
+                                className="text-red-600 hover:text-red-700"
+                                title="Suspender usuário"
+                              >
+                                <UserX className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleStatusChange(u.id, 'ACTIVE')}
+                                className="text-green-600 hover:text-green-700"
+                                title="Ativar usuário"
+                              >
+                                <UserCheck className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {canDeleteUser(u.role) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteUser(u.id, u.name || '', u.role)}
+                                className="text-red-700 hover:text-red-800 hover:bg-red-50"
+                                title="Excluir usuário (apenas usuários internos da plataforma)"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -881,7 +953,9 @@ export function UsersPage() {
                   <div className="flex gap-2 mt-2">
                     <Badge className={getRoleColor(userDetail.role)}>{getRoleLabel(userDetail.role)}</Badge>
                     <Badge className={getStatusColor(userDetail.status)}>{userDetail.status}</Badge>
-                    <Badge variant="outline">{userDetail.plan}</Badge>
+                    {shouldShowPlan(userDetail.role) && (
+                      <Badge variant="outline">{userDetail.plan}</Badge>
+                    )}
                   </div>
                 </div>
               </div>

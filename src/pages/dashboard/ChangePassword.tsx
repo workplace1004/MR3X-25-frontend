@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { AlertCircle } from 'lucide-react'
+import { PasswordInput } from '@/components/ui/password-input'
+import { validatePasswordStrength } from '@/lib/password-utils'
 
 export function ChangePassword() {
   const { user } = useAuth()
@@ -33,8 +34,9 @@ export function ChangePassword() {
       return
     }
 
-    if (form.newPassword.length < 6) {
-      toast.error('A nova senha deve conter pelo menos 6 caracteres.')
+    const validation = validatePasswordStrength(form.newPassword)
+    if (!validation.valid) {
+      toast.error(`Senha inválida: ${validation.errors.join(', ')}`)
       return
     }
 
@@ -76,35 +78,26 @@ export function ChangePassword() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nova senha</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={form.newPassword}
-                    onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
-                    placeholder="Informe a nova senha"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={form.confirmPassword}
-                    onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
-                    placeholder="Repita a nova senha"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-                <AlertCircle className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                <div>
-                  Utilize uma senha forte com pelo menos 6 caracteres. Evite reutilizar senhas anteriores ou informacoes faceis de adivinhar.
-                </div>
+                <PasswordInput
+                  id="newPassword"
+                  label="Nova senha"
+                  value={form.newPassword}
+                  onChange={(event) => setForm({ ...form, newPassword: event.target.value })}
+                  placeholder="Informe a nova senha"
+                  required
+                  showStrengthIndicator={true}
+                />
+                <PasswordInput
+                  id="confirmPassword"
+                  label="Confirmar nova senha"
+                  value={form.confirmPassword}
+                  onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })}
+                  placeholder="Repita a nova senha"
+                  required
+                  showStrengthIndicator={false}
+                  showGenerateButton={false}
+                  error={form.confirmPassword && form.newPassword !== form.confirmPassword ? 'As senhas não coincidem' : undefined}
+                />
               </div>
 
               <div className="flex justify-end">

@@ -10,7 +10,6 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   MoreHorizontal,
   MessageSquare,
   MapPin,
@@ -26,6 +25,7 @@ import {
   Crown
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { PasswordInput } from '@/components/ui/password-input'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
@@ -46,6 +46,7 @@ import { RGInput } from '@/components/ui/rg-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { validateDocument, isValidCEPFormat } from '@/lib/validation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -134,8 +135,6 @@ export function Tenants() {
   const [updating, setUpdating] = useState(false)
   const [loadingEditId, setLoadingEditId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showEditPassword, setShowEditPassword] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [emailVerified, setEmailVerified] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
@@ -1323,28 +1322,16 @@ export function Tenants() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="password">Senha *</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        name="password"
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={newTenant.password}
-                        onChange={handleInputChange}
-                        placeholder="Digite a senha"
-                        required
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                  <PasswordInput
+                    id="password"
+                    name="password"
+                    label="Senha"
+                    value={newTenant.password}
+                    onChange={handleInputChange}
+                    placeholder="Digite a senha"
+                    required
+                    showStrengthIndicator={true}
+                  />
                   <div>
                     <Label htmlFor="birthDate">Data de Nascimento</Label>
                     <Input
@@ -1380,20 +1367,21 @@ export function Tenants() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="maritalStatus">Estado Civil</Label>
-                    <select
-                      id="maritalStatus"
-                      name="maritalStatus"
+                    <Select
                       value={newTenant.maritalStatus}
-                      onChange={handleInputChange}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                      onValueChange={(value) => setNewTenant(prev => ({ ...prev, maritalStatus: value }))}
                     >
-                      <option value="">Selecione...</option>
-                      <option value="Solteiro(a)">Solteiro(a)</option>
-                      <option value="Casado(a)">Casado(a)</option>
-                      <option value="Divorciado(a)">Divorciado(a)</option>
-                      <option value="Viúvo(a)">Viúvo(a)</option>
-                      <option value="União Estável">União Estável</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                        <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                        <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                        <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+                        <SelectItem value="União Estável">União Estável</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="profession">Profissão</Label>
@@ -1672,27 +1660,15 @@ export function Tenants() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="edit-password"
-                        name="password"
-                        type={showEditPassword ? 'text' : 'password'}
-                        value={editForm.password}
-                        onChange={handleEditInputChange}
-                        placeholder="Digite a senha"
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowEditPassword(!showEditPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                  <PasswordInput
+                    id="edit-password"
+                    name="password"
+                    label="Senha"
+                    value={editForm.password}
+                    onChange={handleEditInputChange}
+                    placeholder="Digite a senha (deixe em branco para não alterar)"
+                    showStrengthIndicator={true}
+                  />
                   <div>
                     <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
                     <Input
@@ -1730,20 +1706,21 @@ export function Tenants() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="edit-maritalStatus">Estado Civil</Label>
-                    <select
-                      id="edit-maritalStatus"
-                      name="maritalStatus"
+                    <Select
                       value={editForm.maritalStatus}
-                      onChange={handleEditInputChange}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                      onValueChange={(value) => setEditForm(prev => ({ ...prev, maritalStatus: value }))}
                     >
-                      <option value="">Selecione...</option>
-                      <option value="Solteiro(a)">Solteiro(a)</option>
-                      <option value="Casado(a)">Casado(a)</option>
-                      <option value="Divorciado(a)">Divorciado(a)</option>
-                      <option value="Viúvo(a)">Viúvo(a)</option>
-                      <option value="União Estável">União Estável</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                        <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                        <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                        <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+                        <SelectItem value="União Estável">União Estável</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="edit-profession">Profissão</Label>

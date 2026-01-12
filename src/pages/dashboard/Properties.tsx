@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { propertiesAPI, usersAPI, addressAPI, paymentsAPI, agenciesAPI, plansAPI } from '../../api';
+import { propertiesAPI, usersAPI, addressAPI, paymentsAPI, agenciesAPI, plansAPI, contractsAPI, inspectionsAPI, extrajudicialNotificationsAPI } from '../../api';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -9,7 +9,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Settings,
   MoreHorizontal,
   Image as ImageIcon,
   Eye,
@@ -25,7 +24,9 @@ import {
   Loader2,
   Search,
   Crown,
-  AlertTriangle
+  AlertTriangle,
+  MapPin,
+  Grid3X3
 } from 'lucide-react';
 import { FrozenBadge } from '../../components/ui/FrozenBadge';
 import { CEPInput } from '../../components/ui/cep-input';
@@ -100,6 +101,18 @@ export function Properties() {
     condominiumName: '',
     condominiumFee: '',
     iptuValue: '',
+    // Property Classification
+    propertyType: '',
+    useType: '',
+    // Rural Property Fields
+    totalAreaHectares: '',
+    productiveArea: '',
+    propertyRegistry: '',
+    ccirNumber: '',
+    carNumber: '',
+    itrValue: '',
+    georeferencing: '',
+    intendedUse: '',
   });
 
   const [editForm, setEditForm] = useState({
@@ -121,6 +134,16 @@ export function Properties() {
     condominiumName: '',
     condominiumFee: '',
     iptuValue: '',
+    propertyType: '',
+    useType: '',
+    totalAreaHectares: '',
+    productiveArea: '',
+    propertyRegistry: '',
+    ccirNumber: '',
+    carNumber: '',
+    itrValue: '',
+    georeferencing: '',
+    intendedUse: '',
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,7 +168,7 @@ export function Properties() {
   const [assignTenantModalOpen, setAssignTenantModalOpen] = useState(false);
   const [propertyToAssignTenant, setPropertyToAssignTenant] = useState<any>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string>('none');
-  const [documents] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [_discountInfo, _setDiscountInfo] = useState<any>(null);
   const [settings, setSettings] = useState({
     lateFee: '',
@@ -174,7 +197,9 @@ export function Properties() {
   const [imageRefreshTrigger, setImageRefreshTrigger] = useState(0);
 
   const handleSearch = useCallback(() => {
-    setSearchQuery(searchTerm.trim());
+    // Only update searchQuery when user explicitly triggers search (Enter or button click)
+    const trimmedSearch = searchTerm.trim();
+    setSearchQuery(trimmedSearch);
   }, [searchTerm]);
 
   const handleClearSearch = useCallback(() => {
@@ -197,10 +222,10 @@ export function Properties() {
     queryKey: ['properties', user?.id, user?.role, user?.agencyId, user?.brokerId, searchQuery],
     queryFn: () => propertiesAPI.getProperties(searchQuery ? { search: searchQuery } : undefined),
     enabled: canViewProperties,
-    staleTime: 0,
-    refetchOnMount: 'always' as const,
-    refetchOnReconnect: 'always' as const,
-    refetchOnWindowFocus: true,
+    staleTime: 30000, // 30 seconds - prevents unnecessary refetches
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: false, // Prevent refetch on window focus to avoid refresh on typing
   });
 
   const { data: brokers = [], isLoading: brokersLoading } = useQuery({
@@ -490,7 +515,8 @@ export function Properties() {
       closeAllModals();
       setNewProperty({
         name: '', address: '', city: '', state: '', neighborhood: '', cep: '', monthlyRent: '', dueDay: '', ownerId: '', agencyFee: '',
-        registrationNumber: '', builtArea: '', totalArea: '', description: '', furnitureList: '', condominiumName: '', condominiumFee: '', iptuValue: ''
+        registrationNumber: '', builtArea: '', totalArea: '', description: '', furnitureList: '', condominiumName: '', condominiumFee: '', iptuValue: '',
+        propertyType: '', useType: '', totalAreaHectares: '', productiveArea: '', propertyRegistry: '', ccirNumber: '', carNumber: '', itrValue: '', georeferencing: '', intendedUse: ''
       });
       setSelectedImages([]);
       toast.success('Imóvel criado com sucesso');
@@ -615,6 +641,18 @@ export function Properties() {
         builtArea: newProperty.builtArea ? Number(newProperty.builtArea.replace(/\D/g, '')) / 100 : undefined,
         totalArea: newProperty.totalArea ? Number(newProperty.totalArea.replace(/\D/g, '')) / 100 : undefined,
         description: newProperty.description || undefined,
+        // Property Classification
+        propertyType: newProperty.propertyType || undefined,
+        useType: newProperty.useType || undefined,
+        // Rural Property Fields
+        totalAreaHectares: newProperty.totalAreaHectares ? Number(newProperty.totalAreaHectares) : undefined,
+        productiveArea: newProperty.productiveArea ? Number(newProperty.productiveArea) : undefined,
+        propertyRegistry: newProperty.propertyRegistry || undefined,
+        ccirNumber: newProperty.ccirNumber || undefined,
+        carNumber: newProperty.carNumber || undefined,
+        itrValue: newProperty.itrValue ? Number(newProperty.itrValue.replace(/\D/g, '')) / 100 : undefined,
+        georeferencing: newProperty.georeferencing || undefined,
+        intendedUse: newProperty.intendedUse || undefined,
         furnitureList: newProperty.furnitureList || undefined,
         condominiumName: newProperty.condominiumName || undefined,
         condominiumFee: newProperty.condominiumFee ? Number(newProperty.condominiumFee.replace(/\D/g, '')) / 100 : undefined,
@@ -730,6 +768,55 @@ export function Properties() {
         }
       }
 
+      if (editForm.propertyType) {
+        propertyToSend.propertyType = editForm.propertyType;
+      }
+
+      if (editForm.useType) {
+        propertyToSend.useType = editForm.useType;
+      }
+
+      if (editForm.totalAreaHectares) {
+        const totalAreaHectaresValue = Number(editForm.totalAreaHectares.replace(/\D/g, '')) / 100;
+        if (!isNaN(totalAreaHectaresValue) && totalAreaHectaresValue > 0) {
+          propertyToSend.totalAreaHectares = totalAreaHectaresValue;
+        }
+      }
+
+      if (editForm.productiveArea) {
+        const productiveAreaValue = Number(editForm.productiveArea.replace(/\D/g, '')) / 100;
+        if (!isNaN(productiveAreaValue) && productiveAreaValue > 0) {
+          propertyToSend.productiveArea = productiveAreaValue;
+        }
+      }
+
+      if (editForm.propertyRegistry) {
+        propertyToSend.propertyRegistry = editForm.propertyRegistry;
+      }
+
+      if (editForm.ccirNumber) {
+        propertyToSend.ccirNumber = editForm.ccirNumber;
+      }
+
+      if (editForm.carNumber) {
+        propertyToSend.carNumber = editForm.carNumber;
+      }
+
+      if (editForm.itrValue) {
+        const itrValue = Number(editForm.itrValue.replace(/\D/g, '')) / 100;
+        if (!isNaN(itrValue) && itrValue >= 0) {
+          propertyToSend.itrValue = itrValue;
+        }
+      }
+
+      if (editForm.georeferencing) {
+        propertyToSend.georeferencing = editForm.georeferencing;
+      }
+
+      if (editForm.intendedUse) {
+        propertyToSend.intendedUse = editForm.intendedUse;
+      }
+
       await updatePropertyMutation.mutateAsync({ id: selectedProperty.id, data: propertyToSend });
       toast.success('Imóvel atualizado com sucesso!');
 
@@ -775,6 +862,16 @@ export function Properties() {
         condominiumName: '',
         condominiumFee: '',
         iptuValue: '',
+        propertyType: '',
+        useType: '',
+        totalAreaHectares: '',
+        productiveArea: '',
+        propertyRegistry: '',
+        ccirNumber: '',
+        carNumber: '',
+        itrValue: '',
+        georeferencing: '',
+        intendedUse: '',
       });
     } catch (error) {
       console.error('Error updating property:', error);
@@ -838,6 +935,16 @@ export function Properties() {
         condominiumName: property.condominiumName || '',
         condominiumFee: property.condominiumFee ? String(property.condominiumFee) : '',
         iptuValue: property.iptuValue ? String(property.iptuValue) : '',
+        propertyType: property.propertyType || '',
+        useType: property.useType || '',
+        totalAreaHectares: property.totalAreaHectares ? String(property.totalAreaHectares) : '',
+        productiveArea: property.productiveArea ? String(property.productiveArea) : '',
+        propertyRegistry: property.propertyRegistry || '',
+        ccirNumber: property.ccirNumber || '',
+        carNumber: property.carNumber || '',
+        itrValue: property.itrValue ? String(property.itrValue) : '',
+        georeferencing: property.georeferencing || '',
+        intendedUse: property.intendedUse || '',
       });
     } catch (error) {
       console.error('Error loading edit data:', error);
@@ -867,13 +974,72 @@ export function Properties() {
     setSelectedProperty(property);
     setDocumentsLoading(true);
     setShowDocumentsModal(true);
+    setDocuments([]);
 
     try {
-      // Simulate loading documents - replace with actual API call if needed
-      await new Promise(resolve => setTimeout(resolve, 300));
-      // If you have an API to fetch documents, call it here
-      // const docs = await propertiesAPI.getPropertyDocuments(property.id);
-      // setDocuments(docs);
+      // Fetch all documents linked to this property
+      const [contracts, inspections, notificationsResponse] = await Promise.all([
+        contractsAPI.getContracts().then(contracts => 
+          Array.isArray(contracts) ? contracts.filter((c: any) => c.propertyId === property.id || c.property?.id === property.id) : []
+        ).catch(() => []),
+        inspectionsAPI.getInspections({ propertyId: property.id }).then(result => 
+          Array.isArray(result) ? result : (result?.data || result?.items || [])
+        ).catch(() => []),
+        extrajudicialNotificationsAPI.getNotifications({ propertyId: property.id }).then(result => {
+          // Handle different response structures
+          if (Array.isArray(result)) return result;
+          if (result?.data && Array.isArray(result.data)) return result.data;
+          if (result?.items && Array.isArray(result.items)) return result.items;
+          return [];
+        }).catch(() => []),
+      ]);
+
+      // Ensure all are arrays
+      const contractsArray = Array.isArray(contracts) ? contracts : [];
+      const inspectionsArray = Array.isArray(inspections) ? inspections : [];
+      const notificationsArray = Array.isArray(notificationsResponse) ? notificationsResponse : [];
+
+      // Transform contracts into document format
+      const contractDocs = contractsArray.map((contract: any) => ({
+        id: contract.id,
+        type: 'CONTRACT',
+        name: `Contrato - ${contract.property?.name || contract.property?.address || 'Imóvel'}`,
+        date: contract.createdAt || contract.startDate,
+        status: contract.status,
+        token: contract.token,
+        downloadFn: () => contractsAPI.downloadContract(contract.id),
+      }));
+
+      // Transform inspections into document format
+      const inspectionDocs = inspectionsArray.map((inspection: any) => ({
+        id: inspection.id,
+        type: 'INSPECTION',
+        name: `Vistoria - ${inspection.type || 'N/A'}`,
+        date: inspection.createdAt || inspection.inspectionDate,
+        status: inspection.status,
+        token: inspection.token,
+        downloadFn: () => inspectionsAPI.downloadFinalPdf(inspection.id),
+      }));
+
+      // Transform notifications into document format
+      const notificationDocs = notificationsArray.map((notification: any) => ({
+        id: notification.id,
+        type: 'NOTIFICATION',
+        name: `Notificação Extrajudicial - ${notification.title || notification.notificationNumber || 'N/A'}`,
+        date: notification.createdAt,
+        status: notification.status,
+        token: notification.token || notification.notificationToken,
+        downloadFn: () => extrajudicialNotificationsAPI.downloadFinalPdf(notification.id),
+      }));
+
+      // Combine all documents and sort by date (newest first)
+      const allDocs = [...contractDocs, ...inspectionDocs, ...notificationDocs].sort((a, b) => {
+        const dateA = new Date(a.date || 0).getTime();
+        const dateB = new Date(b.date || 0).getTime();
+        return dateB - dateA;
+      });
+
+      setDocuments(allDocs);
     } catch (error) {
       console.error('Error loading documents:', error);
       toast.error('Erro ao carregar documentos');
@@ -885,7 +1051,33 @@ export function Properties() {
   const handleWhatsAppNotification = (property: any) => {
     closeAllModals();
     setSelectedProperty(property);
-    setWhatsappMessage(`Olá! Este é um lembrete sobre o imóvel ${property.name || property.address}.`);
+    
+    // Auto-generate message using property metadata
+    const propertyName = property.name || property.address || 'Imóvel';
+    const tenantName = property.tenant?.name || 'Inquilino';
+    const monthlyRent = property.monthlyRent ? `R$ ${Number(property.monthlyRent).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '';
+    const dueDay = property.dueDay ? `dia ${property.dueDay}` : '';
+    const nextDueDate = property.nextDueDate ? new Date(property.nextDueDate).toLocaleDateString('pt-BR') : '';
+    
+    // Generate automated message with property metadata
+    let autoMessage = `Olá ${tenantName}! 👋\n\n`;
+    autoMessage += `Este é um lembrete sobre o imóvel: *${propertyName}*\n\n`;
+    
+    if (monthlyRent) {
+      autoMessage += `💰 Valor do aluguel: ${monthlyRent}\n`;
+    }
+    if (dueDay) {
+      autoMessage += `📅 Vencimento: Todo ${dueDay} do mês\n`;
+    }
+    if (nextDueDate) {
+      autoMessage += `📆 Próximo vencimento: ${nextDueDate}\n`;
+    }
+    
+    autoMessage += `\nPor favor, mantenha seus pagamentos em dia.\n\n`;
+    const agencyName = (user as any)?.agencyName || (user as any)?.agency?.name || 'MR3X';
+    autoMessage += `Atenciosamente,\nEquipe ${agencyName}`;
+    
+    setWhatsappMessage(autoMessage);
     setShowWhatsAppModal(true);
   };
 
@@ -1456,19 +1648,6 @@ export function Properties() {
             </div>
           </div>
           <div className="flex gap-2">
-            {user?.role === 'AGENCY_ADMIN' && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost" onClick={() => {
-                    closeAllModals();
-                    setShowSettingsModal(true);
-                  }}>
-                    <Settings className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Configurações de Multa</TooltipContent>
-              </Tooltip>
-            )}
             {canCreateProperties && !(user?.role === 'BROKER') && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1491,7 +1670,13 @@ export function Properties() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex w-full sm:max-w-lg gap-2">
+          <form 
+            className="flex w-full sm:max-w-lg gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearch();
+            }}
+          >
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -1507,11 +1692,15 @@ export function Properties() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={handleSearch} className="self-stretch">
+            <Button 
+              type="submit"
+              className="self-stretch"
+            >
               Buscar
             </Button>
             {(searchTerm || searchQuery) && (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleClearSearch}
@@ -1520,7 +1709,7 @@ export function Properties() {
                 Limpar
               </Button>
             )}
-          </div>
+          </form>
         </div>
 
         <div className="flex justify-center w-full">
@@ -1691,7 +1880,7 @@ export function Properties() {
                                   Notificar por WhatsApp (congelado)
                                 </DropdownMenuItem>
                               )}
-                              {!property.isFrozen ? (
+                              {!property.isFrozen && (
                                 <>
                                   <DropdownMenuItem onClick={() => handleIssueInvoice(property)}>
                                     <Calculator className="w-4 h-4 mr-2" />
@@ -1700,17 +1889,6 @@ export function Properties() {
                                   <DropdownMenuItem onClick={() => handleGenerateReceipt(property)}>
                                     <Receipt className="w-4 h-4 mr-2" />
                                     Gerar recibo
-                                  </DropdownMenuItem>
-                                </>
-                              ) : (
-                                <>
-                                  <DropdownMenuItem disabled className="text-muted-foreground">
-                                    <Calculator className="w-4 h-4 mr-2" />
-                                    Emitir cobrança (congelado)
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem disabled className="text-muted-foreground">
-                                    <Receipt className="w-4 h-4 mr-2" />
-                                    Gerar recibo (congelado)
                                   </DropdownMenuItem>
                                 </>
                               )}
@@ -2018,6 +2196,148 @@ export function Properties() {
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
+              </div>
+
+              {/* Property Classification Section */}
+              <div className="border-t pt-4 mt-4">
+                <h4 className="text-sm font-medium mb-3">Classificação do Imóvel (Obrigatório para Validade Legal)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="propertyType">Tipo de Propriedade <span className="text-red-500">*</span></Label>
+                    <Select
+                      value={newProperty.propertyType}
+                      onValueChange={(value) => setNewProperty(prev => ({ ...prev, propertyType: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="URBAN">Urbano</SelectItem>
+                        <SelectItem value="RURAL">Rural</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="useType">Tipo de Uso <span className="text-red-500">*</span></Label>
+                    <Select
+                      value={newProperty.useType}
+                      onValueChange={(value) => setNewProperty(prev => ({ ...prev, useType: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o uso" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="RESIDENTIAL">Residencial</SelectItem>
+                        <SelectItem value="COMMERCIAL">Comercial</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Rural Property Specific Fields */}
+                {newProperty.propertyType === 'RURAL' && (
+                  <div className="mt-4 space-y-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+                    <h5 className="text-sm font-semibold text-amber-800">Campos Específicos para Propriedade Rural</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="totalAreaHectares">Área Total (Hectares)</Label>
+                        <Input
+                          id="totalAreaHectares"
+                          name="totalAreaHectares"
+                          type="number"
+                          step="0.01"
+                          value={newProperty.totalAreaHectares}
+                          onChange={handleInputChange}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="productiveArea">Área Produtiva (Hectares)</Label>
+                        <Input
+                          id="productiveArea"
+                          name="productiveArea"
+                          type="number"
+                          step="0.01"
+                          value={newProperty.productiveArea}
+                          onChange={handleInputChange}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="propertyRegistry">Número da Matrícula (Registro de Imóveis)</Label>
+                        <Input
+                          id="propertyRegistry"
+                          name="propertyRegistry"
+                          value={newProperty.propertyRegistry}
+                          onChange={handleInputChange}
+                          placeholder="Ex: 12345"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="ccirNumber">CCIR (Cadastro de Imóveis Rurais - INCRA)</Label>
+                        <Input
+                          id="ccirNumber"
+                          name="ccirNumber"
+                          value={newProperty.ccirNumber}
+                          onChange={handleInputChange}
+                          placeholder="Ex: CCIR-123456"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="carNumber">CAR (Cadastro Ambiental Rural)</Label>
+                        <Input
+                          id="carNumber"
+                          name="carNumber"
+                          value={newProperty.carNumber}
+                          onChange={handleInputChange}
+                          placeholder="Ex: CAR-123456"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="itrValue">ITR - Imposto sobre a Propriedade Territorial Rural (R$)</Label>
+                        <Input
+                          id="itrValue"
+                          name="itrValue"
+                          type="text"
+                          value={newProperty.itrValue}
+                          onChange={e => {
+                            const formatted = formatCurrencyInput(e.target.value);
+                            setNewProperty(prev => ({ ...prev, itrValue: formatted }));
+                          }}
+                          placeholder="0,00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="intendedUse">Uso Pretendido</Label>
+                        <Select
+                          value={newProperty.intendedUse}
+                          onValueChange={(value) => setNewProperty(prev => ({ ...prev, intendedUse: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o uso pretendido" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="AGRICULTURAL">Agrícola</SelectItem>
+                            <SelectItem value="LIVESTOCK">Pecuária</SelectItem>
+                            <SelectItem value="MIXED">Misto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="georeferencing">Georreferenciamento</Label>
+                      <textarea
+                        id="georeferencing"
+                        name="georeferencing"
+                        value={newProperty.georeferencing}
+                        onChange={(e) => setNewProperty(prev => ({ ...prev, georeferencing: e.target.value }))}
+                        placeholder="Coordenadas geográficas ou dados de georreferenciamento..."
+                        rows={3}
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               { }
@@ -2335,6 +2655,149 @@ export function Properties() {
                   </div>
                 </div>
 
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="text-sm font-medium mb-3">Classificação da Propriedade</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-propertyType">Tipo de Propriedade</Label>
+                      <Select
+                        value={editForm.propertyType}
+                        onValueChange={(value) => setEditForm(prev => ({ ...prev, propertyType: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="URBAN">Urbana</SelectItem>
+                          <SelectItem value="RURAL">Rural</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-useType">Tipo de Uso</Label>
+                      <Select
+                        value={editForm.useType}
+                        onValueChange={(value) => setEditForm(prev => ({ ...prev, useType: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="RESIDENTIAL">Residencial</SelectItem>
+                          <SelectItem value="COMMERCIAL">Comercial</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {editForm.propertyType === 'RURAL' && (
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium mb-3">Informações Rurais</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="edit-totalAreaHectares">Área Total (Hectares)</Label>
+                        <Input
+                          id="edit-totalAreaHectares"
+                          name="totalAreaHectares"
+                          type="text"
+                          value={editForm.totalAreaHectares}
+                          onChange={e => {
+                            const formatted = formatCurrencyInput(e.target.value);
+                            setEditForm(prev => ({ ...prev, totalAreaHectares: formatted }));
+                          }}
+                          placeholder="0,00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-productiveArea">Área Produtiva (Hectares)</Label>
+                        <Input
+                          id="edit-productiveArea"
+                          name="productiveArea"
+                          type="text"
+                          value={editForm.productiveArea}
+                          onChange={e => {
+                            const formatted = formatCurrencyInput(e.target.value);
+                            setEditForm(prev => ({ ...prev, productiveArea: formatted }));
+                          }}
+                          placeholder="0,00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-propertyRegistry">Registro da Propriedade</Label>
+                        <Input
+                          id="edit-propertyRegistry"
+                          name="propertyRegistry"
+                          value={editForm.propertyRegistry}
+                          onChange={handleEditInputChange}
+                          placeholder="Ex: 12345"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-ccirNumber">Número CCIR</Label>
+                        <Input
+                          id="edit-ccirNumber"
+                          name="ccirNumber"
+                          value={editForm.ccirNumber}
+                          onChange={handleEditInputChange}
+                          placeholder="Ex: CCIR-123456"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-carNumber">Número CAR</Label>
+                        <Input
+                          id="edit-carNumber"
+                          name="carNumber"
+                          value={editForm.carNumber}
+                          onChange={handleEditInputChange}
+                          placeholder="Ex: SP-1234567-ABCD12345678901234567890123456"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-itrValue">Valor ITR (R$)</Label>
+                        <Input
+                          id="edit-itrValue"
+                          name="itrValue"
+                          type="text"
+                          value={editForm.itrValue}
+                          onChange={e => {
+                            const formatted = formatCurrencyInput(e.target.value);
+                            setEditForm(prev => ({ ...prev, itrValue: formatted }));
+                          }}
+                          placeholder="0,00"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-intendedUse">Uso Pretendido</Label>
+                        <Select
+                          value={editForm.intendedUse}
+                          onValueChange={(value) => setEditForm(prev => ({ ...prev, intendedUse: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="AGRICULTURAL">Agrícola</SelectItem>
+                            <SelectItem value="LIVESTOCK">Pecuária</SelectItem>
+                            <SelectItem value="MIXED">Misto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <Label htmlFor="edit-georeferencing">Georreferenciamento</Label>
+                      <textarea
+                        id="edit-georeferencing"
+                        name="georeferencing"
+                        value={editForm.georeferencing}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, georeferencing: e.target.value }))}
+                        placeholder="Dados de georreferenciamento..."
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 { }
                 {selectedProperty && <ExistingImages
                   propertyId={selectedProperty.id}
@@ -2380,32 +2843,35 @@ export function Properties() {
 
         { }
         <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-          <DialogContent>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Detalhes do Imóvel</DialogTitle>
             </DialogHeader>
             {propertyDetailLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <Skeleton className="h-6 w-40 mb-2" />
                   <Skeleton className="h-64 w-full rounded-md" />
                 </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-6 w-32 mb-2" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-4/5" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Skeleton className="w-6 h-6 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[...Array(8)].map((_, i) => (
+                      <div key={i}>
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-5 w-full" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : propertyDetail ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Imagens do Imóvel</h3>
+                  <h3 className="text-lg font-semibold mb-3">Imagens do Imóvel</h3>
                   <PropertyImagesCarousel
                     propertyId={propertyDetail.id}
                     propertyName={propertyDetail.name}
@@ -2413,45 +2879,266 @@ export function Properties() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold mb-2">Detalhes</h3>
-                  <div><b>Nome:</b> {propertyDetail.name || '-'}</div>
-                  {propertyDetail.token && (
-                    <div><b>Token:</b> <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{propertyDetail.token}</span></div>
-                  )}
-                  <div><b>CEP:</b> {propertyDetail.cep || '-'}</div>
-                  <div><b>Endereço:</b> {propertyDetail.address || '-'}</div>
-                  <div><b>Bairro:</b> {propertyDetail.neighborhood || '-'}</div>
-                  <div><b>Cidade:</b> {propertyDetail.city || '-'}</div>
-                  <div><b>Estado:</b> {propertyDetail.stateNumber || '-'}</div>
-                  <div><b>Proprietário:</b> {propertyDetail.owner?.name || propertyDetail.owner?.email || '-'}</div>
-                  {!isIndependentOwner && (
-                    <div><b>Corretor:</b> {propertyDetail.broker?.name || propertyDetail.broker?.email || '-'}</div>
-                  )}
-                  <div><b>Locatário:</b> {propertyDetail.tenant?.name || propertyDetail.tenant?.email || propertyDetail.tenantName || '-'}</div>
-                  <div><b>Próx. vencimento:</b> {propertyDetail.nextDueDate ? new Date(propertyDetail.nextDueDate).toLocaleDateString('pt-BR') : '-'}</div>
-                  <div><b>Aluguel mensal:</b> R$ {propertyDetail.monthlyRent?.toLocaleString('pt-BR') || '-'}</div>
-                  <div><b>Dia do vencimento:</b> {propertyDetail.dueDay || '-'}</div>
-                  {propertyDetail.agencyFee !== null && propertyDetail.agencyFee !== undefined && (
-                    <div><b>Taxa da Agência (Específica):</b> {propertyDetail.agencyFee}%</div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <b>Status:</b> {propertyDetail.isFrozen ? (
-                      <FrozenBadge reason={propertyDetail.frozenReason} />
-                    ) : (
-                      getStatusBadge(getDisplayStatus(propertyDetail))
-                    )}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Informações Básicas</h3>
                   </div>
-                  {propertyDetail.isFrozen && (
-                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
-                      <p className="font-medium">Este imóvel está congelado</p>
-                      <p className="text-xs mt-1">
-                        Não é possível criar contratos, emitir cobranças ou gerar recibos enquanto o imóvel estiver congelado.
-                        Faça upgrade do plano para desbloquear.
-                      </p>
+                  {propertyDetail.token && (
+                    <div className="mb-4">
+                      <label className="text-sm font-medium text-muted-foreground">Token</label>
+                      <div className="text-sm font-mono bg-muted px-2 py-1 rounded inline-block mt-1">{propertyDetail.token}</div>
                     </div>
                   )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Nome</label>
+                      <div className="text-base font-medium">{propertyDetail.name || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Status</label>
+                      <div className="text-base">
+                        {propertyDetail.isFrozen ? (
+                          <FrozenBadge reason={propertyDetail.frozenReason} />
+                        ) : (
+                          getStatusBadge(getDisplayStatus(propertyDetail))
+                        )}
+                      </div>
+                    </div>
+                    {propertyDetail.propertyType && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Tipo de Propriedade</label>
+                        <div className="text-base">{propertyDetail.propertyType === 'URBAN' ? 'Urbana' : propertyDetail.propertyType === 'RURAL' ? 'Rural' : propertyDetail.propertyType}</div>
+                      </div>
+                    )}
+                    {propertyDetail.useType && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Tipo de Uso</label>
+                        <div className="text-base">{propertyDetail.useType === 'RESIDENTIAL' ? 'Residencial' : propertyDetail.useType === 'COMMERCIAL' ? 'Comercial' : propertyDetail.useType}</div>
+                      </div>
+                    )}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Proprietário</label>
+                      <div className="text-base">{propertyDetail.owner?.name || propertyDetail.owner?.email || '-'}</div>
+                    </div>
+                    {!isIndependentOwner && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Corretor</label>
+                        <div className="text-base">{propertyDetail.broker?.name || propertyDetail.broker?.email || '-'}</div>
+                      </div>
+                    )}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Locatário</label>
+                      <div className="text-base">{propertyDetail.tenant?.name || propertyDetail.tenant?.email || propertyDetail.tenantName || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Aluguel Mensal</label>
+                      <div className="text-base font-medium">
+                        {propertyDetail.monthlyRent ? `R$ ${Number(propertyDetail.monthlyRent).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Dia do Vencimento</label>
+                      <div className="text-base">{propertyDetail.dueDay ? `Dia ${propertyDetail.dueDay}` : '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Próximo Vencimento</label>
+                      <div className="text-base">
+                        {propertyDetail.nextDueDate ? new Date(propertyDetail.nextDueDate).toLocaleDateString('pt-BR') : '-'}
+                      </div>
+                    </div>
+                    {propertyDetail.agencyFee !== null && propertyDetail.agencyFee !== undefined && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Taxa da Agência (Específica)</label>
+                        <div className="text-base">{propertyDetail.agencyFee}%</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                <div className="space-y-4 border-t pt-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Endereço</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">CEP</label>
+                      <div className="text-base">{propertyDetail.cep || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Endereço</label>
+                      <div className="text-base">{propertyDetail.address || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Bairro</label>
+                      <div className="text-base">{propertyDetail.neighborhood || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Cidade</label>
+                      <div className="text-base">{propertyDetail.city || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Estado</label>
+                      <div className="text-base">{propertyDetail.stateNumber || '-'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {(propertyDetail.registrationNumber || propertyDetail.builtArea || propertyDetail.totalArea || propertyDetail.condominiumName || propertyDetail.condominiumFee || propertyDetail.iptuValue) && (
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold">Detalhes Adicionais</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {propertyDetail.registrationNumber && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Matrícula / Registro</label>
+                          <div className="text-base">{propertyDetail.registrationNumber}</div>
+                        </div>
+                      )}
+                      {propertyDetail.builtArea && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Área Construída</label>
+                          <div className="text-base">{Number(propertyDetail.builtArea).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²</div>
+                        </div>
+                      )}
+                      {propertyDetail.totalArea && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Área Total</label>
+                          <div className="text-base">{Number(propertyDetail.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²</div>
+                        </div>
+                      )}
+                      {propertyDetail.condominiumName && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Nome do Condomínio</label>
+                          <div className="text-base">{propertyDetail.condominiumName}</div>
+                        </div>
+                      )}
+                      {propertyDetail.condominiumFee && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Taxa de Condomínio</label>
+                          <div className="text-base font-medium">
+                            R$ {Number(propertyDetail.condominiumFee).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      )}
+                      {propertyDetail.iptuValue && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">IPTU</label>
+                          <div className="text-base font-medium">
+                            R$ {Number(propertyDetail.iptuValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {(propertyDetail.totalAreaHectares || propertyDetail.productiveArea || propertyDetail.propertyRegistry || propertyDetail.ccirNumber || propertyDetail.carNumber || propertyDetail.itrValue || propertyDetail.intendedUse) && (
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Grid3X3 className="w-4 h-4 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold">Informações Rurais</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {propertyDetail.totalAreaHectares && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Área Total (Hectares)</label>
+                          <div className="text-base">{Number(propertyDetail.totalAreaHectares).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ha</div>
+                        </div>
+                      )}
+                      {propertyDetail.productiveArea && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Área Produtiva</label>
+                          <div className="text-base">{Number(propertyDetail.productiveArea).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ha</div>
+                        </div>
+                      )}
+                      {propertyDetail.propertyRegistry && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Registro da Propriedade</label>
+                          <div className="text-base">{propertyDetail.propertyRegistry}</div>
+                        </div>
+                      )}
+                      {propertyDetail.ccirNumber && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Número CCIR</label>
+                          <div className="text-base font-mono text-sm">{propertyDetail.ccirNumber}</div>
+                        </div>
+                      )}
+                      {propertyDetail.carNumber && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Número CAR</label>
+                          <div className="text-base font-mono text-sm break-all">{propertyDetail.carNumber}</div>
+                        </div>
+                      )}
+                      {propertyDetail.itrValue && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Valor ITR</label>
+                          <div className="text-base font-medium">
+                            R$ {Number(propertyDetail.itrValue).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      )}
+                      {propertyDetail.intendedUse && (
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Uso Pretendido</label>
+                          <div className="text-base">
+                            {propertyDetail.intendedUse === 'AGRICULTURAL' ? 'Agrícola' : propertyDetail.intendedUse === 'LIVESTOCK' ? 'Pecuária' : propertyDetail.intendedUse === 'MIXED' ? 'Misto' : propertyDetail.intendedUse}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {propertyDetail.georeferencing && (
+                      <div className="mt-4">
+                        <label className="text-sm font-medium text-muted-foreground">Georreferenciamento</label>
+                        <div className="text-xs font-mono bg-muted p-2 rounded mt-1 break-all">{propertyDetail.georeferencing}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {(propertyDetail.description || propertyDetail.furnitureList) && (
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold">Descrições</h3>
+                    </div>
+                    {propertyDetail.description && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Descrição do Imóvel</label>
+                        <p className="mt-2 text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{propertyDetail.description}</p>
+                      </div>
+                    )}
+                    {propertyDetail.furnitureList && (
+                      <div className="mt-4">
+                        <label className="text-sm font-medium text-muted-foreground">Mobílias / Itens Inclusos</label>
+                        <p className="mt-2 text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{propertyDetail.furnitureList}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {propertyDetail.isFrozen && (
+                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                    <p className="font-medium">Este imóvel está congelado</p>
+                    <p className="text-xs mt-1">
+                      Não é possível criar contratos, emitir cobranças ou gerar recibos enquanto o imóvel estiver congelado.
+                      Faça upgrade do plano para desbloquear.
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
@@ -2539,16 +3226,51 @@ export function Properties() {
                 <div className="space-y-2">
                   <h4 className="font-medium">Documentos Disponíveis:</h4>
                   {documents.length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
                       {documents.map((doc, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4" />
-                            <span>{doc.name}</span>
+                        <div key={`${doc.type}-${doc.id}-${index}`} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{doc.name}</div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {doc.type === 'CONTRACT' ? 'Contrato' : doc.type === 'INSPECTION' ? 'Vistoria' : 'Notificação'}
+                                </Badge>
+                                {doc.date && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(doc.date).toLocaleDateString('pt-BR')}
+                                  </span>
+                                )}
+                                {doc.status && (
+                                  <Badge variant={doc.status === 'ASSINADO' || doc.status === 'FINALIZADO' ? 'default' : 'secondary'} className="text-xs">
+                                    {doc.status}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={async () => {
+                              try {
+                                const blob = await doc.downloadFn();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${doc.name.replace(/\s+/g, '-')}.pdf`;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                toast.success('PDF baixado com sucesso!');
+                              } catch (error) {
+                                console.error('Error downloading PDF:', error);
+                                toast.error('Erro ao baixar PDF');
+                              }
+                            }}
+                          >
                             <Download className="w-4 h-4 mr-1" />
-                            Baixar
+                            Baixar PDF
                           </Button>
                         </div>
                       ))}
@@ -2556,21 +3278,14 @@ export function Properties() {
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>Nenhum documento encontrado</p>
+                      <p>Nenhum documento encontrado para este imóvel</p>
+                      <p className="text-xs mt-1">Documentos aparecerão aqui quando houver contratos, vistorias ou notificações vinculados</p>
                     </div>
                   )}
                 </div>
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" onClick={() => setShowDocumentsModal(false)}>
                     Fechar
-                  </Button>
-                  <Button
-                    type="button"
-                    className="bg-primary hover:bg-primary/90"
-                    onClick={() => toast.info('Funcionalidade de upload de documentos em desenvolvimento')}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Documento
                   </Button>
                 </div>
               </div>

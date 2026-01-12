@@ -168,6 +168,12 @@ export function Login() {
         <p className="text-center text-xs text-muted-foreground mt-6">
           Sistema de Gestão de Aluguéis
         </p>
+        
+        <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border/50">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            <strong>MR3X</strong> é uma plataforma de tecnologia para gestão de aluguéis e não presta serviços jurídicos, advocatícios ou de intermediação judicial.
+          </p>
+        </div>
       </div>
 
       {/* Frozen User Modal */}

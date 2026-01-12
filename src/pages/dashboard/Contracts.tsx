@@ -27,7 +27,8 @@ import {
   CheckCircle,
   Loader2,
   AlertTriangle,
-  Crown
+  Crown,
+  Edit
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
@@ -103,6 +104,7 @@ export function Contracts() {
   const allowedUserTypes = getUserTypeFromRole(user?.role || '');
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   const [newContract, setNewContract] = useState({
@@ -139,12 +141,15 @@ export function Contracts() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
 
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [contractToEdit, setContractToEdit] = useState<any>(null);
   const [contractToDelete, setContractToDelete] = useState<any>(null);
   const [contractDetail, setContractDetail] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
   // Removed unused setLoading state
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [loadingEditContract, setLoadingEditContract] = useState(false);
   // Removed unused deleting state - using deleteContractMutation.isPending instead
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -717,10 +722,13 @@ export function Contracts() {
 
   const closeAllModals = () => {
     setShowCreateModal(false);
+    setShowEditModal(false);
     setShowDetailModal(false);
     setSelectedContract(null);
+    setContractToEdit(null);
     setContractToDelete(null);
     setPdfFile(null);
+    setLoadingEditContract(false);
   };
 
   const handleCreateContractClick = async () => {
@@ -846,7 +854,133 @@ export function Contracts() {
     }
   };
 
-  // Contract update is disabled - contracts cannot be edited once created
+  // Handle edit contract
+  const handleEditContract = async (contract: any) => {
+    closeAllModals();
+    setLoadingEditContract(true);
+    setShowEditModal(true);
+    
+    try {
+      // Fetch full contract details
+      const fullContract = await contractsAPI.getContractById(contract.id.toString());
+      setContractToEdit(fullContract);
+      
+      // Populate edit form with contract data
+      setNewContract({
+        propertyId: fullContract.propertyId?.toString() || '',
+        tenantId: fullContract.tenantId?.toString() || '',
+        startDate: fullContract.startDate ? new Date(fullContract.startDate).toISOString().split('T')[0] : '',
+        endDate: fullContract.endDate ? new Date(fullContract.endDate).toISOString().split('T')[0] : '',
+        monthlyRent: fullContract.monthlyRent?.toString() || '',
+        deposit: fullContract.deposit?.toString() || '',
+        dueDay: fullContract.dueDay?.toString() || '5',
+        description: fullContract.description || '',
+        templateId: fullContract.templateId?.toString() || '',
+        templateType: (fullContract.templateType || 'CTR') as 'CTR' | 'ACD' | 'VST',
+        creci: fullContract.creci || '',
+        readjustmentIndex: (fullContract.readjustmentIndex || 'IGPM') as 'IGPM' | 'IPCA' | 'INPC' | 'IGP-DI' | 'OUTRO',
+        customReadjustmentIndex: fullContract.customReadjustmentIndex || fullContract.clausesSnapshot?.customReadjustmentIndex || '',
+        latePaymentPenaltyPercent: fullContract.lateFeePercent?.toString() || fullContract.clausesSnapshot?.latePaymentPenaltyPercent?.toString() || '10',
+        monthlyInterestPercent: fullContract.interestRatePercent?.toString() || fullContract.clausesSnapshot?.monthlyInterestPercent?.toString() || '1',
+        earlyTerminationPenaltyMonths: fullContract.clausesSnapshot?.earlyTerminationPenaltyMonths?.toString() || fullContract.earlyTerminationPenaltyPercent?.toString() || '3',
+        earlyTerminationFixedValue: fullContract.clausesSnapshot?.earlyTerminationFixedValue?.toString() || '',
+        useFixedTerminationValue: !!fullContract.clausesSnapshot?.earlyTerminationFixedValue || !!fullContract.earlyTerminationFixedValue,
+        jurisdiction: fullContract.jurisdiction || fullContract.clausesSnapshot?.jurisdiction || '',
+        contractDate: fullContract.contractDate ? new Date(fullContract.contractDate).toISOString().split('T')[0] : (fullContract.clausesSnapshot?.contractDate ? new Date(fullContract.clausesSnapshot.contractDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+        propertyCharacteristics: fullContract.propertyCharacteristics || fullContract.clausesSnapshot?.propertyCharacteristics || '',
+        guaranteeType: (fullContract.guaranteeType || fullContract.clausesSnapshot?.guaranteeType || 'CAUCAO') as 'CAUCAO' | 'FIADOR' | 'SEGURO' | 'TITULO' | 'NENHUMA',
+        guarantorName: fullContract.guarantorName || '',
+        guarantorDocument: fullContract.guarantorDocument || '',
+        guarantorRg: fullContract.guarantorRg || '',
+        guarantorCep: fullContract.guarantorCep || '',
+        guarantorAddress: fullContract.guarantorAddress || '',
+        guarantorProfession: fullContract.guarantorProfession || '',
+      });
+      
+      // Load template if exists
+      if (fullContract.templateId) {
+        try {
+          const template = await contractTemplatesAPI.getTemplateById(fullContract.templateId.toString());
+          if (template) {
+            setSelectedTemplate(template);
+            generateContractPreview(template, fullContract);
+          }
+        } catch (error) {
+          console.warn('Could not load template:', error);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao carregar contrato para edição');
+      setShowEditModal(false);
+    } finally {
+      setLoadingEditContract(false);
+    }
+  };
+
+  const handleUpdateContract = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contractToEdit?.id) {
+      toast.error('Contrato não encontrado');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const resolvedCreci = newContract.creci || contractToEdit.creci || undefined;
+
+      const contractToSend = {
+        ...newContract,
+        startDate: new Date(newContract.startDate).toISOString().split('T')[0],
+        endDate: new Date(newContract.endDate).toISOString().split('T')[0],
+        monthlyRent: Number(newContract.monthlyRent),
+        deposit: newContract.deposit ? Number(newContract.deposit) : undefined,
+        dueDay: newContract.dueDay ? Number(newContract.dueDay) : undefined,
+        templateId: newContract.templateId || undefined,
+        templateType: newContract.templateType || undefined,
+        creci: resolvedCreci,
+        contentSnapshot: previewContent || contractToEdit.contentSnapshot || undefined,
+      };
+
+      await contractsAPI.updateContract(contractToEdit.id.toString(), contractToSend);
+
+      toast.success('Contrato atualizado com sucesso');
+      queryClient.invalidateQueries({
+        queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none']
+      });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+      closeAllModals();
+      setNewContract({
+        propertyId: '', tenantId: '', startDate: '', endDate: '',
+        monthlyRent: '', deposit: '', dueDay: '5', description: '',
+        templateId: '', templateType: 'CTR', creci: '',
+        readjustmentIndex: 'IGPM',
+        customReadjustmentIndex: '',
+        latePaymentPenaltyPercent: '10',
+        monthlyInterestPercent: '1',
+        earlyTerminationPenaltyMonths: '3',
+        earlyTerminationFixedValue: '',
+        useFixedTerminationValue: false,
+        jurisdiction: '',
+        contractDate: new Date().toISOString().split('T')[0],
+        propertyCharacteristics: '',
+        guaranteeType: 'CAUCAO',
+        guarantorName: '',
+        guarantorDocument: '',
+        guarantorRg: '',
+        guarantorCep: '',
+        guarantorAddress: '',
+        guarantorProfession: '',
+      });
+      setPdfFile(null);
+      setSelectedTemplate(null);
+      setPreviewContent('');
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || 'Erro ao atualizar contrato');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleViewContract = async (contract: any) => {
     closeAllModals();
@@ -1147,9 +1281,18 @@ export function Contracts() {
       DATA_ASS_LOCATARIO: contractData.tenantSignedAt ? new Date(contractData.tenantSignedAt).toLocaleDateString('pt-BR') : '________________________________',
       DATA_ASS_IMOBILIARIA: contractData.agencySignedAt ? new Date(contractData.agencySignedAt).toLocaleDateString('pt-BR') : '________________________________',
 
-      ASSINATURA_LOCADOR: contractData.ownerSignature || '________________________________',
-      ASSINATURA_LOCATARIO: contractData.tenantSignature || '________________________________',
-      ASSINATURA_TESTEMUNHA: contractData.witnessSignature || '________________________________',
+      ASSINATURA_LOCADOR: contractData.ownerSignature 
+        ? `<img src="${contractData.ownerSignature}" alt="Assinatura do Locador" style="max-width: 200px; max-height: 60px; display: block; margin: 0 auto;" />`
+        : '________________________________',
+      ASSINATURA_LOCATARIO: contractData.tenantSignature 
+        ? `<img src="${contractData.tenantSignature}" alt="Assinatura do Locatário" style="max-width: 200px; max-height: 60px; display: block; margin: 0 auto;" />`
+        : '________________________________',
+      ASSINATURA_IMOBILIARIA: contractData.agencySignature 
+        ? `<img src="${contractData.agencySignature}" alt="Assinatura da Imobiliária" style="max-width: 200px; max-height: 60px; display: block; margin: 0 auto;" />`
+        : '________________________________',
+      ASSINATURA_TESTEMUNHA: contractData.witnessSignature 
+        ? `<img src="${contractData.witnessSignature}" alt="Assinatura da Testemunha" style="max-width: 200px; max-height: 60px; display: block; margin: 0 auto;" />`
+        : '________________________________',
       HASH_DOCUMENTO: contractData.documentHash || '[Hash gerado na assinatura]',
       IP_LOCADOR: contractData.ownerSignatureIP || '[IP registrado na assinatura]',
       IP_LOCATARIO: contractData.tenantSignatureIP || '[IP registrado na assinatura]',
@@ -1267,13 +1410,60 @@ export function Contracts() {
 
   const prepareForSigningMutation = useMutation({
     mutationFn: (id: string) => contractsAPI.prepareForSigning(id),
-    onSuccess: () => {
+    onSuccess: async (_, contractId) => {
       toast.success('Contrato enviado para assinatura');
       queryClient.invalidateQueries({
         queryKey: ['contracts', user?.id ?? 'anonymous', user?.role ?? 'unknown', user?.agencyId ?? 'none', user?.brokerId ?? 'none']
       });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['audit-logs'] });
+      
+      // Refresh contract data if it's currently being viewed
+      const contractIdStr = contractId.toString();
+      if (selectedContract && selectedContract.id?.toString() === contractIdStr) {
+        try {
+          const refreshedContract = await contractsAPI.getContractById(contractId);
+          if (refreshedContract) {
+            setSelectedContract(refreshedContract);
+            setContractDetail(refreshedContract);
+            
+            // Update preview if modal is open
+            if (showPreviewModal || showDetailModal) {
+              if (refreshedContract.contentSnapshot) {
+                setPreviewContent(refreshedContract.contentSnapshot);
+                setPreviewToken(refreshedContract.contractToken || '');
+                setIsCreatePreview(false);
+                setShowPreviewModal(true);
+                setShowDetailModal(false);
+              } else if (refreshedContract.templateId) {
+                let template = templates?.find((t: any) => t.id?.toString() === refreshedContract.templateId?.toString());
+                if (!template) {
+                  try {
+                    template = await contractTemplatesAPI.getTemplateById(refreshedContract.templateId.toString());
+                  } catch (templateError) {
+                    console.warn('Could not fetch template:', templateError);
+                  }
+                }
+                if (template) {
+                  generateContractPreview(template, refreshedContract);
+                  setIsCreatePreview(false);
+                  setShowPreviewModal(true);
+                  setShowDetailModal(false);
+                } else {
+                  setShowDetailModal(true);
+                  setShowPreviewModal(false);
+                }
+              } else {
+                setShowDetailModal(true);
+                setShowPreviewModal(false);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error refreshing contract after prepareForSigning:', error);
+        }
+      }
+      
       setPreparingContractId(null);
     },
     onError: (error: any) => {
@@ -1299,15 +1489,17 @@ export function Contracts() {
       return 'tenant';
     }
 
+    // Check if user is from the agency (check this before owner to prioritize agency signature)
+    // Only AGENCY_ADMIN and AGENCY_MANAGER can sign as agency
+    if ((userRole === 'AGENCY_ADMIN' || userRole === 'AGENCY_MANAGER') && 
+        user?.agencyId && contract.agencyId?.toString() === user.agencyId.toString()) {
+      return 'agency';
+    }
+
     // Check if user is the owner
     if (contract.ownerId?.toString() === userId ||
         ((userRole === 'PROPRIETARIO' || userRole === 'INDEPENDENT_OWNER') && contract.ownerUser?.id?.toString() === userId)) {
       return 'owner';
-    }
-
-    // Check if user is from the agency
-    if (user?.agencyId && contract.agencyId?.toString() === user.agencyId.toString()) {
-      return 'agency';
     }
 
     return null;
@@ -1324,7 +1516,8 @@ export function Contracts() {
       case 'owner':
         return !contract.ownerSignature;
       case 'agency':
-        return !contract.agencySignature;
+        // Agency can only sign after tenant and owner have signed
+        return !contract.agencySignature && !!contract.tenantSignature && !!contract.ownerSignature;
       default:
         return false;
     }
@@ -1459,7 +1652,21 @@ export function Contracts() {
 
       // Refresh current contract details if viewing
       if (selectedContract && selectedContract.id === signContractData.contract.id) {
+        // Wait a bit to ensure backend has updated the contentSnapshot
+        await new Promise(resolve => setTimeout(resolve, 500));
         await handleViewContract(signContractData.contract);
+      } else {
+        // If preview modal is open, refresh the contract data
+        if (showPreviewModal && selectedContract) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const refreshedContract = await contractsAPI.getContractById(selectedContract.id.toString());
+          if (refreshedContract) {
+            setSelectedContract(refreshedContract);
+            if (refreshedContract.contentSnapshot) {
+              setPreviewContent(refreshedContract.contentSnapshot);
+            }
+          }
+        }
       }
 
       closeSignModal();
@@ -1471,9 +1678,9 @@ export function Contracts() {
     }
   };
 
-  const canEditContract = (_contract: any): boolean => {
-    // Contracts cannot be edited once created
-    return false;
+  const canEditContract = (contract: any): boolean => {
+    // Contracts can only be edited when status is PENDENTE (before sending for signing)
+    return contract?.status === 'PENDENTE';
   };
 
   const canDeleteContract = (_contract: any): boolean => {
@@ -1481,22 +1688,6 @@ export function Contracts() {
     return true;
   };
 
-  const getImmutabilityMessage = (contract: any): string => {
-    switch (contract.status) {
-      case 'AGUARDANDO_ASSINATURAS':
-        return 'Contrato aguardando assinaturas - cláusulas congeladas';
-      case 'ASSINADO':
-        return 'Contrato assinado - documento imutável';
-      case 'ATIVO':
-        return 'Contrato ativo - documento imutável';
-      case 'REVOGADO':
-        return 'Contrato revogado - documento arquivado';
-      case 'ENCERRADO':
-        return 'Contrato encerrado - documento arquivado';
-      default:
-        return '';
-    }
-  };
 
   const generatePreview = (template: any) => {
     if (!template) return;
@@ -2145,15 +2336,15 @@ export function Contracts() {
                                 {signingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
                               </Button>
                             )}
-                             {canUpdateContracts && !canEditContract(contract) && (
+                             {canUpdateContracts && canEditContract(contract) && (
                               <Button
                                 size="icon"
                                 variant="outline"
-                                disabled
-                                className="text-gray-400 border-gray-300 cursor-not-allowed"
-                                title={getImmutabilityMessage(contract)}
+                                onClick={() => handleEditContract(contract)}
+                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                title="Editar contrato"
                               >
-                                <Lock className="w-4 h-4" />
+                                <Edit className="w-4 h-4" />
                               </Button>
                             )}
                              {contract.pdfPath && (
@@ -2244,15 +2435,15 @@ export function Contracts() {
                            {signingContractId === contract.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
                          </Button>
                        )}
-                       {canUpdateContracts && !canEditContract(contract) && (
+                       {canUpdateContracts && canEditContract(contract) && (
                         <Button
                           size="icon"
                           variant="outline"
-                          disabled
-                          className="text-gray-400 border-gray-300 cursor-not-allowed"
-                          title={getImmutabilityMessage(contract)}
+                          onClick={() => handleEditContract(contract)}
+                          className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                          title="Editar contrato"
                         >
-                          <Lock className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </Button>
                       )}
                       {contract.pdfPath && (
@@ -2913,6 +3104,537 @@ export function Contracts() {
         </Dialog>
 
         {}
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar contrato</DialogTitle>
+              <DialogDescription>Atualize os dados do contrato abaixo.</DialogDescription>
+            </DialogHeader>
+            {loadingEditContract ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </div>
+                <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+                  <Skeleton className="h-5 w-48" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 border rounded-lg bg-muted/30 space-y-4">
+                  <Skeleton className="h-5 w-40" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-36" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Skeleton className="h-10 w-24" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              </div>
+            ) : (
+            <form className="space-y-4" onSubmit={handleUpdateContract}>
+              {}
+              <div>
+                <Label htmlFor="edit-templateId">Modelo de Contrato</Label>
+                <Select
+                  value={newContract.templateId || 'none'}
+                  onValueChange={(value) => {
+                    if (value === 'none') {
+                      setNewContract(prev => ({
+                        ...prev,
+                        templateId: '',
+                        templateType: 'CTR'
+                      }));
+                      setSelectedTemplate(null);
+                      setPreviewContent('');
+                    } else {
+                      const template = templates.find((t: any) => t.id === value);
+                      setNewContract(prev => ({
+                        ...prev,
+                        templateId: value,
+                        templateType: template?.type || 'CTR'
+                      }));
+                      setSelectedTemplate(template || null);
+                      if (template) {
+                        generatePreview(template);
+                      }
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={templatesLoading ? 'Carregando modelos...' : 'Selecione um modelo'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none" hidden>Sem modelo (padrão)</SelectItem>
+                    {templates
+                      .filter((template: any) =>
+                        !template.allowedUserTypes ||
+                        template.allowedUserTypes.some((type: string) => allowedUserTypes.includes(type as ContractUserType))
+                      )
+                      .filter((template: any, index: number, self: any[]) => 
+                        index === self.findIndex((t: any) => t.id === template.id)
+                      )
+                      .map((template: any) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {selectedTemplate && (
+                  <p className="text-xs text-muted-foreground mt-1">{selectedTemplate.description}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-propertyId">Imóvel</Label>
+                  <Select
+                    value={newContract.propertyId}
+                    disabled={true}
+                  >
+                    <SelectTrigger className="[&>span]:text-left [&>span]:truncate bg-muted">
+                      <SelectValue placeholder="Selecione um imóvel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {properties
+                        .filter(p => {
+                          const pId = p.id?.toString() || String(p.id);
+                          return pId === newContract.propertyId;
+                        })
+                        .map((property) => {
+                          const propId = property.id?.toString() || String(property.id);
+                          return (
+                            <SelectItem key={propId} value={propId}>
+                              {property.name || property.address || `Imóvel ${propId}`}
+                            </SelectItem>
+                          );
+                        })}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">O imóvel não pode ser alterado após a criação do contrato</p>
+                </div>
+                <div>
+                  <Label htmlFor="edit-tenantId">Locatário</Label>
+                  <Select
+                    value={newContract.tenantId}
+                    onValueChange={(value) => setNewContract(prev => ({ ...prev, tenantId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um locatário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tenants.map((tenant: any) => {
+                        const tenantId = tenant.id?.toString() || String(tenant.id);
+                        return (
+                          <SelectItem key={tenantId} value={tenantId}>
+                            {tenant.name || tenant.email || 'Sem nome'}
+                            {tenant.isFrozen && <span className="ml-2 text-xs text-red-500">(Congelado)</span>}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-startDate">Data de início</Label>
+                  <Input
+                    id="edit-startDate"
+                    name="startDate"
+                    type="date"
+                    value={newContract.startDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-endDate">Data de término</Label>
+                  <Input
+                    id="edit-endDate"
+                    name="endDate"
+                    type="date"
+                    value={newContract.endDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-monthlyRent">Valor do aluguel</Label>
+                  <Input
+                    id="edit-monthlyRent"
+                    name="monthlyRent"
+                    type="number"
+                    step="0.01"
+                    value={newContract.monthlyRent}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-deposit">Depósito</Label>
+                  <Input
+                    id="edit-deposit"
+                    name="deposit"
+                    type="number"
+                    step="0.01"
+                    value={newContract.deposit}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-dueDay">Dia de Vencimento <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-dueDay"
+                    name="dueDay"
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={newContract.dueDay}
+                    onChange={handleInputChange}
+                    placeholder="5"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-contractDate">Data do Contrato <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-contractDate"
+                    name="contractDate"
+                    type="date"
+                    value={newContract.contractDate}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-muted/30">
+                <h4 className="font-semibold mb-3 text-sm">Cláusula 3 - Índice de Reajuste Anual</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-readjustmentIndex">Índice de Reajuste <span className="text-red-500">*</span></Label>
+                    <Select
+                      value={newContract.readjustmentIndex}
+                      onValueChange={(value) => setNewContract(prev => ({ ...prev, readjustmentIndex: value as any }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o índice" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="IGPM">IGP-M (Índice Geral de Preços - Mercado)</SelectItem>
+                        <SelectItem value="IPCA">IPCA (Índice Nacional de Preços ao Consumidor Amplo)</SelectItem>
+                        <SelectItem value="INPC">INPC (Índice Nacional de Preços ao Consumidor)</SelectItem>
+                        <SelectItem value="IGP-DI">IGP-DI (Índice Geral de Preços - Disponibilidade Interna)</SelectItem>
+                        <SelectItem value="OUTRO">Outro (especificar)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {newContract.readjustmentIndex === 'OUTRO' && (
+                    <div>
+                      <Label htmlFor="edit-customReadjustmentIndex">Especificar Índice</Label>
+                      <Input
+                        id="edit-customReadjustmentIndex"
+                        name="customReadjustmentIndex"
+                        value={newContract.customReadjustmentIndex}
+                        onChange={handleInputChange}
+                        placeholder="Ex: Taxa Referencial"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-muted/30">
+                <h4 className="font-semibold mb-3 text-sm">Multas e Juros por Atraso</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-latePaymentPenaltyPercent">Multa por Atraso (%) <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="edit-latePaymentPenaltyPercent"
+                      name="latePaymentPenaltyPercent"
+                      type="number"
+                      min="0"
+                      max="10"
+                      step="0.1"
+                      value={newContract.latePaymentPenaltyPercent}
+                      onChange={handleInputChange}
+                      placeholder="10"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Máximo legal: 10% (Lei 8.245/91)</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-monthlyInterestPercent">Juros de Mora Mensal (%) <span className="text-red-500">*</span></Label>
+                    <Input
+                      id="edit-monthlyInterestPercent"
+                      name="monthlyInterestPercent"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={newContract.monthlyInterestPercent}
+                      onChange={handleInputChange}
+                      placeholder="1"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Máximo legal: 1% ao mês</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-muted/30">
+                <h4 className="font-semibold mb-3 text-sm">Cláusula 7 - Multa por Rescisão Antecipada</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="edit-terminationType"
+                        checked={!newContract.useFixedTerminationValue}
+                        onChange={() => setNewContract(prev => ({ ...prev, useFixedTerminationValue: false }))}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">Baseada em meses de aluguel</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="edit-terminationType"
+                        checked={newContract.useFixedTerminationValue}
+                        onChange={() => setNewContract(prev => ({ ...prev, useFixedTerminationValue: true }))}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">Valor fixo</span>
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {!newContract.useFixedTerminationValue ? (
+                      <div>
+                        <Label htmlFor="edit-earlyTerminationPenaltyMonths">Quantidade de Meses de Aluguel</Label>
+                        <Input
+                          id="edit-earlyTerminationPenaltyMonths"
+                          name="earlyTerminationPenaltyMonths"
+                          type="number"
+                          min="1"
+                          max="12"
+                          value={newContract.earlyTerminationPenaltyMonths}
+                          onChange={handleInputChange}
+                          placeholder="3"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Valor: R$ {newContract.monthlyRent && newContract.earlyTerminationPenaltyMonths
+                            ? (parseFloat(newContract.monthlyRent) * parseFloat(newContract.earlyTerminationPenaltyMonths)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                            : '0,00'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <Label htmlFor="edit-earlyTerminationFixedValue">Valor Fixo</Label>
+                        <Input
+                          id="edit-earlyTerminationFixedValue"
+                          name="earlyTerminationFixedValue"
+                          type="number"
+                          step="0.01"
+                          value={newContract.earlyTerminationFixedValue}
+                          onChange={handleInputChange}
+                          placeholder="5000.00"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-guaranteeType">Tipo de Garantia <span className="text-red-500">*</span></Label>
+                  <Select
+                    value={newContract.guaranteeType}
+                    onValueChange={(value) => setNewContract(prev => ({ ...prev, guaranteeType: value as any }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CAUCAO">Caução em dinheiro</SelectItem>
+                      <SelectItem value="FIADOR">Fiador</SelectItem>
+                      <SelectItem value="SEGURO">Seguro-fiança</SelectItem>
+                      <SelectItem value="TITULO">Título de capitalização</SelectItem>
+                      <SelectItem value="NENHUMA">Sem garantia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-jurisdiction">Foro (Comarca) <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-jurisdiction"
+                    name="jurisdiction"
+                    value={newContract.jurisdiction}
+                    onChange={handleInputChange}
+                    placeholder="Ex: São Paulo - SP"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Cidade onde serão resolvidas questões legais</p>
+                </div>
+              </div>
+
+              {selectedTemplate?.id === 'contrato-locacao-residencial-padrao' && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-semibold text-sm">FIADOR</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-guarantorName">Nome Completo</Label>
+                      <Input
+                        id="edit-guarantorName"
+                        name="guarantorName"
+                        value={newContract.guarantorName}
+                        onChange={handleInputChange}
+                        placeholder="Nome completo do fiador"
+                      />
+                    </div>
+                    <DocumentInput
+                      value={newContract.guarantorDocument}
+                      onChange={(value) => {
+                        setNewContract(prev => ({ ...prev, guarantorDocument: value }));
+                      }}
+                      placeholder="CPF do fiador"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <RGInput
+                      value={newContract.guarantorRg}
+                      onChange={(v: string) => setNewContract(prev => ({ ...prev, guarantorRg: v }))}
+                      placeholder="RG do fiador"
+                    />
+                    <div>
+                      <Label htmlFor="edit-guarantorProfession">Profissão</Label>
+                      <Input
+                        id="edit-guarantorProfession"
+                        name="guarantorProfession"
+                        value={newContract.guarantorProfession}
+                        onChange={handleInputChange}
+                        placeholder="Profissão do fiador"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CEPInput
+                      value={newContract.guarantorCep}
+                      onChange={(v: string) => setNewContract(prev => ({ ...prev, guarantorCep: v }))}
+                      onCEPData={handleGuarantorCEPData}
+                      placeholder="00000-000"
+                    />
+                    <div>
+                      <Label htmlFor="edit-guarantorAddress">Endereço</Label>
+                      <Input
+                        id="edit-guarantorAddress"
+                        name="guarantorAddress"
+                        value={newContract.guarantorAddress}
+                        onChange={handleInputChange}
+                        placeholder="Endereço completo do fiador"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-2">
+                {selectedTemplate && previewContent && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsCreatePreview(true);
+                      setShowEditModal(false);
+                      setShowPreviewModal(true);
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Visualizar Prévia
+                  </Button>
+                )}
+                <div className="flex gap-2 ml-auto">
+                  <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={updating}>
+                    {updating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Atualizando...
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Atualizar Contrato
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </form>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {}
         <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
           <DialogContent className="w-[95vw] sm:w-auto max-w-4xl max-h-[90vh] overflow-y-auto p-3 sm:p-6">
             <DialogHeader className="flex flex-row items-center justify-between">
@@ -3006,6 +3728,97 @@ export function Contracts() {
                 </div>
 
                 {}
+                <div className="bg-muted p-3 sm:p-4 rounded-lg border">
+                  <h3 className="font-semibold mb-3">Assinaturas</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="flex flex-col items-center p-3 bg-white rounded-lg border">
+                      {(selectedContract || contractDetail)?.tenantSignature ? (
+                        <>
+                          <img 
+                            src={(selectedContract || contractDetail).tenantSignature} 
+                            alt="Assinatura do Inquilino" 
+                            className="w-32 h-16 object-contain mb-2 border rounded"
+                          />
+                          <p className="font-medium text-sm mb-1">Inquilino</p>
+                          <Badge variant="default" className="text-xs mb-1">
+                            Assinado
+                          </Badge>
+                          {(selectedContract || contractDetail)?.tenantSignedAt && (
+                            <p className="text-xs text-muted-foreground">
+                              {new Date((selectedContract || contractDetail).tenantSignedAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <PenLine className="w-6 h-6 text-muted-foreground mb-2" />
+                          <p className="font-medium text-sm mb-1">Inquilino</p>
+                          <Badge variant="secondary" className="text-xs">
+                            Pendente
+                          </Badge>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-center p-3 bg-white rounded-lg border">
+                      {(selectedContract || contractDetail)?.ownerSignature ? (
+                        <>
+                          <img 
+                            src={(selectedContract || contractDetail).ownerSignature} 
+                            alt="Assinatura do Proprietário" 
+                            className="w-32 h-16 object-contain mb-2 border rounded"
+                          />
+                          <p className="font-medium text-sm mb-1">Proprietário</p>
+                          <Badge variant="default" className="text-xs mb-1">
+                            Assinado
+                          </Badge>
+                          {(selectedContract || contractDetail)?.ownerSignedAt && (
+                            <p className="text-xs text-muted-foreground">
+                              {new Date((selectedContract || contractDetail).ownerSignedAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <PenLine className="w-6 h-6 text-muted-foreground mb-2" />
+                          <p className="font-medium text-sm mb-1">Proprietário</p>
+                          <Badge variant="secondary" className="text-xs">
+                            Pendente
+                          </Badge>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-center p-3 bg-white rounded-lg border">
+                      {(selectedContract || contractDetail)?.agencySignature ? (
+                        <>
+                          <img 
+                            src={(selectedContract || contractDetail).agencySignature} 
+                            alt="Assinatura da Agência" 
+                            className="w-32 h-16 object-contain mb-2 border rounded"
+                          />
+                          <p className="font-medium text-sm mb-1">Agência</p>
+                          <Badge variant="default" className="text-xs mb-1">
+                            Assinado
+                          </Badge>
+                          {(selectedContract || contractDetail)?.agencySignedAt && (
+                            <p className="text-xs text-muted-foreground">
+                              {new Date((selectedContract || contractDetail).agencySignedAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <PenLine className="w-6 h-6 text-muted-foreground mb-2" />
+                          <p className="font-medium text-sm mb-1">Agência</p>
+                          <Badge variant="secondary" className="text-xs">
+                            Pendente
+                          </Badge>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {}
                 {previewToken && (
                   <div className="flex flex-col sm:flex-row items-center justify-center p-3 sm:p-4 bg-white border rounded-lg gap-4 sm:gap-6">
                     <div className="flex-shrink-0">
@@ -3031,45 +3844,55 @@ export function Contracts() {
 
                 {}
                 <div className="prose prose-sm max-w-none bg-white p-4 sm:p-6 border rounded-lg">
-                  <div className="text-sm leading-relaxed" style={{ wordBreak: 'normal', overflowWrap: 'normal', hyphens: 'none' }}>
-                    {previewContent.split('\n').map((line, index) => {
-                      const isSeparator = line.trim().match(/^[─═\-]{20,}$/);
-                      if (isSeparator) {
-                        return (
-                          <div key={index} className="my-4">
-                            <hr className="border-t border-gray-400 w-full" />
-                          </div>
-                        );
-                      }
+                  {previewContent.includes('<img') || previewContent.includes('<div') || previewContent.includes('<p') ? (
+                    <div 
+                      className="text-sm leading-relaxed" 
+                      style={{ wordBreak: 'normal', overflowWrap: 'normal', hyphens: 'none' }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: previewContent
+                      }}
+                    />
+                  ) : (
+                    <div className="text-sm leading-relaxed" style={{ wordBreak: 'normal', overflowWrap: 'normal', hyphens: 'none' }}>
+                      {previewContent.split('\n').map((line, index) => {
+                        const isSeparator = line.trim().match(/^[─═\-]{20,}$/);
+                        if (isSeparator) {
+                          return (
+                            <div key={index} className="my-4">
+                              <hr className="border-t border-gray-400 w-full" />
+                            </div>
+                          );
+                        }
 
-                      const isContractTitle = line.startsWith('CONTRATO') && line.includes('–');
-                      if (isContractTitle) {
-                        return (
-                          <p key={index} className="font-bold my-4" style={{ wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', fontSize: '17px' }}>
-                            {line}
-                          </p>
-                        );
-                      }
+                        const isContractTitle = line.startsWith('CONTRATO') && line.includes('–');
+                        if (isContractTitle) {
+                          return (
+                            <p key={index} className="font-bold my-4" style={{ wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', fontSize: '17px' }}>
+                              {line}
+                            </p>
+                          );
+                        }
 
-                      const isSectionTitle = line.startsWith('**') && line.endsWith('**');
-                      const isBold = isSectionTitle || line.includes('CLÁUSULA');
-                      const cleanLine = line.replace(/\*\*/g, '');
+                        const isSectionTitle = line.startsWith('**') && line.endsWith('**');
+                        const isBold = isSectionTitle || line.includes('CLÁUSULA');
+                        const cleanLine = line.replace(/\*\*/g, '');
 
-                      if (isSectionTitle) {
+                        if (isSectionTitle) {
+                          return (
+                            <p key={index} className="font-bold my-3 text-base" style={{ wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', fontSize: '15px' }}>
+                              {cleanLine}
+                            </p>
+                          );
+                        }
+
                         return (
-                          <p key={index} className="font-bold my-3 text-base" style={{ wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal', fontSize: '15px' }}>
+                          <p key={index} className={isBold ? 'font-bold my-2' : 'my-1'} style={{ wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal' }}>
                             {cleanLine}
                           </p>
                         );
-                      }
-
-                      return (
-                        <p key={index} className={isBold ? 'font-bold my-2' : 'my-1'} style={{ wordBreak: 'normal', overflowWrap: 'normal', whiteSpace: 'normal' }}>
-                          {cleanLine}
-                        </p>
-                      );
-                    })}
-                  </div>
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -3077,7 +3900,7 @@ export function Contracts() {
                 Selecione um modelo de contrato e preencha os dados para visualizar a prévia
               </p>
             )}
-            <div className="flex justify-end">
+            <div className="flex justify-end mt-5">
               <Button variant="outline" onClick={() => setShowPreviewModal(false)}>
                 Fechar
               </Button>

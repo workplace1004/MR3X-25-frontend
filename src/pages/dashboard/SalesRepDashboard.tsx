@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import {
   TrendingUp, Users, FileText, DollarSign, Target, Award,
-  Clock, CheckCircle, Inbox, Building2, Home
+  Clock, CheckCircle, Inbox, Building2, Home, Phone, AlertCircle
 } from 'lucide-react';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
@@ -44,24 +44,36 @@ export function SalesRepDashboard() {
   const { user } = useAuth();
 
   const { data: salesStats = {
+    // Lead metrics
+    totalLeads: 0,
+    leadsCaptured: 0,
+    newLeads: 0,
+    contactedLeads: 0,
+    convertedLeads: 0,
+    // Prospect metrics
     leadsInProgress: 0,
     conversions: 0,
     monthlyTarget: 0,
     monthlyAchieved: 0,
     totalProspects: 0,
+    // Proposal metrics
     proposalsSent: 0,
     proposalsAccepted: 0,
     proposalsPending: 0,
     proposalsRejected: 0,
+    // Revenue metrics
     expectedRevenue: 0,
     commissionEarned: 0,
     commissionPending: 0,
     avgTicket: 0,
     conversionRate: 0,
+    // Charts and lists
     weeklyPerformance: [],
     pipelineData: [],
     recentLeads: [],
     topProspects: [],
+    // Alerts
+    alerts: [],
   }, isLoading } = useQuery({
     queryKey: ['sales-rep', 'stats'],
     queryFn: salesRepAPI.getStats,
@@ -242,6 +254,120 @@ export function SalesRepDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Leads and Commissions Section */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Pistas Capturadas</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">{salesStats.leadsCaptured || salesStats.totalLeads || 0}</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">
+                  {salesStats.newLeads || 0} novas
+                </p>
+              </div>
+              <div className="p-2 sm:p-3 bg-cyan-100 rounded-full flex-shrink-0 ml-2">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Pistas Contatadas</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">{salesStats.contactedLeads || 0}</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">
+                  {salesStats.convertedLeads || 0} convertidas
+                </p>
+              </div>
+              <div className="p-2 sm:p-3 bg-orange-100 rounded-full flex-shrink-0 ml-2">
+                <Phone className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Comissões Ganhas</p>
+                <p className="text-lg sm:text-2xl font-bold mt-1 break-words">{formatCurrency(salesStats.commissionEarned || 0)}</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">
+                  {formatCurrency(salesStats.commissionPending || 0)} pendentes
+                </p>
+              </div>
+              <div className="p-2 sm:p-3 bg-amber-100 rounded-full flex-shrink-0 ml-2">
+                <Award className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Propostas Aprovadas</p>
+                <p className="text-xl sm:text-2xl font-bold mt-1">{salesStats.proposalsAccepted || 0}</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">
+                  {salesStats.proposalsRejected || 0} rejeitadas
+                </p>
+              </div>
+              <div className="p-2 sm:p-3 bg-indigo-100 rounded-full flex-shrink-0 ml-2">
+                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Important Alerts Section */}
+      {salesStats.alerts && salesStats.alerts.length > 0 && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
+              <span>Alertas Importantes</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="space-y-3">
+              {salesStats.alerts.map((alert: any, index: number) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border ${
+                    alert.priority === 'urgent'
+                      ? 'bg-red-50 border-red-200'
+                      : alert.priority === 'high'
+                      ? 'bg-orange-50 border-orange-200'
+                      : 'bg-blue-50 border-blue-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm sm:text-base">{alert.title}</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-1">{alert.message}</p>
+                    </div>
+                    {alert.actionUrl && (
+                      <a
+                        href={alert.actionUrl}
+                        className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium flex-shrink-0"
+                      >
+                        Ver →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Agency Sign-ups Section */}
       {agenciesMetrics && (

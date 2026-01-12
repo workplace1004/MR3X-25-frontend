@@ -73,9 +73,10 @@ export function BrokerDashboard() {
     }));
 
     const propertyStatusData = [
-      { name: 'Alugados', value: overview.occupiedProperties || properties.filter((p: any) => p.status === 'ALUGADO').length || 0, color: '#22c55e' },
-      { name: 'Disponíveis', value: overview.availableProperties || properties.filter((p: any) => p.status === 'DISPONIVEL').length || 0, color: '#3b82f6' },
-      { name: 'Manutenção', value: overview.maintenanceProperties || properties.filter((p: any) => p.status === 'MANUTENCAO').length || 0, color: '#f59e0b' },
+      { name: 'Ocupados', value: overview.occupiedProperties || 0, color: '#22c55e' },
+      { name: 'Em Negociação', value: overview.inNegotiationProperties || 0, color: '#f59e0b' },
+      { name: 'Disponíveis', value: overview.availableProperties || 0, color: '#3b82f6' },
+      { name: 'Manutenção', value: overview.maintenanceProperties || 0, color: '#ef4444' },
     ].filter(item => item.value > 0);
 
     const dueData = dueDates || [];
@@ -181,10 +182,15 @@ export function BrokerDashboard() {
   const recentPayments = dashboard?.recentPayments || [];
 
   const totalProperties = overview.totalProperties || properties.length || 0;
-  const occupiedProperties = overview.occupiedProperties || properties.filter((p: any) => p.status === 'ALUGADO').length || 0;
+  const occupiedProperties = overview.occupiedProperties || 0;
+  const inNegotiationProperties = overview.inNegotiationProperties || 0;
   const activeContracts = overview.activeContracts || 0;
+  const inNegotiationContracts = overview.inNegotiationContracts || 0;
   const monthlyRevenue = overview.monthlyRevenue || 0;
-  const occupancyRate = totalProperties > 0 ? ((occupiedProperties / totalProperties) * 100).toFixed(1) : 0;
+  // Use backend-calculated occupancy rate (based on fully signed contracts only)
+  const occupancyRate = overview.occupancyRate !== undefined 
+    ? overview.occupancyRate 
+    : (totalProperties > 0 ? Math.round((occupiedProperties / totalProperties) * 100) : 0);
 
   const upcomingDueDates = dueDates?.filter((d: any) => d.status === 'upcoming' || d.status === 'overdue') || [];
 
@@ -267,6 +273,9 @@ export function BrokerDashboard() {
               <div>
                 <p className="text-sm text-cyan-600 font-medium">Taxa Ocupação</p>
                 <p className="text-2xl font-bold text-cyan-700">{occupancyRate}%</p>
+                <p className="text-xs text-cyan-500 mt-1">
+                  {inNegotiationProperties > 0 && `${inNegotiationProperties} em negociação`}
+                </p>
               </div>
               <div className="w-12 h-12 bg-cyan-200 rounded-full flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-cyan-600" />
@@ -275,6 +284,25 @@ export function BrokerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Property Status Breakdown */}
+      {(inNegotiationProperties > 0 || inNegotiationContracts > 0) && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-orange-600" />
+              <div>
+                <p className="text-sm font-medium text-orange-800">
+                  {inNegotiationProperties} {inNegotiationProperties === 1 ? 'imóvel' : 'imóveis'} em negociação
+                </p>
+                <p className="text-xs text-orange-600">
+                  {inNegotiationContracts} {inNegotiationContracts === 1 ? 'contrato' : 'contratos'} aguardando assinaturas
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -336,25 +364,34 @@ export function BrokerDashboard() {
           </CardHeader>
           <CardContent>
             {chartData.propertyStatusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={chartData.propertyStatusData}
                     cx="50%"
-                    cy="50%"
-                    innerRadius={60}
+                    cy="45%"
+                    innerRadius={50}
                     outerRadius={90}
-                    paddingAngle={5}
+                    paddingAngle={3}
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                    labelLine={false}
+                    label={({ name, value }: { name?: string; value?: number; percent?: number }) => 
+                      `${name || ''}: ${value || 0}`
+                    }
+                    labelLine={true}
                   >
                     {chartData.propertyStatusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => `${value} imóveis`} />
-                  <Legend />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [`${value} imóveis`, name]}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value) => value}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

@@ -290,8 +290,8 @@ export function Agencies() {
             <Building className="w-6 h-6 text-blue-700" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Agencias</h1>
-            <p className="text-muted-foreground">Visualize e gerencie proprietarios independentes que trabalham diretamente com MR3X</p>
+            <h1 className="text-2xl font-bold text-foreground">Usuários Autônomos</h1>
+            <p className="text-muted-foreground">Visualize e gerencie proprietários independentes, corretores sem agência formal e profissionais com CRECI ativo</p>
           </div>
         </div>
 

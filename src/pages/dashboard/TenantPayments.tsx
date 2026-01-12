@@ -131,40 +131,28 @@ export function TenantPayments() {
             {}
             {paymentStatus.status === 'overdue' && (
               <div className="mt-4 p-4 bg-red-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-6 h-6 text-red-500" />
-                    <div>
-                      <p className="font-semibold text-red-700">Pagamento em Atraso</p>
-                      <p className="text-sm text-red-600">
-                        Regularize sua situação para evitar multas e juros
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                  <div>
+                    <p className="font-semibold text-red-700">Pagamento em Atraso</p>
+                    <p className="text-sm text-red-600">
+                      Regularize sua situação para evitar multas e juros. Entre em contato com a imobiliária para realizar o pagamento.
+                    </p>
                   </div>
-                  <Button className="bg-red-600 hover:bg-red-700">
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Pagar Agora
-                  </Button>
                 </div>
               </div>
             )}
 
             {paymentStatus.status === 'upcoming' && (
               <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-6 h-6 text-yellow-600" />
-                    <div>
-                      <p className="font-semibold text-yellow-700">Vencimento Próximo</p>
-                      <p className="text-sm text-yellow-600">
-                        Seu pagamento vence em breve
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-6 h-6 text-yellow-600" />
+                  <div>
+                    <p className="font-semibold text-yellow-700">Vencimento Próximo</p>
+                    <p className="text-sm text-yellow-600">
+                      Seu pagamento vence em breve. Entre em contato com a imobiliária para realizar o pagamento.
+                    </p>
                   </div>
-                  <Button className="bg-yellow-600 hover:bg-yellow-700">
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Pagar Agora
-                  </Button>
                 </div>
               </div>
             )}

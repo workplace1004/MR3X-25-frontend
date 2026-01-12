@@ -26,6 +26,16 @@ export const dashboardAPI = {
     return response.data;
   },
 
+  getApiConsumption: async () => {
+    const response = await apiClient.get('/dashboard/api-consumption');
+    return response.data;
+  },
+
+  refreshApiConsumption: async () => {
+    const response = await apiClient.post('/dashboard/api-consumption/refresh');
+    return response.data;
+  },
+
   acknowledgeExtrajudicial: async (notificationId: string, data: {
     acknowledgmentType: 'DASHBOARD_VIEW' | 'CLICK' | 'SIGNATURE';
     ipAddress?: string;
@@ -36,6 +46,16 @@ export const dashboardAPI = {
     signature?: string;
   }) => {
     const response = await apiClient.post(`/dashboard/extrajudicial/${notificationId}/acknowledge`, data);
+    return response.data;
+  },
+
+  acknowledgeBanner: async (data: {
+    type: 'UPCOMING_DUE' | 'OVERDUE' | 'EXTRAJUDICIAL' | 'AGREEMENT';
+    itemId?: string;
+    ipAddress: string;
+    userAgent: string;
+  }) => {
+    const response = await apiClient.post('/dashboard/tenant-banner/acknowledge', data);
     return response.data;
   },
 };
@@ -906,6 +926,7 @@ export const auditAPI = {
     pageSize?: number;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }) => {
     const qs = new URLSearchParams();
     if (params) {
@@ -1962,6 +1983,62 @@ export const salesRepAPI = {
     const response = await apiClient.get('/sales-rep/agencies/metrics');
     return response.data;
   },
+
+  // Lead endpoints
+  getLeads: async (filters?: { status?: string; source?: string; search?: string }) => {
+    const qs = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') qs.append(k, String(v));
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/sales-rep/leads${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  createLead: async (data: {
+    companyName?: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone?: string;
+    city?: string;
+    state?: string;
+    source: string;
+    planInterest?: string;
+    notes?: string;
+  }) => {
+    const response = await apiClient.post('/sales-rep/leads', data);
+    return response.data;
+  },
+
+  updateLead: async (id: string, data: any) => {
+    const response = await apiClient.put(`/sales-rep/leads/${id}`, data);
+    return response.data;
+  },
+
+  deleteLead: async (id: string) => {
+    const response = await apiClient.delete(`/sales-rep/leads/${id}`);
+    return response.data;
+  },
+
+  addLeadActivity: async (id: string, data: { type: string; title: string; description?: string }) => {
+    const response = await apiClient.post(`/sales-rep/leads/${id}/activities`, data);
+    return response.data;
+  },
+
+  convertLeadToProspect: async (id: string, data: {
+    name: string;
+    type: 'agency' | 'independent_owner';
+    address?: string;
+    cep?: string;
+    cnpj?: string;
+    estimatedValue?: number;
+    probability?: number;
+  }) => {
+    const response = await apiClient.post(`/sales-rep/leads/${id}/convert-to-prospect`, data);
+    return response.data;
+  },
 };
 
 export const apiClientDashboardAPI = {
@@ -2422,6 +2499,78 @@ export const billingAPI = {
     }
     const query = qs.toString();
     const response = await apiClient.get(`/billing/usage/overages${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+};
+
+export const financialReportsAPI = {
+  generateReport: async (params?: {
+    type?: 'daily' | 'monthly' | 'annual';
+    startDate?: string;
+    endDate?: string;
+    agencyId?: string;
+    ownerId?: string;
+    propertyId?: string;
+    contractId?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          qs.append(k, String(v));
+        }
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/financial-reports${query ? `?${query}` : ''}`);
+    return response.data;
+  },
+
+  exportCSV: async (params?: {
+    type?: 'daily' | 'monthly' | 'annual';
+    startDate?: string;
+    endDate?: string;
+    agencyId?: string;
+    ownerId?: string;
+    propertyId?: string;
+    contractId?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          qs.append(k, String(v));
+        }
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/financial-reports/export/csv${query ? `?${query}` : ''}`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  exportPDF: async (params?: {
+    type?: 'daily' | 'monthly' | 'annual';
+    startDate?: string;
+    endDate?: string;
+    agencyId?: string;
+    ownerId?: string;
+    propertyId?: string;
+    contractId?: string;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          qs.append(k, String(v));
+        }
+      });
+    }
+    const query = qs.toString();
+    const response = await apiClient.get(`/financial-reports/export/pdf${query ? `?${query}` : ''}`, {
+      responseType: 'blob',
+    });
     return response.data;
   },
 };

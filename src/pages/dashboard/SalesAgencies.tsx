@@ -12,7 +12,7 @@ import {
 import { salesRepAPI } from '../../api';
 import {
   Building2, Search, Phone, Mail, MapPin, Calendar,
-  Users, Package, CheckCircle, XCircle, Building
+  Users, Package, CheckCircle, XCircle, Building, User
 } from 'lucide-react';
 
 interface Agency {
@@ -115,10 +115,10 @@ export function SalesAgencies() {
         <div>
           <div className="flex items-center gap-3">
             <Building className="w-7 h-7 text-primary" />
-            <h1 className="text-3xl font-bold">Agências</h1>
+            <h1 className="text-3xl font-bold">Agências e Proprietários Autônomos</h1>
           </div>
           <p className="text-muted-foreground mt-1">
-            Visualização de agências cadastradas (somente leitura)
+            Visualização de agências imobiliárias e proprietários independentes cadastrados
           </p>
         </div>
       </div>
@@ -223,14 +223,14 @@ export function SalesAgencies() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Agências ({filteredAgencies.length})
+            Agências e Proprietários Autônomos ({filteredAgencies.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredAgencies.length === 0 ? (
             <div className="text-center py-12">
               <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Nenhuma agência encontrada</p>
+              <p className="text-muted-foreground">Nenhuma agência ou proprietário autônomo encontrado</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -241,8 +241,19 @@ export function SalesAgencies() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <h3 className="text-lg font-semibold">{agency.name}</h3>
+                        {(agency as any).type === 'independent_owner' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                            <User className="w-3 h-3" />
+                            Proprietário Autônomo
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                            <Building2 className="w-3 h-3" />
+                            Agência
+                          </span>
+                        )}
                         {getStatusBadge(agency.status)}
                         {getPlanBadge(agency.plan)}
                       </div>

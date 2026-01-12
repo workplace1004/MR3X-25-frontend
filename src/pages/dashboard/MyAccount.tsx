@@ -20,14 +20,16 @@ import {
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
 import {
-  User,UserCog, Mail, Phone, FileText, MapPin, Shield, Camera, Trash2, Lock, Eye, EyeOff, Save, Loader2, Building2, Award, Users, BadgeCheck
+  User,UserCog, Mail, Phone, FileText, MapPin, Shield, Camera, Trash2, Lock, Save, Loader2, Building2, Award, Users, BadgeCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { profileAPI } from '../../api';
 import { useAuthStore } from '../../stores/authStore';
 import { CEPInput } from '../../components/ui/cep-input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { formatDocumentInput, formatCNPJInput, formatCPFInput, formatCRECIInput } from '../../lib/validation';
+import { validatePasswordStrength } from '../../lib/password-utils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
@@ -52,6 +54,8 @@ export default function MyAccount() {
     neighborhood: '',
     city: '',
     state: '',
+    addressReference: '', // Mandatory for Representatives
+    rg: '', // Mandatory for Representatives (National ID)
     agencyName: '',
     agencyCnpj: '',
     representativeName: '',
@@ -64,9 +68,6 @@ export default function MyAccount() {
     confirmPassword: '',
   });
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const getPhotoUrl = (photoUrl: string | null | undefined) => {
@@ -93,6 +94,8 @@ export default function MyAccount() {
         neighborhood: profile.neighborhood || '',
         city: profile.city || '',
         state: profile.state || '',
+        addressReference: profile.addressReference || '',
+        rg: profile.rg || '',
         agencyName: profile.agency?.name || '',
         agencyCnpj: profile.agency?.cnpj || '',
         representativeName: profile.agency?.representativeName || '',
@@ -155,6 +158,7 @@ export default function MyAccount() {
     updateProfileMutation.mutate(formData);
   };
 
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -163,8 +167,9 @@ export default function MyAccount() {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      toast.error('A nova senha deve ter no mínimo 6 caracteres');
+    const validation = validatePasswordStrength(passwordData.newPassword);
+    if (!validation.valid) {
+      toast.error(`Senha inválida: ${validation.errors.join(', ')}`);
       return;
     }
 
@@ -283,6 +288,7 @@ export default function MyAccount() {
   const showCreci = ['BROKER', 'AGENCY_ADMIN'].includes(user?.role || '');
   const showAgencyInfo = user?.role === 'AGENCY_ADMIN' && profile?.agency;
   const showAddressSection = (user?.role || '') !== 'ADMIN';
+  const isRepresentative = user?.role === 'REPRESENTATIVE';
 
   return (
     <div className="space-y-6">
@@ -373,7 +379,9 @@ export default function MyAccount() {
                   <span>CRECI: {profile.creci}</span>
                 </div>
               )}
-              {profile?.plan && (
+              {profile?.plan && 
+               !['CEO', 'ADMIN', 'PLATFORM_MANAGER', 'PROPRIETARIO', 'INQUILINO'].includes(user?.role || '') && 
+               profile.plan !== 'FREE' && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <FileText className="h-4 w-4" />
                   <span>Plano: {profile.plan}</span>
@@ -643,72 +651,34 @@ export default function MyAccount() {
                         <Lock className="h-4 w-4" />
                         Senha Atual
                       </Label>
-                      <div className="relative">
-                        <Input
-                          id="currentPassword"
-                          type={showCurrentPassword ? 'text' : 'password'}
-                          value={passwordData.currentPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                          placeholder="Digite sua senha atual"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
+                      <Input
+                        id="currentPassword"
+                        type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        placeholder="Digite sua senha atual"
+                      />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword" className="flex items-center gap-2">
-                        <Lock className="h-4 w-4" />
-                        Nova Senha
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="newPassword"
-                          type={showNewPassword ? 'text' : 'password'}
-                          value={passwordData.newPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                          placeholder="Digite sua nova senha"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        A senha deve ter no mínimo 6 caracteres
-                      </p>
-                    </div>
+                    <PasswordInput
+                      id="newPassword"
+                      label="Nova Senha"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      placeholder="Digite sua nova senha"
+                      showStrengthIndicator={true}
+                    />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="flex items-center gap-2">
-                        <Lock className="h-4 w-4" />
-                        Confirmar Nova Senha
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                          placeholder="Confirme sua nova senha"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
+                    <PasswordInput
+                      id="confirmPassword"
+                      label="Confirmar Nova Senha"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      placeholder="Confirme sua nova senha"
+                      showStrengthIndicator={false}
+                      showGenerateButton={false}
+                      error={passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword ? 'As senhas não coincidem' : undefined}
+                    />
                   </div>
 
                   <div className="flex justify-end">
@@ -730,6 +700,66 @@ export default function MyAccount() {
                     </Button>
                   </div>
                 </form>
+
+                {/* Two-Factor Authentication Section for Representatives */}
+                {isRepresentative && (
+                  <>
+                    <Separator className="my-6" />
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            <Shield className="h-5 w-5" />
+                            Autenticação de Dois Fatores (2FA)
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Adicione uma camada extra de segurança à sua conta
+                          </p>
+                        </div>
+                        <Badge className={'bg-gray-100 text-gray-800'}>
+                          Desativado
+                        </Badge>
+                      </div>
+
+                      {true ? (
+                        <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                          <p className="text-sm text-muted-foreground">
+                            A autenticação de dois fatores (2FA) é obrigatória para representantes comerciais.
+                            Isso protege sua conta mesmo se sua senha for comprometida.
+                          </p>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              // TODO: Implement 2FA setup
+                              toast.info('Configuração de 2FA será implementada em breve');
+                            }}
+                            className="w-full sm:w-auto"
+                          >
+                            <Shield className="h-4 w-4 mr-2" />
+                            Configurar 2FA
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 p-4 border rounded-lg bg-green-50">
+                          <p className="text-sm text-green-800">
+                            ✓ Autenticação de dois fatores está ativada
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              // TODO: Implement 2FA disable
+                              toast.info('Desativação de 2FA será implementada em breve');
+                            }}
+                            className="w-full sm:w-auto"
+                          >
+                            Desativar 2FA
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>

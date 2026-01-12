@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, User, Eye, EyeOff, Camera, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, User, Camera, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -9,6 +9,7 @@ import { Checkbox } from '../../components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Skeleton } from '../../components/ui/skeleton';
+import { PasswordInput } from '../../components/ui/password-input';
 import { toast } from 'sonner';
 import { usersAPI } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -100,7 +101,6 @@ export function UserEditPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
   const baseAvailableRoles = getAvailableRoles(user?.role);
 
@@ -485,26 +485,14 @@ export function UserEditPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder="Digite a senha"
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+              <PasswordInput
+                id="password"
+                label="Senha"
+                value={formData.password || ''}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                placeholder="Digite a senha (deixe em branco para não alterar)"
+                showStrengthIndicator={true}
+              />
             </div>
 
             {}

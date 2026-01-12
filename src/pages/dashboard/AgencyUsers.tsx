@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersAPI } from '@/api'
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
@@ -14,7 +14,10 @@ import {
   MapPin,
   Home,
   CreditCard,
-  Loader2
+  Loader2,
+  UserX,
+  UserCheck,
+  Trash2
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -88,7 +91,11 @@ const getDisplayStatus = (userData: any): string => {
 }
 
 export function AgencyUsers() {
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
+  const queryClient = useQueryClient()
+
+  const canDeleteUsers = hasPermission('users:delete')
+  const canUpdateUsers = hasPermission('users:update')
 
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [userDetail, setUserDetail] = useState<any>(null)
@@ -150,6 +157,55 @@ export function AgencyUsers() {
     } finally {
       setLoadingDetailsId(null)
     }
+  }
+
+  const statusChangeMutation = useMutation({
+    mutationFn: async ({ userId, status }: { userId: string; status: 'ACTIVE' | 'SUSPENDED' }) => {
+      return await usersAPI.changeStatus(userId, status, `Status alterado para ${status}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-users'] })
+      toast.success('Status do usuário atualizado com sucesso')
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Erro ao alterar status do usuário')
+    },
+  })
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await usersAPI.deleteUser(userId)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-users'] })
+      toast.success('Usuário excluído com sucesso')
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Erro ao excluir usuário')
+    },
+  })
+
+  const handleStatusChange = async (userId: string, currentStatus: string) => {
+    if (!canUpdateUsers) {
+      toast.error('Você não tem permissão para alterar o status do usuário')
+      return
+    }
+
+    const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE'
+    statusChangeMutation.mutate({ userId, status: newStatus as 'ACTIVE' | 'SUSPENDED' })
+  }
+
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!canDeleteUsers) {
+      toast.error('Você não tem permissão para excluir usuários')
+      return
+    }
+
+    if (!confirm(`Tem certeza que deseja excluir o usuário "${userName}"? Esta ação não pode ser desfeita.`)) {
+      return
+    }
+
+    deleteUserMutation.mutate(userId)
   }
 
   const filteredUsers = (myUsers || []).filter((userData: any) => {
@@ -372,15 +428,56 @@ export function AgencyUsers() {
                             <div className="text-muted-foreground">{userData.phone || '-'}</div>
                           </td>
                           <td className="p-4">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleViewUser(userData)}
-                              disabled={loadingDetailsId === userData.id.toString()}
-                              className="text-orange-600 border-orange-600 hover:bg-orange-50"
-                            >
-                              {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleViewUser(userData)}
+                                disabled={loadingDetailsId === userData.id.toString()}
+                                className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                              >
+                                {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                              </Button>
+                              {canUpdateUsers && !userData.isFrozen && (
+                                <>
+                                  {getDisplayStatus(userData) === 'ACTIVE' ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleStatusChange(userData.id.toString(), 'ACTIVE')}
+                                      disabled={statusChangeMutation.isPending}
+                                      className="text-red-600 hover:text-red-700"
+                                      title="Suspender usuário"
+                                    >
+                                      {statusChangeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleStatusChange(userData.id.toString(), 'SUSPENDED')}
+                                      disabled={statusChangeMutation.isPending}
+                                      className="text-green-600 hover:text-green-700"
+                                      title="Ativar usuário"
+                                    >
+                                      {statusChangeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                              {canDeleteUsers && !userData.isFrozen && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteUser(userData.id.toString(), userData.name || userData.email || 'Usuário')}
+                                  disabled={deleteUserMutation.isPending}
+                                  className="text-red-700 hover:text-red-800 hover:bg-red-50"
+                                  title="Excluir usuário"
+                                >
+                                  {deleteUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                </Button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       )
@@ -481,6 +578,39 @@ export function AgencyUsers() {
                               {loadingDetailsId === userData.id.toString() ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Eye className="w-4 h-4 mr-2" />}
                               {loadingDetailsId === userData.id.toString() ? 'Carregando...' : 'Visualizar'}
                             </DropdownMenuItem>
+                            {canUpdateUsers && !userData.isFrozen && (
+                              <>
+                                {getDisplayStatus(userData) === 'ACTIVE' ? (
+                                  <DropdownMenuItem
+                                    onClick={() => handleStatusChange(userData.id.toString(), 'ACTIVE')}
+                                    disabled={statusChangeMutation.isPending}
+                                    className="text-red-600 focus:text-red-700"
+                                  >
+                                    {statusChangeMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserX className="w-4 h-4 mr-2" />}
+                                    Suspender
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem
+                                    onClick={() => handleStatusChange(userData.id.toString(), 'SUSPENDED')}
+                                    disabled={statusChangeMutation.isPending}
+                                    className="text-green-600 focus:text-green-700"
+                                  >
+                                    {statusChangeMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
+                                    Ativar
+                                  </DropdownMenuItem>
+                                )}
+                              </>
+                            )}
+                            {canDeleteUsers && !userData.isFrozen && (
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteUser(userData.id.toString(), userData.name || userData.email || 'Usuário')}
+                                disabled={deleteUserMutation.isPending}
+                                className="text-red-700 focus:text-red-800"
+                              >
+                                {deleteUserMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                                Excluir
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

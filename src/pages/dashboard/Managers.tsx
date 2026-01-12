@@ -10,7 +10,6 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   MoreHorizontal,
   MapPin,
   Grid3X3,
@@ -44,6 +43,7 @@ import { CEPInput } from '@/components/ui/cep-input'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { PasswordInput } from '@/components/ui/password-input'
 import { validateDocument, isValidCEPFormat } from '@/lib/validation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -88,7 +88,6 @@ export function Managers() {
     city: '',
     state: '',
   })
-  const [showPassword, setShowPassword] = useState(false)
 
   const [editForm, setEditForm] = useState({
     name: '',
@@ -103,7 +102,6 @@ export function Managers() {
     city: '',
     state: '',
   })
-  const [showEditPassword, setShowEditPassword] = useState(false)
 
   const [selectedManager, setSelectedManager] = useState<any>(null)
   const [managerToDelete, setManagerToDelete] = useState<any>(null)
@@ -893,28 +891,15 @@ export function Managers() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        name="password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={newManager.password}
-                        onChange={handleInputChange}
-                        placeholder="Minimo 6 caracteres"
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Se vazio, uma senha sera gerada automaticamente</p>
-                  </div>
+                  <PasswordInput
+                    id="password"
+                    name="password"
+                    label="Senha"
+                    value={newManager.password}
+                    onChange={handleInputChange}
+                    placeholder="Digite a senha (se vazio, uma senha será gerada automaticamente)"
+                    showStrengthIndicator={true}
+                  />
                   <div>
                     <Label htmlFor="birthDate">Data de Nascimento</Label>
                     <Input id="birthDate" name="birthDate" type="date" value={newManager.birthDate} onChange={handleInputChange} />
@@ -1021,28 +1006,15 @@ export function Managers() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="edit-password"
-                        name="password"
-                        type={showEditPassword ? 'text' : 'password'}
-                        value={editForm.password}
-                        onChange={handleEditInputChange}
-                        placeholder="Deixe vazio para manter a senha atual"
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowEditPassword(!showEditPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Deixe vazio para manter a senha atual</p>
-                  </div>
+                  <PasswordInput
+                    id="edit-password"
+                    name="password"
+                    label="Senha"
+                    value={editForm.password}
+                    onChange={handleEditInputChange}
+                    placeholder="Digite a senha (deixe em branco para não alterar)"
+                    showStrengthIndicator={true}
+                  />
                   <div>
                     <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
                     <Input id="edit-birthDate" name="birthDate" type="date" value={editForm.birthDate} onChange={handleEditInputChange} />

@@ -25,6 +25,7 @@ import {
   QrCode,
   Copy,
   ExternalLink,
+  FileCheck,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -767,6 +768,66 @@ export function AgencyPlanConfig() {
                   </span>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileCheck className="w-5 h-5" />
+                Limites Gratuitos/mês
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                {/* Vistorias */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Vistorias</span>
+                    <span className="font-medium">
+                      {planUsage?.freeUsage?.inspections?.current || 0} / {planUsage?.freeUsage?.inspections?.limit === -1 ? 'Ilimitado' : planUsage?.freeUsage?.inspections?.limit || 0}
+                    </span>
+                  </div>
+                  {planUsage?.freeUsage?.inspections?.limit !== -1 && planUsage?.freeUsage?.inspections?.limit && (
+                    <Progress 
+                      value={planUsage?.freeUsage?.inspections?.limit ? Math.min(100, ((planUsage?.freeUsage?.inspections?.current || 0) / planUsage.freeUsage.inspections.limit) * 100) : 0} 
+                      className="h-2" 
+                    />
+                  )}
+                </div>
+
+                {/* Análises */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Análises</span>
+                    <span className="font-medium">
+                      {planUsage?.freeUsage?.analyses?.current || 0} / {planUsage?.freeUsage?.analyses?.limit === -1 ? 'Ilimitado' : planUsage?.freeUsage?.analyses?.limit || 0}
+                    </span>
+                  </div>
+                  {planUsage?.freeUsage?.analyses?.limit !== -1 && planUsage?.freeUsage?.analyses?.limit && (
+                    <Progress 
+                      value={planUsage?.freeUsage?.analyses?.limit ? Math.min(100, ((planUsage?.freeUsage?.analyses?.current || 0) / planUsage.freeUsage.analyses.limit) * 100) : 0} 
+                      className="h-2" 
+                    />
+                  )}
+                </div>
+
+                {/* Acordos */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Acordos</span>
+                    <span className="font-medium">
+                      {planUsage?.freeUsage?.agreements?.current || 0} / {planUsage?.freeUsage?.agreements?.limit === -1 ? 'Ilimitado' : planUsage?.freeUsage?.agreements?.limit || 0}
+                    </span>
+                  </div>
+                  {planUsage?.freeUsage?.agreements?.limit !== -1 && planUsage?.freeUsage?.agreements?.limit && (
+                    <Progress 
+                      value={planUsage?.freeUsage?.agreements?.limit ? Math.min(100, ((planUsage?.freeUsage?.agreements?.current || 0) / planUsage.freeUsage.agreements.limit) * 100) : 0} 
+                      className="h-2" 
+                    />
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -3,10 +3,12 @@ import { auditAPI } from '@/api'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
+import apiClient from '@/api/client'
 import {
   FileText,
   Filter,
   Download,
+  FileDown,
   User,
   Clock,
   ChevronDown,
@@ -35,7 +37,8 @@ export function Audit() {
   const canViewAudit = hasPermission('audit:read')
 
   const [entityFilter, setEntityFilter] = useState<string>('all')
-  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchInput, setSearchInput] = useState<string>('') // What user types
+  const [activeSearch, setActiveSearch] = useState<string>('') // What we actually search for
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
   const [page, setPage] = useState(1)
@@ -53,13 +56,14 @@ export function Audit() {
   }
 
   const { data: auditData, isLoading } = useQuery({
-    queryKey: ['audit-logs', entityFilter, searchQuery, startDate, endDate, page],
+    queryKey: ['audit-logs', entityFilter, activeSearch, startDate, endDate, page],
     queryFn: () => auditAPI.getAuditLogs({
       entity: entityFilter && entityFilter !== 'all' ? entityFilter : undefined,
       page,
       pageSize: 50,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
+      search: activeSearch.trim() || undefined,
     }),
     enabled: canViewAudit,
   })
@@ -75,35 +79,68 @@ export function Audit() {
   }
 
   const getEventBadgeColor = (event: string) => {
+    if (event === 'LOGIN') return 'bg-green-600 text-white'
+    if (event === 'LOGOUT') return 'bg-orange-600 text-white'
     if (event.includes('CREATE') || event.includes('create')) return 'bg-green-500 text-white'
     if (event.includes('UPDATE') || event.includes('update')) return 'bg-blue-500 text-white'
     if (event.includes('DELETE') || event.includes('delete')) return 'bg-red-500 text-white'
     return 'bg-gray-500 text-white'
   }
 
-  const exportToCSV = () => {
-    if (!auditData?.items) return
+  const exportToCSV = async () => {
+    try {
+      const params = new URLSearchParams()
+      if (entityFilter && entityFilter !== 'all') params.append('entity', entityFilter)
+      if (startDate) params.append('startDate', startDate)
+      if (endDate) params.append('endDate', endDate)
 
-    const headers = ['Data', 'Usuario', 'Evento', 'Entidade', 'ID da Entidade', 'Endereco IP', 'User Agent']
-    const rows = auditData.items.map((log: any) => [
-      formatDateTime(log.timestamp),
-      log.user?.name || 'Desconhecido',
-      log.event,
-      log.entity,
-      log.entityId,
-      log.ip || '-',
-      log.userAgent || '-'
-    ])
+      const response = await apiClient.get(`/audit/export/csv?${params.toString()}`, {
+        responseType: 'blob',
+      })
 
-    const csv = [headers.join(','), ...rows.map((row: any[]) => row.join(','))].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `audit-logs-${new Date().toISOString()}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
-    toast.success('Logs de auditoria exportados com sucesso')
+      const blob = new Blob([response.data], { type: 'text/csv; charset=utf-8' })
+      // Access headers - axios normalizes to lowercase, but check all possible formats
+      // Headers are available but not currently used in this export
+
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`
+      a.click()
+      window.URL.revokeObjectURL(url)
+
+      toast.success('Logs exportados com sucesso!')
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao exportar logs')
+    }
+  }
+
+  const exportToPDF = async () => {
+    try {
+      const params = new URLSearchParams()
+      if (entityFilter && entityFilter !== 'all') params.append('entity', entityFilter)
+      if (startDate) params.append('startDate', startDate)
+      if (endDate) params.append('endDate', endDate)
+
+      const response = await apiClient.get(`/audit/export/pdf?${params.toString()}`, {
+        responseType: 'blob',
+      })
+
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      // Access headers - axios normalizes to lowercase, but check all possible formats
+      // Headers are available but not currently used in this export
+
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(url)
+
+      toast.success('PDF exportado com sucesso!')
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao exportar PDF')
+    }
   }
 
   if (isLoading) {
@@ -186,13 +223,23 @@ export function Audit() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={exportToCSV}
-          className="bg-orange-600 hover:bg-orange-700 text-white"
-        >
-          <Download className="w-4 h-4 mr-2" />
-          Exportar CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={exportToCSV}
+            variant="outline"
+            className="border-orange-600 text-orange-600 hover:bg-orange-50"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar CSV
+          </Button>
+          <Button
+            onClick={exportToPDF}
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+          >
+            <FileDown className="w-4 h-4 mr-2" />
+            Exportar PDF
+          </Button>
+        </div>
       </div>
 
       {}
@@ -250,8 +297,14 @@ export function Audit() {
               <Input
                 id="search"
                 placeholder="Buscar logs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setActiveSearch(searchInput) // Update active search when Enter is pressed
+                    setPage(1) // Reset to first page when searching
+                  }
+                }}
               />
             </div>
           </div>
@@ -273,10 +326,15 @@ export function Audit() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <Badge className={getEventBadgeColor(log.event)}>
                           {log.event}
                         </Badge>
+                        {(log.event === 'LOGIN' || log.event === 'LOGOUT') && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {log.event === 'LOGIN' ? '🔐 Entrada' : '🚪 Saída'}
+                          </Badge>
+                        )}
                         <Badge variant="outline">{log.entity}</Badge>
                         <span className="text-sm text-muted-foreground">
                           ID: {log.entityId}
@@ -294,7 +352,7 @@ export function Audit() {
                         </div>
                         {log.ip && (
                           <div className="flex items-center gap-1">
-                            <span>IP: {log.ip}</span>
+                            <span className="font-mono text-xs">IP: {log.ip}</span>
                           </div>
                         )}
                       </div>

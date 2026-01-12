@@ -38,6 +38,7 @@ import {
   PenTool,
   AlertCircle,
   User,
+  Clock,
 } from 'lucide-react';
 
 interface Notification {
@@ -114,7 +115,7 @@ const statusOptions = [
   { value: 'RESOLVIDO', label: 'Resolvido', color: 'bg-green-500' },
   { value: 'REJEITADO', label: 'Rejeitado', color: 'bg-red-500' },
   { value: 'PRAZO_EXPIRADO', label: 'Prazo Expirado', color: 'bg-orange-500' },
-  { value: 'ENCAMINHADO_JUDICIAL', label: 'Encaminhado ao Judicial', color: 'bg-red-700' },
+  { value: 'ENCAMINHADO_JUDICIAL', label: 'Encaminhado para Medidas Judiciais', color: 'bg-red-700' },
   { value: 'CANCELADO', label: 'Cancelado', color: 'bg-gray-700' },
 ];
 
@@ -150,6 +151,77 @@ const formatDateTime = (date: string | null | undefined) => {
   if (!date) return '-';
   return new Date(date).toLocaleString('pt-BR');
 };
+
+// Countdown Timer Component
+function CountdownTimer({ deadlineDate }: { deadlineDate: string }) {
+  const [timeRemaining, setTimeRemaining] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    expired: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    const calculateTimeRemaining = () => {
+      const deadline = new Date(deadlineDate);
+      const now = new Date();
+      const diff = deadline.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeRemaining({ days, hours, minutes, seconds, expired: false });
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [deadlineDate]);
+
+  if (!timeRemaining) {
+    return <p className="text-sm text-gray-500">Calculando...</p>;
+  }
+
+  if (timeRemaining.expired) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-red-600 font-bold">
+        <AlertCircle className="w-4 h-4" />
+        <span>PRAZO EXPIRADO</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <Clock className="w-4 h-4 text-yellow-600" />
+      <div className="flex gap-2 text-sm font-bold">
+        {timeRemaining.days > 0 && (
+          <span className="bg-yellow-100 px-2 py-1 rounded">
+            {timeRemaining.days}d
+          </span>
+        )}
+        <span className="bg-yellow-100 px-2 py-1 rounded">
+          {timeRemaining.hours.toString().padStart(2, '0')}h
+        </span>
+        <span className="bg-yellow-100 px-2 py-1 rounded">
+          {timeRemaining.minutes.toString().padStart(2, '0')}m
+        </span>
+        <span className="bg-yellow-100 px-2 py-1 rounded">
+          {timeRemaining.seconds.toString().padStart(2, '0')}s
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function ExtrajudicialNotifications() {
   const { user } = useAuth();
@@ -392,7 +464,8 @@ export default function ExtrajudicialNotifications() {
 
   const handleCreate = async () => {
     const requiredFields = [
-      { field: 'propertyId', label: 'Imovel' },
+      { field: 'propertyId', label: 'Imóvel' },
+      { field: 'type', label: 'Tipo' },
       { field: 'creditorId', label: 'ID do Credor' },
       { field: 'creditorName', label: 'Nome do Credor' },
       { field: 'creditorDocument', label: 'Documento do Credor' },
@@ -868,6 +941,11 @@ export default function ExtrajudicialNotifications() {
                         <div>
                           <span className="text-muted-foreground">Prazo:</span>
                           <p className="font-medium">{formatDate(n.deadlineDate)}</p>
+                          {n.deadlineDate && n.status !== 'PRAZO_EXPIRADO' && n.status !== 'RESOLVIDO' && (
+                            <div className="mt-1 text-xs">
+                              <CountdownTimer deadlineDate={n.deadlineDate} />
+                            </div>
+                          )}
                         </div>
                         <div>
                           <span className="text-muted-foreground">Prioridade:</span>
@@ -1252,13 +1330,19 @@ export default function ExtrajudicialNotifications() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label className="text-xs sm:text-sm">Imovel</Label>
+                  <Label className="text-xs sm:text-sm">
+                    Imóvel <span className="text-red-500">*</span>
+                  </Label>
                   <Select
                     value={formData.propertyId}
                     onValueChange={(v) => setFormData({ ...formData, propertyId: v })}
                   >
-                    <SelectTrigger className="text-xs sm:text-sm">
-                      <SelectValue placeholder="Selecione o imovel" />
+                    <SelectTrigger 
+                      className={`text-xs sm:text-sm ${
+                        !formData.propertyId ? 'border-red-500 focus:border-red-500' : ''
+                      }`}
+                    >
+                      <SelectValue placeholder="Selecione o imóvel" />
                     </SelectTrigger>
                     <SelectContent>
                       {properties.map(p => (
@@ -1266,16 +1350,25 @@ export default function ExtrajudicialNotifications() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {!formData.propertyId && (
+                    <p className="text-xs text-red-500 mt-1">Este campo é obrigatório</p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs sm:text-sm">Tipo</Label>
+                    <Label className="text-xs sm:text-sm">
+                      Tipo <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={formData.type}
                       onValueChange={(v) => setFormData({ ...formData, type: v })}
                     >
-                      <SelectTrigger className="text-xs sm:text-sm">
-                        <SelectValue />
+                      <SelectTrigger 
+                        className={`text-xs sm:text-sm ${
+                          !formData.type ? 'border-red-500 focus:border-red-500' : ''
+                        }`}
+                      >
+                        <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
                         {typeOptions.map(t => (
@@ -1283,6 +1376,9 @@ export default function ExtrajudicialNotifications() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {!formData.type && (
+                      <p className="text-xs text-red-500 mt-1">Este campo é obrigatório</p>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs sm:text-sm">Prioridade</Label>
@@ -1706,6 +1802,12 @@ export default function ExtrajudicialNotifications() {
                       <p className="text-xs text-gray-500 uppercase">Status</p>
                       <div className="mt-1">{getStatusBadge(selectedNotification.status)}</div>
                     </div>
+                    {selectedNotification.deadlineDate && selectedNotification.status !== 'PRAZO_EXPIRADO' && selectedNotification.status !== 'RESOLVIDO' && (
+                      <div className="border text-center p-3 col-span-2 sm:col-span-3 bg-yellow-50">
+                        <p className="text-xs text-gray-500 uppercase mb-1">Tempo Restante</p>
+                        <CountdownTimer deadlineDate={selectedNotification.deadlineDate} />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1871,14 +1973,14 @@ export default function ExtrajudicialNotifications() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Gavel className="h-4 w-4 sm:h-5 sm:w-5" />
-              Encaminhar ao Judicial
+              Encaminhar para Medidas Judiciais
             </DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
-              Esta notificacao sera marcada como encaminhada ao processo judicial
+              Esta notificacao sera marcada como "Encaminhada para Medidas Judiciais", indicando que o credor podera utilizar este documento para suportar o ajuizamento de acao judicial. Este documento nao constitui uma decisao judicial e nao substitui o ajuizamento formal de uma acao.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4 mt-2">
             <div>
               <Label className="text-xs sm:text-sm">Numero do Processo</Label>
               <Input
@@ -1908,7 +2010,7 @@ export default function ExtrajudicialNotifications() {
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 mt-5">
             <Button variant="outline" onClick={() => setShowJudicialModal(false)} className="w-full sm:w-auto order-2 sm:order-1">
               Cancelar
             </Button>

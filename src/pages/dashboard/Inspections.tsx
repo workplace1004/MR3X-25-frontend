@@ -382,6 +382,10 @@ export function Inspections() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      if (user?.agencyId) {
+        await queryClient.invalidateQueries({ queryKey: ['agency-plan-usage', user.agencyId] });
+        await queryClient.refetchQueries({ queryKey: ['agency-plan-usage', user.agencyId] });
+      }
       closeAllModals();
       toast.success('Vistoria criada com sucesso');
       setNewInspection({
@@ -1950,10 +1954,10 @@ export function Inspections() {
                     <SelectContent>
                       {properties
                         .filter((property) => {
-                          // Only show properties with status DISPONIVEL
+                          // Only show properties with status ALUGADO (rented)
                           if (!property || !property.status) return false;
                           const status = String(property.status).toUpperCase().trim();
-                          return status === 'DISPONIVEL' || status === 'AVAILABLE';
+                          return status === 'ALUGADO' || status === 'RENTED';
                         })
                         .map((property) => (
                         <SelectItem key={property.id} value={property.id?.toString()}>

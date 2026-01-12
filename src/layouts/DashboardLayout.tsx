@@ -34,11 +34,12 @@ const baseNavigation = [
 
   { name: 'Meu Contrato', href: '/dashboard/tenant-contract', icon: FileText, perm: undefined, roles: ['INQUILINO'] },
   { name: 'Meus Pagamentos', href: '/dashboard/tenant-payments', icon: DollarSign, perm: undefined, roles: ['INQUILINO'] },
+  { name: 'Meus Imóveis', href: '/dashboard/tenant-properties', icon: Building2, perm: undefined, roles: ['INQUILINO'] },
 
   { name: 'Usuários', href: '/dashboard/agency-users', icon: UsersRound, perm: undefined, roles: ['AGENCY_ADMIN'] },
   { name: 'Imóveis', href: '/dashboard/properties', icon: Building2, perm: 'properties:read' },
   { name: 'Inquilinos', href: '/dashboard/tenants', icon: Users, perm: 'users:read' },
-  { name: 'Análise de Inquilinos', href: '/dashboard/tenant-analysis', icon: UserSearch, perm: undefined },
+  { name: 'Análise de Clientes', href: '/dashboard/tenant-analysis', icon: UserSearch, perm: undefined },
   { name: 'Corretores', href: '/dashboard/brokers', icon: Briefcase, perm: 'users:read' },
   { name: 'Proprietários', href: '/dashboard/owners', icon: User, perm: 'users:read' },
   { name: 'Diretor Agência', href: '/dashboard/agency-admin', icon: Crown, perm: undefined, roles: ['CEO', 'ADMIN'] },
@@ -51,7 +52,7 @@ const baseNavigation = [
   { name: 'Plano da Agência', href: '/dashboard/agency-plan-config', icon: Package, perm: 'agencies:update', roles: ['AGENCY_ADMIN'] },
   { name: 'Meu Plano', href: '/dashboard/owner-plan-config', icon: Package, perm: undefined, roles: ['INDEPENDENT_OWNER'] },
   { name: 'Usuários', href: '/dashboard/users', icon: Users, perm: 'users:read' },
-  { name: 'Agências', href: '/dashboard/agencies', icon: Building, perm: undefined, roles: ['CEO', 'ADMIN'] },
+  { name: 'Usuários Autônomos', href: '/dashboard/agencies', icon: Building, perm: undefined, roles: ['CEO', 'ADMIN'] },
   { name: 'Relatórios', href: '/dashboard/reports', icon: BarChart3, perm: 'reports:read' },
   { name: 'Planos', href: '/dashboard/plans', icon: Package, perm: undefined, roles: ['CEO', 'ADMIN'] },
   { name: 'Faturamento', href: '/dashboard/billing', icon: Receipt, perm: 'billing:read', roles: ['CEO', 'ADMIN', 'INDEPENDENT_OWNER'] },
@@ -325,9 +326,11 @@ export function DashboardLayout() {
         '/dashboard',
         '/dashboard/tenant-contract',
         '/dashboard/tenant-payments',
+        '/dashboard/tenant-properties',
         '/dashboard/inspections',
         '/dashboard/extrajudicial-notifications',
         '/dashboard/agreements',
+        '/dashboard/reports',
         '/dashboard/chat',
         '/dashboard/notifications',
         '/dashboard/my-account',
@@ -577,12 +580,20 @@ export function DashboardLayout() {
       </div>
 
       {}
-      <div className="lg:pl-64 min-h-screen">
-        <main className="min-h-screen pt-4 lg:pt-6 p-4 lg:p-8 bg-gray-50">
+      <div className="lg:pl-64 min-h-screen flex flex-col">
+        <main className="flex-1 pt-4 lg:pt-6 p-4 lg:p-8 bg-gray-50">
           <div className="max-w-8xl mx-auto">
             <Outlet />
           </div>
         </main>
+        <footer className="bg-white border-t border-border py-3 px-4 lg:px-8">
+          <div className="max-w-8xl mx-auto">
+            <p className="text-xs text-muted-foreground text-center">
+              <strong>MR3X</strong> é uma plataforma de tecnologia para gestão de aluguéis e não presta serviços jurídicos, 
+              advocatícios ou de intermediação judicial.
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
   );
