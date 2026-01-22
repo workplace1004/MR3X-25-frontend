@@ -96,7 +96,9 @@ export function TenantPayments() {
       
       // Find invoice that matches this payment
       const matchingInvoice = paidInvoices.find((inv: Invoice) => {
-        const invDate = new Date(inv.paidAt || inv.dueDate).toISOString().split('T')[0];
+        const dateValue = inv.paidAt || inv.dueDate;
+        if (!dateValue) return false;
+        const invDate = new Date(dateValue).toISOString().split('T')[0];
         const payDate = new Date(payment.date).toISOString().split('T')[0];
         return invDate === payDate || Math.abs(Number(inv.paidValue || inv.originalValue) - Number(payment.amount)) < 0.01;
       });
@@ -317,8 +319,9 @@ export function TenantPayments() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDownloadReceipt(payment.id)}
+                      onClick={() => payment.id && handleDownloadReceipt(payment.id)}
                       title="Baixar comprovante"
+                      disabled={!payment.id}
                     >
                       <Download className="w-4 h-4" />
                     </Button>

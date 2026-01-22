@@ -87,6 +87,10 @@ interface Tenant {
   emergencyContactPhone?: string;
   plainPassword?: string;
   photo?: string;
+  photoUrl?: string;
+  token?: string;
+  isFrozen?: boolean;
+  status?: string;
   role?: string;
   plan?: string;
 }
@@ -125,6 +129,8 @@ interface TenantFormData {
   employerName?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  role?: string;
+  plan?: string;
 }
 
 interface ApiError {
@@ -215,7 +221,23 @@ export function Tenants() {
   const [showAnalysisSearchModal, setShowAnalysisSearchModal] = useState(false)
   const [searchDocument, setSearchDocument] = useState('')
   const [searchingAnalysis, setSearchingAnalysis] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState<unknown>(null)
+  const [analysisResult, setAnalysisResult] = useState<{
+    basicData?: {
+      phone?: string;
+      birthDate?: string;
+      address?: string;
+      zipCode?: string;
+      city?: string;
+      state?: string;
+    };
+    document?: string;
+    name?: string;
+    riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    recommendation?: 'APPROVED' | 'APPROVED_WITH_CAUTION' | 'REQUIRES_GUARANTOR' | 'REJECTED';
+    riskScore?: number;
+    analyzedAt?: string;
+    recommendationNotes?: string;
+  } | null>(null)
   const [analysisError, setAnalysisError] = useState('')
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -394,22 +416,22 @@ export function Tenants() {
   })
 
   const handleNewTenantCEPData = useCallback((data: CEPData) => {
-    setNewTenant((prev: TenantFormData) => ({
+    setNewTenant((prev) => ({
       ...prev,
-      address: data.logradouro || data.street || prev.address,
-      neighborhood: data.bairro || data.neighborhood || prev.neighborhood,
-      city: data.cidade || data.city || prev.city,
-      state: data.estado || data.state || prev.state,
+      address: data.logradouro || data.street || prev.address || '',
+      neighborhood: data.bairro || data.neighborhood || prev.neighborhood || '',
+      city: data.cidade || data.city || prev.city || '',
+      state: data.estado || data.state || prev.state || '',
     }))
   }, [])
 
   const handleEditTenantCEPData = useCallback((data: CEPData) => {
-    setEditForm((prev: TenantFormData) => ({
+    setEditForm((prev) => ({
       ...prev,
-      address: data.logradouro || data.street || prev.address,
-      neighborhood: data.bairro || data.neighborhood || prev.neighborhood,
-      city: data.cidade || data.city || prev.city,
-      state: data.estado || data.state || prev.state,
+      address: data.logradouro || data.street || prev.address || '',
+      neighborhood: data.bairro || data.neighborhood || prev.neighborhood || '',
+      city: data.cidade || data.city || prev.city || '',
+      state: data.estado || data.state || prev.state || '',
     }))
   }, [])
 
@@ -466,7 +488,7 @@ export function Tenants() {
   const handleProceedToRegistration = () => {
     if (!analysisResult) return
 
-    const basicData = analysisResult.basicData || {}
+    const basicData = (analysisResult?.basicData || {}) as { phone?: string; birthDate?: string; address?: string; zipCode?: string; city?: string; state?: string }
     const phone = basicData.phone || ''
 
     let birthDate = ''
@@ -504,8 +526,8 @@ export function Tenants() {
     }
 
     setNewTenant({
-      document: analysisResult.document || '',
-      name: analysisResult.name || '',
+      document: analysisResult?.document || '',
+      name: analysisResult?.name || '',
       phone: phone,
       email: '',
       password: '',
@@ -1506,7 +1528,7 @@ export function Tenants() {
                 <div>
                   <CEPInput
                     value={newTenant.cep}
-                    onChange={(v: string) => setNewTenant((prev: TenantFormData) => ({ ...prev, cep: v }))}
+                    onChange={(v: string) => setNewTenant((prev) => ({ ...prev, cep: v }))}
                     onCEPData={handleNewTenantCEPData}
                     placeholder="00000-000"
                   />
@@ -1822,7 +1844,7 @@ export function Tenants() {
                 <div>
                   <CEPInput
                     value={editForm.cep}
-                    onChange={(v: string) => setEditForm((prev: TenantFormData) => ({ ...prev, cep: v }))}
+                    onChange={(v: string) => setEditForm((prev) => ({ ...prev, cep: v }))}
                     onCEPData={handleEditTenantCEPData}
                     placeholder="00000-000"
                   />
@@ -2174,7 +2196,6 @@ export function Tenants() {
             </div>
 
             <div className="p-6 space-y-5">
-              {}
               <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <Shield className="w-4 h-4 text-blue-600" />
@@ -2186,7 +2207,6 @@ export function Tenants() {
                 </div>
               </div>
 
-              {}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">
                   Documento (CPF ou CNPJ)
@@ -2271,51 +2291,47 @@ export function Tenants() {
                     </div>
                   </div>
 
-                  {}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                       <h4 className="font-medium text-gray-800">Dados da Análise</h4>
                     </div>
                     <div className="p-4 space-y-4">
-                      {}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Nome</p>
-                          <p className="font-medium text-gray-900">{analysisResult.name || '-'}</p>
+                          <p className="font-medium text-gray-900">{analysisResult?.name || '-'}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Documento (CPF/CNPJ)</p>
-                          <p className="font-medium text-gray-900 font-mono">{analysisResult.document || '-'}</p>
+                          <p className="font-medium text-gray-900 font-mono">{analysisResult?.document || '-'}</p>
                         </div>
                       </div>
 
-                      {}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Nível de Risco</p>
-                          <Badge className={`${analysisResult.riskLevel === 'LOW' ? 'bg-green-500 hover:bg-green-600' :
-                              analysisResult.riskLevel === 'MEDIUM' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                          <Badge className={`${analysisResult?.riskLevel === 'LOW' ? 'bg-green-500 hover:bg-green-600' :
+                              analysisResult?.riskLevel === 'MEDIUM' ? 'bg-yellow-500 hover:bg-yellow-600' :
                                 'bg-orange-500 hover:bg-orange-600'
                             } text-white`}>
-                            {analysisResult.riskLevel === 'LOW' ? 'Baixo' :
-                              analysisResult.riskLevel === 'MEDIUM' ? 'Médio' : analysisResult.riskLevel}
+                            {analysisResult?.riskLevel === 'LOW' ? 'Baixo' :
+                              analysisResult?.riskLevel === 'MEDIUM' ? 'Médio' : analysisResult?.riskLevel || '-'}
                           </Badge>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Recomendação</p>
-                          <Badge className={`${analysisResult.recommendation === 'APPROVED' ? 'bg-green-500 hover:bg-green-600' :
+                          <Badge className={`${analysisResult?.recommendation === 'APPROVED' ? 'bg-green-500 hover:bg-green-600' :
                               'bg-yellow-500 hover:bg-yellow-600'
                             } text-white`}>
-                            {analysisResult.recommendation === 'APPROVED' ? 'Aprovado' :
-                              analysisResult.recommendation === 'APPROVED_WITH_CAUTION' ? 'Aprovado com Ressalvas' :
-                                analysisResult.recommendation}
+                            {analysisResult?.recommendation === 'APPROVED' ? 'Aprovado' :
+                              analysisResult?.recommendation === 'APPROVED_WITH_CAUTION' ? 'Aprovado com Ressalvas' :
+                                analysisResult?.recommendation || '-'}
                           </Badge>
                         </div>
                       </div>
 
-                      {}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {analysisResult.riskScore !== undefined && (
+                        {analysisResult?.riskScore !== undefined && (
                           <div>
                             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Score de Risco</p>
                             <p className="font-medium text-gray-900">{analysisResult.riskScore}/1000</p>
@@ -2324,17 +2340,15 @@ export function Tenants() {
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Data da Análise</p>
                           <p className="font-medium text-gray-900">
-                            {analysisResult.analyzedAt ? new Date(analysisResult.analyzedAt).toLocaleDateString('pt-BR') : '-'}
+                            {analysisResult?.analyzedAt ? new Date(analysisResult.analyzedAt).toLocaleDateString('pt-BR') : '-'}
                           </p>
                         </div>
                       </div>
-
-                      {}
-                      {analysisResult.recommendation === 'APPROVED_WITH_CAUTION' && analysisResult.recommendationNotes && (
+                      {analysisResult?.recommendation === 'APPROVED_WITH_CAUTION' && analysisResult?.recommendationNotes && (
                         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <div className="flex items-start gap-2">
                             <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-yellow-800">{analysisResult.recommendationNotes}</p>
+                            <p className="text-sm text-yellow-800">{analysisResult?.recommendationNotes}</p>
                           </div>
                         </div>
                       )}

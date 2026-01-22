@@ -47,6 +47,48 @@ interface Property {
   state?: string;
   status?: string;
   rentValue?: number;
+  token?: string;
+  owner?: {
+    id?: string;
+    name?: string;
+    email?: string;
+  };
+  broker?: {
+    id?: string;
+    name?: string;
+    email?: string;
+  };
+  tenant?: {
+    id?: string;
+    name?: string;
+    email?: string;
+  };
+  tenantName?: string;
+  monthlyRent?: number;
+  dueDay?: number;
+  nextDueDate?: string | Date;
+  agencyFee?: number;
+  cep?: string;
+  neighborhood?: string;
+  stateNumber?: string;
+  propertyType?: string;
+  useType?: string;
+  registrationNumber?: string;
+  builtArea?: number;
+  totalArea?: number;
+  condominiumName?: string;
+  condominiumFee?: number;
+  iptuValue?: number;
+  totalAreaHectares?: number;
+  productiveArea?: number;
+  propertyRegistry?: string;
+  ccirNumber?: string;
+  carNumber?: string;
+  itrValue?: number;
+  intendedUse?: string;
+  georeferencing?: string;
+  description?: string;
+  furnitureList?: string;
   [key: string]: unknown;
 }
 
@@ -55,6 +97,8 @@ interface PropertyDocument {
   type?: string;
   name?: string;
   url?: string;
+  date?: string | Date;
+  pdfUrl?: string;
   [key: string]: unknown;
 }
 
@@ -67,19 +111,40 @@ interface PropertyImage {
 interface Contract {
   id: string;
   propertyId?: string;
-  property?: { id: string };
+  property?: { 
+    id: string;
+    name?: string;
+  };
+  createdAt?: string | Date;
+  contractDate?: string | Date;
+  provisionalPdfUrl?: string;
+  finalPdfUrl?: string;
   [key: string]: unknown;
 }
 
 interface Inspection {
   id: string;
   propertyId?: string;
+  property?: {
+    id?: string;
+    name?: string;
+  };
+  createdAt?: string | Date;
+  inspectionDate?: string | Date;
+  pdfUrl?: string;
   [key: string]: unknown;
 }
 
 interface Notification {
   id: string;
   propertyId?: string;
+  property?: {
+    id?: string;
+    name?: string;
+  };
+  createdAt?: string | Date;
+  notificationDate?: string | Date;
+  pdfUrl?: string;
   [key: string]: unknown;
 }
 
@@ -396,27 +461,27 @@ export function TenantProperties() {
       const inspectionsArray = Array.isArray(inspections) ? inspections : [];
       const notificationsArray = Array.isArray(notificationsResponse) ? notificationsResponse : [];
 
-      const allDocuments = [
+      const allDocuments: PropertyDocument[] = [
         ...contractsArray.map((c: Contract) => ({
           id: c.id,
           name: `Contrato - ${c.property?.name || property.name || 'Imóvel'}`,
           type: 'CONTRACT',
-          date: c.createdAt || c.contractDate,
-          pdfUrl: c.provisionalPdfUrl || c.finalPdfUrl,
+          date: (c.createdAt || c.contractDate) ? String(c.createdAt || c.contractDate) : undefined,
+          pdfUrl: (c.provisionalPdfUrl || c.finalPdfUrl) ? String(c.provisionalPdfUrl || c.finalPdfUrl) : undefined,
         })),
         ...inspectionsArray.map((i: Inspection) => ({
           id: i.id,
           name: `Vistoria - ${i.property?.name || property.name || 'Imóvel'}`,
           type: 'INSPECTION',
-          date: i.createdAt || i.inspectionDate,
-          pdfUrl: i.pdfUrl,
+          date: (i.createdAt || i.inspectionDate) ? String(i.createdAt || i.inspectionDate) : undefined,
+          pdfUrl: i.pdfUrl ? String(i.pdfUrl) : undefined,
         })),
         ...notificationsArray.map((n: Notification) => ({
           id: n.id,
           name: `Notificação Extrajudicial - ${n.property?.name || property.name || 'Imóvel'}`,
           type: 'NOTIFICATION',
-          date: n.createdAt || n.notificationDate,
-          pdfUrl: n.pdfUrl,
+          date: (n.createdAt || n.notificationDate) ? String(n.createdAt || n.notificationDate) : undefined,
+          pdfUrl: n.pdfUrl ? String(n.pdfUrl) : undefined,
         })),
       ];
 
@@ -741,13 +806,13 @@ export function TenantProperties() {
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Próximo Vencimento</label>
                       <div className="text-base">
-                        {propertyDetail.nextDueDate ? new Date(propertyDetail.nextDueDate).toLocaleDateString('pt-BR') : '-'}
+                        {propertyDetail.nextDueDate ? new Date(String(propertyDetail.nextDueDate)).toLocaleDateString('pt-BR') : '-'}
                       </div>
                     </div>
                     {propertyDetail.agencyFee !== null && propertyDetail.agencyFee !== undefined && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Taxa da Agência (Específica)</label>
-                        <div className="text-base">{propertyDetail.agencyFee}%</div>
+                        <div className="text-base">{String(propertyDetail.agencyFee)}%</div>
                       </div>
                     )}
                   </div>
@@ -763,7 +828,7 @@ export function TenantProperties() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">CEP</label>
-                      <div className="text-base">{propertyDetail.cep || '-'}</div>
+                      <div className="text-base">{String(propertyDetail.cep || '-')}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Endereço</label>
@@ -771,7 +836,7 @@ export function TenantProperties() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Bairro</label>
-                      <div className="text-base">{propertyDetail.neighborhood || '-'}</div>
+                      <div className="text-base">{String(propertyDetail.neighborhood || '-')}</div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Cidade</label>
@@ -779,12 +844,12 @@ export function TenantProperties() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Estado</label>
-                      <div className="text-base">{propertyDetail.stateNumber || '-'}</div>
+                      <div className="text-base">{String(propertyDetail.stateNumber || '-')}</div>
                     </div>
                   </div>
                 </div>
 
-                {(propertyDetail.registrationNumber || propertyDetail.builtArea || propertyDetail.totalArea || propertyDetail.condominiumName || propertyDetail.condominiumFee || propertyDetail.iptuValue) && (
+                {(Boolean(propertyDetail.registrationNumber) || Boolean(propertyDetail.builtArea) || Boolean(propertyDetail.totalArea) || Boolean(propertyDetail.condominiumName) || Boolean(propertyDetail.condominiumFee) || Boolean(propertyDetail.iptuValue)) && (
                   <div className="space-y-4 border-t pt-4">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
@@ -793,31 +858,31 @@ export function TenantProperties() {
                       <h3 className="text-lg font-semibold">Detalhes Adicionais</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {propertyDetail.registrationNumber && (
+                      {Boolean(propertyDetail.registrationNumber) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Matrícula / Registro</label>
-                          <div className="text-base">{propertyDetail.registrationNumber}</div>
+                          <div className="text-base">{String(propertyDetail.registrationNumber)}</div>
                         </div>
                       )}
-                      {propertyDetail.builtArea && (
+                      {Boolean(propertyDetail.builtArea) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Área Construída</label>
                           <div className="text-base">{Number(propertyDetail.builtArea).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²</div>
                         </div>
                       )}
-                      {propertyDetail.totalArea && (
+                      {Boolean(propertyDetail.totalArea) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Área Total</label>
                           <div className="text-base">{Number(propertyDetail.totalArea).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²</div>
                         </div>
                       )}
-                      {propertyDetail.condominiumName && (
+                      {Boolean(propertyDetail.condominiumName) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Nome do Condomínio</label>
-                          <div className="text-base">{propertyDetail.condominiumName}</div>
+                          <div className="text-base">{String(propertyDetail.condominiumName)}</div>
                         </div>
                       )}
-                      {propertyDetail.condominiumFee && (
+                      {Boolean(propertyDetail.condominiumFee) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Taxa de Condomínio</label>
                           <div className="text-base font-medium">
@@ -825,7 +890,7 @@ export function TenantProperties() {
                           </div>
                         </div>
                       )}
-                      {propertyDetail.iptuValue && (
+                      {Boolean(propertyDetail.iptuValue) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">IPTU</label>
                           <div className="text-base font-medium">
@@ -837,7 +902,7 @@ export function TenantProperties() {
                   </div>
                 )}
 
-                {(propertyDetail.totalAreaHectares || propertyDetail.productiveArea || propertyDetail.propertyRegistry || propertyDetail.ccirNumber || propertyDetail.carNumber || propertyDetail.itrValue || propertyDetail.intendedUse) && (
+                {(Boolean(propertyDetail.totalAreaHectares) || Boolean(propertyDetail.productiveArea) || Boolean(propertyDetail.propertyRegistry) || Boolean(propertyDetail.ccirNumber) || Boolean(propertyDetail.carNumber) || Boolean(propertyDetail.itrValue) || Boolean(propertyDetail.intendedUse)) && (
                   <div className="space-y-4 border-t pt-4">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
@@ -846,37 +911,37 @@ export function TenantProperties() {
                       <h3 className="text-lg font-semibold">Informações Rurais</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {propertyDetail.totalAreaHectares && (
+                      {Boolean(propertyDetail.totalAreaHectares) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Área Total (Hectares)</label>
                           <div className="text-base">{Number(propertyDetail.totalAreaHectares).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ha</div>
                         </div>
                       )}
-                      {propertyDetail.productiveArea && (
+                      {Boolean(propertyDetail.productiveArea) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Área Produtiva</label>
                           <div className="text-base">{Number(propertyDetail.productiveArea).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ha</div>
                         </div>
                       )}
-                      {propertyDetail.propertyRegistry && (
+                      {Boolean(propertyDetail.propertyRegistry) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Registro da Propriedade</label>
-                          <div className="text-base">{propertyDetail.propertyRegistry}</div>
+                          <div className="text-base">{String(propertyDetail.propertyRegistry)}</div>
                         </div>
                       )}
-                      {propertyDetail.ccirNumber && (
+                      {Boolean(propertyDetail.ccirNumber) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Número CCIR</label>
-                          <div className="text-base font-mono text-sm">{propertyDetail.ccirNumber}</div>
+                          <div className="text-base font-mono text-sm">{String(propertyDetail.ccirNumber)}</div>
                         </div>
                       )}
-                      {propertyDetail.carNumber && (
+                      {Boolean(propertyDetail.carNumber) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Número CAR</label>
-                          <div className="text-base font-mono text-sm break-all">{propertyDetail.carNumber}</div>
+                          <div className="text-base font-mono text-sm break-all">{String(propertyDetail.carNumber)}</div>
                         </div>
                       )}
-                      {propertyDetail.itrValue && (
+                      {Boolean(propertyDetail.itrValue) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Valor ITR</label>
                           <div className="text-base font-medium">
@@ -884,25 +949,25 @@ export function TenantProperties() {
                           </div>
                         </div>
                       )}
-                      {propertyDetail.intendedUse && (
+                      {Boolean(propertyDetail.intendedUse) && (
                         <div>
                           <label className="text-sm font-medium text-muted-foreground">Uso Pretendido</label>
                           <div className="text-base">
-                            {propertyDetail.intendedUse === 'AGRICULTURAL' ? 'Agrícola' : propertyDetail.intendedUse === 'LIVESTOCK' ? 'Pecuária' : propertyDetail.intendedUse === 'MIXED' ? 'Misto' : propertyDetail.intendedUse}
+                            {String(propertyDetail.intendedUse) === 'AGRICULTURAL' ? 'Agrícola' : String(propertyDetail.intendedUse) === 'LIVESTOCK' ? 'Pecuária' : String(propertyDetail.intendedUse) === 'MIXED' ? 'Misto' : String(propertyDetail.intendedUse)}
                           </div>
                         </div>
                       )}
                     </div>
-                    {propertyDetail.georeferencing && (
+                    {Boolean(propertyDetail.georeferencing) && (
                       <div className="mt-4">
                         <label className="text-sm font-medium text-muted-foreground">Georreferenciamento</label>
-                        <div className="text-xs font-mono bg-muted p-2 rounded mt-1 break-all">{propertyDetail.georeferencing}</div>
+                        <div className="text-xs font-mono bg-muted p-2 rounded mt-1 break-all">{String(propertyDetail.georeferencing)}</div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {(propertyDetail.description || propertyDetail.furnitureList) && (
+                {(Boolean(propertyDetail.description) || Boolean(propertyDetail.furnitureList)) && (
                   <div className="space-y-4 border-t pt-4">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
@@ -910,16 +975,16 @@ export function TenantProperties() {
                       </div>
                       <h3 className="text-lg font-semibold">Descrições</h3>
                     </div>
-                    {propertyDetail.description && (
+                    {Boolean(propertyDetail.description) && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Descrição do Imóvel</label>
-                        <p className="mt-2 text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{propertyDetail.description}</p>
+                        <p className="mt-2 text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{String(propertyDetail.description)}</p>
                       </div>
                     )}
-                    {propertyDetail.furnitureList && (
+                    {Boolean(propertyDetail.furnitureList) && (
                       <div className="mt-4">
                         <label className="text-sm font-medium text-muted-foreground">Mobílias / Itens Inclusos</label>
-                        <p className="mt-2 text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{propertyDetail.furnitureList}</p>
+                        <p className="mt-2 text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{String(propertyDetail.furnitureList)}</p>
                       </div>
                     )}
                   </div>
@@ -978,7 +1043,7 @@ export function TenantProperties() {
                                 </Badge>
                                 {doc.date && (
                                   <span className="text-xs text-muted-foreground">
-                                    {new Date(doc.date).toLocaleDateString('pt-BR')}
+                                    {new Date(String(doc.date)).toLocaleDateString('pt-BR')}
                                   </span>
                                 )}
                               </div>
@@ -988,7 +1053,7 @@ export function TenantProperties() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => window.open(doc.pdfUrl, '_blank')}
+                              onClick={() => window.open(String(doc.pdfUrl), '_blank')}
                               className="flex-shrink-0"
                             >
                               <Download className="w-4 h-4 mr-2" />
