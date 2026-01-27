@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Button } from '../../components/ui/button';
@@ -11,7 +11,7 @@ import { ApiConsumptionWidget } from '../../components/dashboard/ApiConsumptionW
 import { WithdrawModal } from '../../components/withdraw/WithdrawModal';
 import {
   Building2, FileText, DollarSign,
-  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User, Bell, Wallet, History
+  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User, Bell, Wallet, History, Loader2
 } from 'lucide-react';
 
 export function CEODashboard() {
@@ -154,12 +154,15 @@ export function CEODashboard() {
                 {/* <span className="text-xs text-green-700 font-medium">Valor Disponível para Saque</span> */}
                 <button
                   onClick={() => setShowWithdrawButton(!showWithdrawButton)}
-                  className="text-xl font-bold text-green-600 hover:text-green-700 transition-colors cursor-pointer text-left"
+                  className="text-xl font-bold text-green-600 hover:text-green-700 transition-colors cursor-pointer text-left flex items-center gap-2"
                   title="Clique para ver opções de saque"
                   disabled={isBalanceLoading}
                 >
                   {isBalanceLoading ? (
-                    <span className="text-sm text-green-500">Carregando...</span>
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin text-green-500" />
+                      <span className="text-sm text-green-500">Calculando...</span>
+                    </>
                   ) : (
                     formatCurrency(balanceData?.availableBalance ?? 0)
                   )}
@@ -252,7 +255,12 @@ export function CEODashboard() {
         />
         <KPICard
           title="Sua Receita"
-          value={isBalanceLoading ? "Carregando..." : formatCurrency(balanceData?.availableBalance ?? (overview.roleSpecificIncome ?? (overview.platformFee ?? 0) + (overview.planPaymentsRevenue ?? 0)))}
+          value={isBalanceLoading ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
+              <span className="text-sm text-gray-500">Calculando...</span>
+            </div>
+          ) : formatCurrency(balanceData?.availableBalance ?? (overview.roleSpecificIncome ?? (overview.platformFee ?? 0) + (overview.planPaymentsRevenue ?? 0)))}
           icon={Award}
           color="yellow"
           subtitle={overview.planPaymentsRevenue ? `2% aluguéis + R$ ${formatCurrency(overview.planPaymentsRevenue)} planos` : "Receita da plataforma"}
@@ -473,7 +481,7 @@ function KPICard({
   isAmount = false,
 }: {
   title: string;
-  value: string | number;
+  value: string | number | React.ReactNode;
   icon: any;
   color: string;
   subtitle?: string;
@@ -500,9 +508,13 @@ function KPICard({
           </div>
         </div>
         <h3 className="text-xs sm:text-sm text-muted-foreground mb-1 line-clamp-2">{title}</h3>
-        <p className="text-lg sm:text-2xl font-bold truncate">
-          {isAmount ? value : typeof value === 'number' ? value.toLocaleString() : value}
-        </p>
+        <div className="text-lg sm:text-2xl font-bold truncate">
+          {typeof value === 'string' || typeof value === 'number' ? (
+            <p>{isAmount ? value : typeof value === 'number' ? value.toLocaleString() : value}</p>
+          ) : (
+            value
+          )}
+        </div>
         {subtitle && (
           <p className="text-xs text-muted-foreground mt-1 truncate">{subtitle}</p>
         )}
