@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Key,
 } from 'lucide-react';
+import { PageHeader } from '../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -252,13 +253,10 @@ export function SubscriptionPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Gerenciar Assinatura</h1>
-        <p className="text-muted-foreground">
-          Gerencie seu plano, visualize consumo e historico de cobrancas.
-        </p>
-      </div>
-
+      <PageHeader
+        title="Gerenciar Assinatura"
+        subtitle="Gerencie seu plano, visualize consumo e histórico de cobranças."
+      />
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Visao Geral</TabsTrigger>

@@ -13,9 +13,11 @@ interface PageHeaderProps {
   title: string;
   subtitle?: string;
   showWallet?: boolean; // Optional prop to override default wallet visibility
+  /** Optional custom actions (e.g. Export CSV, Send Email) rendered to the right of title, before wallet/notifications */
+  actions?: React.ReactNode;
 }
 
-export function PageHeader({ title, subtitle, showWallet }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, showWallet, actions }: PageHeaderProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showWithdrawButton, setShowWithdrawButton] = useState(false);
@@ -68,7 +70,8 @@ export function PageHeader({ title, subtitle, showWallet }: PageHeaderProps) {
           <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
           {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          {actions}
           {shouldShowWallet && (
             <div 
               className="relative bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow"

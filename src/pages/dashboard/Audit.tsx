@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ChevronLeft
 } from 'lucide-react'
+import { PageHeader } from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -218,37 +219,29 @@ export function Audit() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-orange-100 rounded-lg">
-            <ShieldCheck className="w-6 h-6 text-orange-700" />
+      <PageHeader
+        title="Logs de Auditoria"
+        subtitle="Visualize atividades e alterações do sistema"
+        actions={
+          <div className="flex gap-2">
+            <Button
+              onClick={exportToCSV}
+              variant="outline"
+              className="border-orange-600 text-orange-600 hover:bg-orange-50"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV
+            </Button>
+            <Button
+              onClick={exportToPDF}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              <FileDown className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Logs de Auditoria</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Visualize atividades e alteracoes do sistema
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={exportToCSV}
-            variant="outline"
-            className="border-orange-600 text-orange-600 hover:bg-orange-50"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Exportar CSV
-          </Button>
-          <Button
-            onClick={exportToPDF}
-            className="bg-orange-600 hover:bg-orange-700 text-white"
-          >
-            <FileDown className="w-4 h-4 mr-2" />
-            Exportar PDF
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {}
       <Card>

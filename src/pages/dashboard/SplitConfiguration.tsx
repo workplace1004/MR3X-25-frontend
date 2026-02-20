@@ -13,6 +13,7 @@ import {
   Info,
   Lock,
 } from 'lucide-react';
+import { PageHeader } from '../../components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -356,19 +357,10 @@ export function SplitConfiguration() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-orange-100 rounded-lg">
-          <Handshake className="w-6 h-6 text-orange-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Configuração de Divisão de Pagamentos</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Configure as porcentagens de divisão de pagamentos entre plataforma, agência e proprietários
-          </p>
-        </div>
-      </div>
-
+      <PageHeader
+        title="Configuração de Divisão de Pagamentos"
+        subtitle="Configure as porcentagens de divisão de pagamentos entre plataforma, agência e proprietários"
+      />
       {/* Entity Selector for CEO/ADMIN */}
       {isCeoOrAdmin && (
         <Card>

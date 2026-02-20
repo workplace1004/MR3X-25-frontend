@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Mail, MessageSquare, Send, Building } from 'lucide-react'
+import { PageHeader } from '../../components/PageHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -61,24 +62,22 @@ export default function CommunicationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Comunicação Global</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Envie mensagens em massa por Email e WhatsApp
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowEmailModal(true)} variant="outline">
-            <Mail className="w-4 h-4 mr-2" />
-            Enviar Email
-          </Button>
-          <Button onClick={() => setShowWhatsAppModal(true)} className="bg-green-600 hover:bg-green-700">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Enviar WhatsApp
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Comunicação Global"
+        subtitle="Envie mensagens em massa por Email e WhatsApp"
+        actions={
+          <div className="flex gap-2">
+            <Button onClick={() => setShowEmailModal(true)} variant="outline">
+              <Mail className="w-4 h-4 mr-2" />
+              Enviar Email
+            </Button>
+            <Button onClick={() => setShowWhatsAppModal(true)} className="bg-green-600 hover:bg-green-700">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Enviar WhatsApp
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>

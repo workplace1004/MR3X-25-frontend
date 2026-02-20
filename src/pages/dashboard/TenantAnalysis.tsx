@@ -41,6 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../../components/ui/tooltip';
+import { PageHeader } from '../../components/PageHeader';
 import {
   UserSearch,
   Shield,
@@ -1013,18 +1014,11 @@ export function TenantAnalysis() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-blue-100 rounded-lg">
-          <UserSearch className="w-6 h-6 text-blue-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Análise de Clientes</h1>
-          <p className="text-muted-foreground mt-1">
-            Análise de risco para agências e proprietários independentes - Informação apenas, sem bloqueio automático
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Análise de Clientes"
+        subtitle="Análise de risco para agências e proprietários independentes - Informação apenas, sem bloqueio automático"
+        showWallet={false}
+      />
 
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">

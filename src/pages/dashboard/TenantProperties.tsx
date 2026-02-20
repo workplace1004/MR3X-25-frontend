@@ -3,6 +3,7 @@ import { propertiesAPI, contractsAPI, inspectionsAPI, extrajudicialNotifications
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
+import { PageHeader } from '../../components/PageHeader';
 import {
   Building2,
   Eye,
@@ -497,18 +498,11 @@ export function TenantProperties() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Building2 className="w-6 h-6 text-blue-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Meus Imóveis</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Gerencie todos os seus imóveis em um só lugar
-            </p>
-          </div>
-        </div>
-
+        <PageHeader
+          title="Meus Imóveis"
+          subtitle="Gerencie todos os seus imóveis em um só lugar"
+          showWallet={false}
+        />
         <div className="flex justify-center w-full">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 w-full max-w-7xl px-2">
             {[...Array(3)].map((_, i) => (
@@ -534,20 +528,11 @@ export function TenantProperties() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Building2 className="w-6 h-6 text-orange-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Meus Imóveis</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Visualize os imóveis vinculados aos seus contratos
-              </p>
-            </div>
-          </div>
-        </div>
-
+        <PageHeader
+          title="Meus Imóveis"
+          subtitle="Visualize os imóveis vinculados aos seus contratos"
+          showWallet={false}
+        />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <form 
             className="flex w-full sm:max-w-lg gap-2"

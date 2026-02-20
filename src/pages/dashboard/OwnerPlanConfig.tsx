@@ -6,6 +6,7 @@ import { plansAPI, usersAPI } from '../../api';
 
 // Storage key for pending payment
 const PENDING_PAYMENT_KEY = 'pending_owner_plan_payment';
+import { PageHeader } from '../../components/PageHeader';
 import {
   Package,
   Building2,
@@ -521,19 +522,10 @@ export function OwnerPlanConfig() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-orange-100 rounded-lg">
-          <Package className="w-6 h-6 text-orange-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Meu Plano</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Gerencie o seu plano e limites de uso
-          </p>
-        </div>
-      </div>
-
+      <PageHeader
+        title="Meu Plano"
+        subtitle="Gerencie o seu plano e limites de uso"
+      />
       {/* Current Plan and Usage Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Current Plan Card */}
