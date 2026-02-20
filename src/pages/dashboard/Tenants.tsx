@@ -463,7 +463,7 @@ export function Tenants() {
       const history = await tenantAnalysisAPI.getHistory({ document: cleanDocument, status: 'COMPLETED' })
 
       if (history.data && history.data.length > 0) {
-        
+
         const latestAnalysis = history.data[0]
 
         const approvedRecommendations = ['APPROVED', 'APPROVED_WITH_CAUTION']
@@ -471,8 +471,8 @@ export function Tenants() {
           setAnalysisResult(latestAnalysis)
         } else {
           setAnalysisError(`Este inquilino não foi aprovado na análise. Recomendação: ${latestAnalysis.recommendation === 'REJECTED' ? 'REJEITADO' :
-              latestAnalysis.recommendation === 'REQUIRES_GUARANTOR' ? 'REQUER FIADOR' :
-                latestAnalysis.recommendation
+            latestAnalysis.recommendation === 'REQUIRES_GUARANTOR' ? 'REQUER FIADOR' :
+              latestAnalysis.recommendation
             }`)
         }
       } else {
@@ -693,7 +693,7 @@ export function Tenants() {
         return
       }
       const { password, ...restData } = editForm;
-      
+
       const updateData = password ? { ...restData, password } : restData;
       updateTenantMutation.mutate({ id: selectedTenant.id, data: updateData })
     } finally {
@@ -707,7 +707,7 @@ export function Tenants() {
     setTenantDetail(null)
     setTenantDetailLoading(true)
     setShowDetailModal(true)
-    
+
     try {
       const fullTenantDetails = await usersAPI.getUserById(tenant.id)
       setTenantDetail(fullTenantDetails)
@@ -856,94 +856,13 @@ export function Tenants() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <PageHeader 
-          title="Inquilinos" 
+        <PageHeader
+          title="Inquilinos"
           subtitle="Gerencie todos os seus inquilinos"
           icon={<Users className="w-6 h-6 text-orange-700" />}
           iconBgClass="bg-orange-100"
         />
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="flex border border-border rounded-lg p-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'table' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('table')}
-                    className={viewMode === 'table' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Visualizacao em Tabela</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('cards')}
-                    className={viewMode === 'cards' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Visualizacao em Cards</TooltipContent>
-              </Tooltip>
-            </div>
 
-            {showCreateTenantButton && (
-              <div className="flex items-center gap-2 w-full">
-                <Button
-                  className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
-                  onClick={async () => {
-                    setCheckingPlanLimit(true)
-                    try {
-                      let result: { allowed: boolean; message?: string }
-
-                      if (isOwnerUser && user?.id) {
-                        // INDEPENDENT_OWNER uses userId-based check
-                        result = await plansAPI.canCreateTenantForOwner(user.id.toString())
-                      } else if (user?.agencyId) {
-                        // Agency users use agencyId-based check
-                        result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'TENANT')
-                      } else {
-                        toast.error('Usuário não encontrado')
-                        return
-                      }
-
-                      if (result.allowed) {
-                        closeAllModals()
-                        setEmailError('')
-                        setShowAnalysisSearchModal(true)
-                      } else {
-                        setUpgradeErrorMessage(result.message || 'Você atingiu o limite de inquilinos do seu plano.')
-                        setShowUpgradeModal(true)
-                      }
-                    } catch (error) {
-                      console.error('Error checking plan limit:', error)
-                      closeAllModals()
-                      setEmailError('')
-                      setShowAnalysisSearchModal(true)
-                    } finally {
-                      setCheckingPlanLimit(false)
-                    }
-                  }}
-                  disabled={checkingPlanLimit}
-                >
-                  {checkingPlanLimit ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4 mr-2" />
-                  )}
-                  <span className="hidden sm:inline">Cadastrar Inquilino</span>
-                  <span className="sm:hidden">Adicionar</span>
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex w-full sm:max-w-lg gap-2">
@@ -975,6 +894,88 @@ export function Tenants() {
                 Limpar
               </Button>
             )}
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex border border-border rounded-lg p-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={viewMode === 'table' ? 'default' : 'ghost'}
+                      onClick={() => setViewMode('table')}
+                      className={viewMode === 'table' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Visualizacao em Tabela</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                      onClick={() => setViewMode('cards')}
+                      className={viewMode === 'cards' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Visualizacao em Cards</TooltipContent>
+                </Tooltip>
+              </div>
+
+              {showCreateTenantButton && (
+                <div className="flex items-center gap-2 w-full">
+                  <Button
+                    className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
+                    onClick={async () => {
+                      setCheckingPlanLimit(true)
+                      try {
+                        let result: { allowed: boolean; message?: string }
+
+                        if (isOwnerUser && user?.id) {
+                          // INDEPENDENT_OWNER uses userId-based check
+                          result = await plansAPI.canCreateTenantForOwner(user.id.toString())
+                        } else if (user?.agencyId) {
+                          // Agency users use agencyId-based check
+                          result = await agenciesAPI.checkUserCreationAllowed(user.agencyId.toString(), 'TENANT')
+                        } else {
+                          toast.error('Usuário não encontrado')
+                          return
+                        }
+
+                        if (result.allowed) {
+                          closeAllModals()
+                          setEmailError('')
+                          setShowAnalysisSearchModal(true)
+                        } else {
+                          setUpgradeErrorMessage(result.message || 'Você atingiu o limite de inquilinos do seu plano.')
+                          setShowUpgradeModal(true)
+                        }
+                      } catch (error) {
+                        console.error('Error checking plan limit:', error)
+                        closeAllModals()
+                        setEmailError('')
+                        setShowAnalysisSearchModal(true)
+                      } finally {
+                        setCheckingPlanLimit(false)
+                      }
+                    }}
+                    disabled={checkingPlanLimit}
+                  >
+                    {checkingPlanLimit ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Plus className="w-4 h-4 mr-2" />
+                    )}
+                    <span className="hidden sm:inline">Cadastrar Inquilino</span>
+                    <span className="sm:hidden">Adicionar</span>
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1166,14 +1167,14 @@ export function Tenants() {
               </div>
             </div>
           ) : (
-            
+
             <div className="flex justify-center w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-7xl px-2 items-stretch justify-center">
                 {tenants.map((tenant: Tenant) => (
                   <Card key={tenant.id} className="transition-all hover:shadow-md flex flex-col w-full max-w-[400px] mx-auto overflow-hidden">
                     <CardContent className="p-0 h-full flex flex-col overflow-hidden min-w-0">
                       <div className="flex h-full min-w-0">
-                        {}
+                        { }
                         <div className="w-28 min-w-28 h-36 bg-primary/10 flex items-center justify-center rounded-l-md flex-shrink-0">
                           <Avatar className="h-16 w-16">
                             <AvatarImage src={getPhotoUrl(tenant.photoUrl)} alt={tenant.name || 'Inquilino'} />
@@ -1182,7 +1183,7 @@ export function Tenants() {
                             </AvatarFallback>
                           </Avatar>
                         </div>
-                        {}
+                        { }
                         <div className="flex-1 flex flex-col justify-between p-4 min-w-0 overflow-hidden">
                           <div className="min-w-0 space-y-1">
                             <h3 className="text-lg font-bold truncate" title={tenant.name || 'Sem nome'}>{tenant.name || 'Sem nome'}</h3>
@@ -1336,7 +1337,7 @@ export function Tenants() {
           </div>
         )}
 
-        {}
+        { }
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1488,7 +1489,7 @@ export function Tenants() {
                   </div>
                 </div>
 
-                {}
+                { }
                 {isAdminOrCeo && agencies && agencies.length > 0 && (
                   <div>
                     <Label htmlFor="agencyId">Imobiliaria</Label>
@@ -1592,7 +1593,7 @@ export function Tenants() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
             <DialogHeader>
@@ -1679,244 +1680,244 @@ export function Tenants() {
               </div>
             ) : (
               <form className="space-y-6" onSubmit={handleUpdateTenant}>
-              {}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Users className="w-4 h-4 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Informacoes Pessoais</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-document">Documento</Label>
-                    <Input
-                      id="edit-document"
-                      name="document"
-                      value={editForm.document}
-                      onChange={handleEditInputChange}
-                      placeholder="000.000.000-00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-name">Nome</Label>
-                    <Input
-                      id="edit-name"
-                      name="name"
-                      value={editForm.name}
-                      onChange={handleEditInputChange}
-                      placeholder="Nome completo"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-phone">Telefone</Label>
-                    <Input
-                      id="edit-phone"
-                      name="phone"
-                      value={editForm.phone}
-                      onChange={handleEditInputChange}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-email">Email</Label>
-                    <div className="relative">
-                      <Input
-                        id="edit-email"
-                        name="email"
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) => {
-                          handleEditInputChange(e)
-                          setEmailVerified(false)
-                          setEmailError('')
-                        }}
-                        onBlur={(e) => checkEmailExists(e.target.value, selectedTenant?.email)}
-                        placeholder="email@exemplo.com"
-                        required
-                        className={`pr-10 ${emailError ? 'border-red-500' : emailVerified ? 'border-green-500' : ''}`}
-                      />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        {checkingEmail && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                        {!checkingEmail && emailVerified && <CheckCircle className="w-4 h-4 text-green-500" />}
-                        {!checkingEmail && emailError && <XCircle className="w-4 h-4 text-red-500" />}
-                      </div>
+                { }
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Users className="w-4 h-4 text-primary" />
                     </div>
-                    {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
-                    {emailVerified && !emailError && <p className="text-green-500 text-sm mt-1">Email disponível</p>}
+                    <h3 className="text-lg font-semibold">Informacoes Pessoais</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-document">Documento</Label>
+                      <Input
+                        id="edit-document"
+                        name="document"
+                        value={editForm.document}
+                        onChange={handleEditInputChange}
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-name">Nome</Label>
+                      <Input
+                        id="edit-name"
+                        name="name"
+                        value={editForm.name}
+                        onChange={handleEditInputChange}
+                        placeholder="Nome completo"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-phone">Telefone</Label>
+                      <Input
+                        id="edit-phone"
+                        name="phone"
+                        value={editForm.phone}
+                        onChange={handleEditInputChange}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-email">Email</Label>
+                      <div className="relative">
+                        <Input
+                          id="edit-email"
+                          name="email"
+                          type="email"
+                          value={editForm.email}
+                          onChange={(e) => {
+                            handleEditInputChange(e)
+                            setEmailVerified(false)
+                            setEmailError('')
+                          }}
+                          onBlur={(e) => checkEmailExists(e.target.value, selectedTenant?.email)}
+                          placeholder="email@exemplo.com"
+                          required
+                          className={`pr-10 ${emailError ? 'border-red-500' : emailVerified ? 'border-green-500' : ''}`}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {checkingEmail && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                          {!checkingEmail && emailVerified && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          {!checkingEmail && emailError && <XCircle className="w-4 h-4 text-red-500" />}
+                        </div>
+                      </div>
+                      {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
+                      {emailVerified && !emailError && <p className="text-green-500 text-sm mt-1">Email disponível</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <PasswordInput
+                      id="edit-password"
+                      name="password"
+                      label="Senha"
+                      value={editForm.password}
+                      onChange={handleEditInputChange}
+                      placeholder="Digite a senha (deixe em branco para não alterar)"
+                      showStrengthIndicator={true}
+                    />
+                    <div>
+                      <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
+                      <Input
+                        id="edit-birthDate"
+                        name="birthDate"
+                        type="date"
+                        value={editForm.birthDate}
+                        onChange={handleEditInputChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <RGInput
+                      value={editForm.rg}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, rg: value }))}
+                      label="RG"
+                      placeholder="00.000.000-0"
+                      showValidation={true}
+                      id="edit-rg"
+                      name="rg"
+                    />
+                    <div>
+                      <Label htmlFor="edit-nationality">Nacionalidade</Label>
+                      <Input
+                        id="edit-nationality"
+                        name="nationality"
+                        value={editForm.nationality}
+                        onChange={handleEditInputChange}
+                        placeholder="Brasileira"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-maritalStatus">Estado Civil</Label>
+                      <Select
+                        value={editForm.maritalStatus}
+                        onValueChange={(value) => setEditForm(prev => ({ ...prev, maritalStatus: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                          <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                          <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                          <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+                          <SelectItem value="União Estável">União Estável</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-profession">Profissão</Label>
+                      <Input
+                        id="edit-profession"
+                        name="profession"
+                        value={editForm.profession}
+                        onChange={handleEditInputChange}
+                        placeholder="Ex: Engenheiro"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <PasswordInput
-                    id="edit-password"
-                    name="password"
-                    label="Senha"
-                    value={editForm.password}
-                    onChange={handleEditInputChange}
-                    placeholder="Digite a senha (deixe em branco para não alterar)"
-                    showStrengthIndicator={true}
-                  />
+                { }
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Endereco</h3>
+                  </div>
+
                   <div>
-                    <Label htmlFor="edit-birthDate">Data de Nascimento</Label>
+                    <CEPInput
+                      value={editForm.cep}
+                      onChange={(v: string) => setEditForm((prev) => ({ ...prev, cep: v }))}
+                      onCEPData={handleEditTenantCEPData}
+                      placeholder="00000-000"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-address">Endereco</Label>
                     <Input
-                      id="edit-birthDate"
-                      name="birthDate"
-                      type="date"
-                      value={editForm.birthDate}
+                      id="edit-address"
+                      name="address"
+                      value={editForm.address}
                       onChange={handleEditInputChange}
+                      placeholder="Rua, Avenida, etc."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-neighborhood">Bairro</Label>
+                      <Input
+                        id="edit-neighborhood"
+                        name="neighborhood"
+                        value={editForm.neighborhood}
+                        onChange={handleEditInputChange}
+                        placeholder="Centro"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-city">Cidade</Label>
+                      <Input
+                        id="edit-city"
+                        name="city"
+                        value={editForm.city}
+                        onChange={handleEditInputChange}
+                        placeholder="Sao Paulo"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-state">Estado</Label>
+                    <Input
+                      id="edit-state"
+                      name="state"
+                      value={editForm.state}
+                      onChange={handleEditInputChange}
+                      placeholder="SP"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <RGInput
-                    value={editForm.rg}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, rg: value }))}
-                    label="RG"
-                    placeholder="00.000.000-0"
-                    showValidation={true}
-                    id="edit-rg"
-                    name="rg"
-                  />
-                  <div>
-                    <Label htmlFor="edit-nationality">Nacionalidade</Label>
-                    <Input
-                      id="edit-nationality"
-                      name="nationality"
-                      value={editForm.nationality}
-                      onChange={handleEditInputChange}
-                      placeholder="Brasileira"
-                    />
-                  </div>
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} disabled={updating} className="text-orange-600 border-orange-600 hover:bg-orange-50">
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                    disabled={updating || checkingEmail || !emailVerified}
+                  >
+                    {updating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      'Salvar'
+                    )}
+                  </Button>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-maritalStatus">Estado Civil</Label>
-                    <Select
-                      value={editForm.maritalStatus}
-                      onValueChange={(value) => setEditForm(prev => ({ ...prev, maritalStatus: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
-                        <SelectItem value="Casado(a)">Casado(a)</SelectItem>
-                        <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
-                        <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
-                        <SelectItem value="União Estável">União Estável</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-profession">Profissão</Label>
-                    <Input
-                      id="edit-profession"
-                      name="profession"
-                      value={editForm.profession}
-                      onChange={handleEditInputChange}
-                      placeholder="Ex: Engenheiro"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold">Endereco</h3>
-                </div>
-
-                <div>
-                  <CEPInput
-                    value={editForm.cep}
-                    onChange={(v: string) => setEditForm((prev) => ({ ...prev, cep: v }))}
-                    onCEPData={handleEditTenantCEPData}
-                    placeholder="00000-000"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-address">Endereco</Label>
-                  <Input
-                    id="edit-address"
-                    name="address"
-                    value={editForm.address}
-                    onChange={handleEditInputChange}
-                    placeholder="Rua, Avenida, etc."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="edit-neighborhood">Bairro</Label>
-                    <Input
-                      id="edit-neighborhood"
-                      name="neighborhood"
-                      value={editForm.neighborhood}
-                      onChange={handleEditInputChange}
-                      placeholder="Centro"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-city">Cidade</Label>
-                    <Input
-                      id="edit-city"
-                      name="city"
-                      value={editForm.city}
-                      onChange={handleEditInputChange}
-                      placeholder="Sao Paulo"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-state">Estado</Label>
-                  <Input
-                    id="edit-state"
-                    name="state"
-                    value={editForm.state}
-                    onChange={handleEditInputChange}
-                    placeholder="SP"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setShowEditModal(false)} disabled={updating} className="text-orange-600 border-orange-600 hover:bg-orange-50">
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
-                  disabled={updating || checkingEmail || !emailVerified}
-                >
-                  {updating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    'Salvar'
-                  )}
-                </Button>
-              </div>
-            </form>
+              </form>
             )}
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-0">
             <DialogHeader>
@@ -1999,7 +2000,7 @@ export function Tenants() {
               </div>
             ) : tenantDetail ? (
               <div className="space-y-6">
-                {}
+                { }
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
@@ -2055,7 +2056,7 @@ export function Tenants() {
                   </div>
                 </div>
 
-                {}
+                { }
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
@@ -2096,7 +2097,7 @@ export function Tenants() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showWhatsAppModal} onOpenChange={setShowWhatsAppModal}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -2141,7 +2142,7 @@ export function Tenants() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showContractsModal} onOpenChange={setShowContractsModal}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -2170,15 +2171,15 @@ export function Tenants() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showAnalysisSearchModal} onOpenChange={setShowAnalysisSearchModal}>
           <DialogContent className="max-w-md sm:max-w-lg p-0 overflow-hidden">
-            {}
+            { }
             <DialogHeader className="sr-only">
               <DialogTitle>Verificar Análise do Inquilino</DialogTitle>
             </DialogHeader>
 
-            {}
+            { }
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -2247,7 +2248,7 @@ export function Tenants() {
                 </div>
               </div>
 
-              {}
+              { }
               {analysisError && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex items-start gap-3">
@@ -2271,10 +2272,10 @@ export function Tenants() {
                 </div>
               )}
 
-              {}
+              { }
               {analysisResult && (
                 <div className="space-y-4">
-                  {}
+                  { }
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -2307,8 +2308,8 @@ export function Tenants() {
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Nível de Risco</p>
                           <Badge className={`${analysisResult?.riskLevel === 'LOW' ? 'bg-green-500 hover:bg-green-600' :
-                              analysisResult?.riskLevel === 'MEDIUM' ? 'bg-yellow-500 hover:bg-yellow-600' :
-                                'bg-orange-500 hover:bg-orange-600'
+                            analysisResult?.riskLevel === 'MEDIUM' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                              'bg-orange-500 hover:bg-orange-600'
                             } text-white`}>
                             {analysisResult?.riskLevel === 'LOW' ? 'Baixo' :
                               analysisResult?.riskLevel === 'MEDIUM' ? 'Médio' : analysisResult?.riskLevel || '-'}
@@ -2317,7 +2318,7 @@ export function Tenants() {
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Recomendação</p>
                           <Badge className={`${analysisResult?.recommendation === 'APPROVED' ? 'bg-green-500 hover:bg-green-600' :
-                              'bg-yellow-500 hover:bg-yellow-600'
+                            'bg-yellow-500 hover:bg-yellow-600'
                             } text-white`}>
                             {analysisResult?.recommendation === 'APPROVED' ? 'Aprovado' :
                               analysisResult?.recommendation === 'APPROVED_WITH_CAUTION' ? 'Aprovado com Ressalvas' :
@@ -2351,7 +2352,7 @@ export function Tenants() {
                     </div>
                   </div>
 
-                  {}
+                  { }
                   <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
                     <Button
                       type="button"
@@ -2373,7 +2374,7 @@ export function Tenants() {
                 </div>
               )}
 
-              {}
+              { }
               {!analysisResult && !analysisError && !searchingAnalysis && (
                 <div className="text-center py-6">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -2396,7 +2397,7 @@ export function Tenants() {
                 </div>
               )}
 
-              {}
+              { }
               {searchingAnalysis && (
                 <div className="text-center py-8">
                   <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -2409,7 +2410,7 @@ export function Tenants() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={!!tenantToDelete} onOpenChange={() => setTenantToDelete(null)}>
           <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg rounded-xl">
             <DialogHeader>

@@ -1546,34 +1546,13 @@ export function Properties() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <PageHeader 
-          title="Imóveis" 
+        <PageHeader
+          title="Imóveis"
           subtitle="Gerencie seus imóveis e propriedades"
           icon={<Building2 className="w-6 h-6 text-orange-700" />}
           iconBgClass="bg-orange-100"
         />
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            {canCreateProperties && !(user?.role === 'BROKER') && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={checkPlanLimitAndOpenModal}
-                    disabled={checkingPlanLimit}
-                  >
-                    {checkingPlanLimit ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Plus className="w-5 h-5" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Cadastrar Imóvel</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </div>
+
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <form
@@ -1616,6 +1595,29 @@ export function Properties() {
               </Button>
             )}
           </form>
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              {canCreateProperties && !(user?.role === 'BROKER') && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                      onClick={checkPlanLimitAndOpenModal}
+                      disabled={checkingPlanLimit}
+                    >
+                      {checkingPlanLimit ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Plus className="w-5 h-5" />
+                      )}
+                      <span className="hidden sm:inline">Adicionar Imóvel</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Adicionar Imóvel</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-center w-full">

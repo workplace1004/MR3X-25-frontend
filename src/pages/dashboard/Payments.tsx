@@ -171,8 +171,8 @@ export function Payments() {
   // Get properties owned by PROPRIETARIO user for filtering
   const ownedProperties = useMemo(() => {
     if (user?.role === 'PROPRIETARIO' && user?.id && properties.length > 0) {
-      return properties.filter((p: any) => 
-        p.ownerId === user.id || 
+      return properties.filter((p: any) =>
+        p.ownerId === user.id ||
         String(p.ownerId) === String(user.id) ||
         p.owner?.id === user.id ||
         String(p.owner?.id) === String(user.id)
@@ -335,22 +335,22 @@ export function Payments() {
   const allPaymentsAndInvoices = useMemo(() => {
     const paymentsList = Array.isArray(payments) ? payments : [];
     const invoicesList = Array.isArray(invoicesData) ? invoicesData : [];
-    
+
     // For PROPRIETARIO role, filter to only show payments/invoices for owned properties
     let filteredPayments = paymentsList;
     let filteredInvoices = invoicesList;
-    
+
     if (user?.role === 'PROPRIETARIO' && user?.id && ownedProperties.length > 0) {
-      const ownedPropertyIds = ownedProperties.map((p: any) => 
+      const ownedPropertyIds = ownedProperties.map((p: any) =>
         p.id?.toString() || String(p.id)
       );
-      
+
       // Filter payments by property ownership
       filteredPayments = paymentsList.filter((payment: any) => {
         const propertyId = payment.propertyId?.toString() || String(payment.propertyId);
         return ownedPropertyIds.includes(propertyId);
       });
-      
+
       // Filter invoices by property ownership or ownerId
       filteredInvoices = invoicesList.filter((invoice: any) => {
         // Check if invoice has ownerId matching user
@@ -362,7 +362,7 @@ export function Payments() {
         return ownedPropertyIds.includes(propertyId);
       });
     }
-    
+
     // Convert invoices to payment-like format for display
     const formattedInvoices = filteredInvoices.map((invoice: any) => ({
       id: `invoice_${invoice.id}`,
@@ -406,24 +406,24 @@ export function Payments() {
       const hasMatchingPayment = paymentsWithMethod.some((payment: any) => {
         const invoiceContractId = invoice.contract?.id?.toString() || invoice.contractId?.toString();
         const paymentContractId = payment.contratoId?.toString() || payment.contractId?.toString();
-        
+
         const invoiceDate = invoice.paymentDate || invoice.dataPagamento;
         const paymentDate = payment.dataPagamento || payment.paymentDate;
-        
+
         const invoiceValue = Number(invoice.valorPago || invoice.amount || 0);
         const paymentValue = Number(payment.valorPago || payment.amount || 0);
-        
+
         // Get property IDs for additional matching
         const invoicePropertyId = invoice.property?.id?.toString() || invoice.propertyId?.toString();
         const paymentPropertyId = payment.propertyId?.toString() || payment.property?.id?.toString();
-        
+
         // Match by contract, date (same day), and similar value (within 0.01 difference for rounding)
         const contractMatch = invoiceContractId && paymentContractId && invoiceContractId === paymentContractId;
         const propertyMatch = invoicePropertyId && paymentPropertyId && invoicePropertyId === paymentPropertyId;
-        const dateMatch = invoiceDate && paymentDate && 
+        const dateMatch = invoiceDate && paymentDate &&
           new Date(invoiceDate).toDateString() === new Date(paymentDate).toDateString();
         const valueMatch = Math.abs(invoiceValue - paymentValue) < 0.01;
-        
+
         // Match if contract+date+value match, or property+date+value match (for cases without contract)
         return (contractMatch || propertyMatch) && dateMatch && valueMatch;
       });
@@ -470,7 +470,7 @@ export function Payments() {
   // Calculate pending totals
   const pendingTotal = useMemo(() => {
     return pendingPayments.reduce((sum, p: any) => {
-      const amount = (p as any).isInvoice 
+      const amount = (p as any).isInvoice
         ? Number((p as any).updatedValue || (p as any).originalValue || p.amount || p.valorPago || 0)
         : Number(p.amount || p.valorPago || 0);
       return sum + amount;
@@ -540,47 +540,13 @@ export function Payments() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <PageHeader 
-          title="Pagamentos" 
+        <PageHeader
+          title="Pagamentos"
           subtitle="Gerencie todos os seus pagamentos"
           icon={<DollarSign className="w-6 h-6 text-green-700" />}
           iconBgClass="bg-green-100"
         />
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">
-                Pagamentos
-                {isReadOnlyOwner && (
-                  <ReadOnlyBadge className="ml-3 align-middle" />
-                )}
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Acompanhe todos os seus pagamentos
-              </p>
-            </div>
-          </div>
 
-          {canCreatePayments && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={() => {
-                    closeAllModals();
-                    setShowCreateModal(true);
-                  }}
-                >
-                  <Plus className="w-5 h-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Registrar Pagamento</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
 
         {isReadOnlyOwner && (
           <ReadOnlyBadge
@@ -620,6 +586,25 @@ export function Payments() {
               </Button>
             )}
           </div>
+          {/* <div className="flex justify-between items-center">
+
+            {canCreatePayments && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    onClick={() => {
+                      closeAllModals();
+                      setShowCreateModal(true);
+                    }}
+                  >
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Registrar Pagamento</TooltipContent>
+              </Tooltip>
+            )}
+          </div> */}
         </div>
 
         { }
@@ -723,110 +708,107 @@ export function Payments() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {pendingPayments && pendingPayments.length > 0 ? (
                   pendingPayments.map((payment: any) => {
-                const isPending = payment.status?.toUpperCase() === 'PENDING' || payment.status?.toUpperCase() === 'OVERDUE';
-                const isOverdue = payment.status?.toUpperCase() === 'OVERDUE';
-                return (
-                <Card 
-                  key={payment.id} 
-                  className={`transition-all hover:shadow-md overflow-hidden ${
-                    isOverdue ? 'border-red-300 bg-red-50/30' : 
-                    isPending ? 'border-orange-300 bg-orange-50/30' : 
-                    ''
-                  }`}
-                >
-                  <CardContent className="p-0">
-                    <div className="flex">
-                      { }
-                      <div className="w-20 sm:w-28 min-w-[5rem] sm:min-w-[7rem] h-32 sm:h-36 bg-primary/10 flex items-center justify-center rounded-l-md">
-                        <DollarSign className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
-                      </div>
-                      { }
-                      <div className="flex-1 flex flex-col justify-between p-3 sm:p-4 min-w-0">
-                        <div>
-                          <h3 className="text-base sm:text-lg font-bold truncate">
-                            {formatCurrency(Number(payment.amount || payment.valorPago))}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                            <Building2 className="w-3 h-3 inline mr-1" />
-                            {payment.property?.name || payment.property?.address || 'Imóvel'}
-                          </p>
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                            <User className="w-3 h-3 inline mr-1" />
-                            {payment.user?.name || payment.tenantUser?.name || 'Inquilino'}
-                          </p>
-                          <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2">
-                            <Calendar className={`w-3 h-3 shrink-0 ${
-                              isPending ? 'text-orange-600' : 
-                              isOverdue ? 'text-red-600' : 
-                              'text-muted-foreground'
-                            }`} />
-                            <span className={`text-[10px] sm:text-xs ${
-                              isPending ? 'text-orange-600 font-medium' : 
-                              isOverdue ? 'text-red-600 font-medium' : 
-                              'text-muted-foreground'
-                            }`}>
-                              {isPending && payment.dueDate 
-                                ? `Vencimento: ${formatDate(payment.dueDate)}` 
-                                : formatDate(payment.paymentDate || payment.dataPagamento)}
-                            </span>
+                    const isPending = payment.status?.toUpperCase() === 'PENDING' || payment.status?.toUpperCase() === 'OVERDUE';
+                    const isOverdue = payment.status?.toUpperCase() === 'OVERDUE';
+                    return (
+                      <Card
+                        key={payment.id}
+                        className={`transition-all hover:shadow-md overflow-hidden ${isOverdue ? 'border-red-300 bg-red-50/30' :
+                            isPending ? 'border-orange-300 bg-orange-50/30' :
+                              ''
+                          }`}
+                      >
+                        <CardContent className="p-0">
+                          <div className="flex">
+                            { }
+                            <div className="w-20 sm:w-28 min-w-[5rem] sm:min-w-[7rem] h-32 sm:h-36 bg-primary/10 flex items-center justify-center rounded-l-md">
+                              <DollarSign className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+                            </div>
+                            { }
+                            <div className="flex-1 flex flex-col justify-between p-3 sm:p-4 min-w-0">
+                              <div>
+                                <h3 className="text-base sm:text-lg font-bold truncate">
+                                  {formatCurrency(Number(payment.amount || payment.valorPago))}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                  <Building2 className="w-3 h-3 inline mr-1" />
+                                  {payment.property?.name || payment.property?.address || 'Imóvel'}
+                                </p>
+                                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                  <User className="w-3 h-3 inline mr-1" />
+                                  {payment.user?.name || payment.tenantUser?.name || 'Inquilino'}
+                                </p>
+                                <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2">
+                                  <Calendar className={`w-3 h-3 shrink-0 ${isPending ? 'text-orange-600' :
+                                      isOverdue ? 'text-red-600' :
+                                        'text-muted-foreground'
+                                    }`} />
+                                  <span className={`text-[10px] sm:text-xs ${isPending ? 'text-orange-600 font-medium' :
+                                      isOverdue ? 'text-red-600 font-medium' :
+                                        'text-muted-foreground'
+                                    }`}>
+                                    {isPending && payment.dueDate
+                                      ? `Vencimento: ${formatDate(payment.dueDate)}`
+                                      : formatDate(payment.paymentDate || payment.dataPagamento)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between mt-2 gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {payment.isInvoice && (
+                                    <Badge className="bg-indigo-500 text-white text-xs">Fatura</Badge>
+                                  )}
+                                  {/* Display payment method if available */}
+                                  {(payment.paymentMethod || payment.payment_method) &&
+                                    getPaymentMethodBadge(payment.paymentMethod || payment.payment_method)}
+                                  {/* Display payment type if method not available or if type is different */}
+                                  {(!payment.paymentMethod && !payment.payment_method) &&
+                                    getPaymentTypeBadge(payment.paymentType || payment.tipo)}
+                                  {payment.status && (
+                                    <Badge className={
+                                      payment.status === 'PAID' ? 'bg-green-500 text-white' :
+                                        payment.status === 'PENDING' ? 'bg-yellow-500 text-white' :
+                                          payment.status === 'OVERDUE' ? 'bg-red-500 text-white' :
+                                            'bg-gray-500 text-white'
+                                    }>
+                                      {payment.status === 'PAID' ? 'Pago' :
+                                        payment.status === 'PENDING' ? 'Pendente' :
+                                          payment.status === 'OVERDUE' ? 'Vencido' :
+                                            payment.status}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="outline" className="h-8 w-8 sm:h-10 sm:w-10">
+                                      <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleViewPayment(payment)}>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      Visualizar
+                                    </DropdownMenuItem>
+                                    {!payment.isInvoice && canUpdatePayments && (
+                                      <DropdownMenuItem onClick={() => handleEditPayment(payment)}>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Editar pagamento
+                                      </DropdownMenuItem>
+                                    )}
+                                    {!payment.isInvoice && canDeletePayments && (
+                                      <DropdownMenuItem onClick={() => handleDeletePayment(payment)} className="text-red-600 focus:text-red-700">
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Excluir pagamento
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-2 gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {payment.isInvoice && (
-                              <Badge className="bg-indigo-500 text-white text-xs">Fatura</Badge>
-                            )}
-                            {/* Display payment method if available */}
-                            {(payment.paymentMethod || payment.payment_method) && 
-                             getPaymentMethodBadge(payment.paymentMethod || payment.payment_method)}
-                            {/* Display payment type if method not available or if type is different */}
-                            {(!payment.paymentMethod && !payment.payment_method) && 
-                             getPaymentTypeBadge(payment.paymentType || payment.tipo)}
-                            {payment.status && (
-                              <Badge className={
-                                payment.status === 'PAID' ? 'bg-green-500 text-white' :
-                                payment.status === 'PENDING' ? 'bg-yellow-500 text-white' :
-                                payment.status === 'OVERDUE' ? 'bg-red-500 text-white' :
-                                'bg-gray-500 text-white'
-                              }>
-                                {payment.status === 'PAID' ? 'Pago' :
-                                 payment.status === 'PENDING' ? 'Pendente' :
-                                 payment.status === 'OVERDUE' ? 'Vencido' :
-                                 payment.status}
-                              </Badge>
-                            )}
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="icon" variant="outline" className="h-8 w-8 sm:h-10 sm:w-10">
-                                <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewPayment(payment)}>
-                                <Eye className="w-4 h-4 mr-2" />
-                                Visualizar
-                              </DropdownMenuItem>
-                              {!payment.isInvoice && canUpdatePayments && (
-                                <DropdownMenuItem onClick={() => handleEditPayment(payment)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Editar pagamento
-                                </DropdownMenuItem>
-                              )}
-                              {!payment.isInvoice && canDeletePayments && (
-                                <DropdownMenuItem onClick={() => handleDeletePayment(payment)} className="text-red-600 focus:text-red-700">
-                                  <Trash2 className="w-4 h-4 mr-2" />
-                                  Excluir pagamento
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
+                        </CardContent>
+                      </Card>
+                    );
                   })
                 ) : (
                   <div className="text-center py-12 sm:py-16 bg-card border border-border rounded-lg px-4 col-span-full">
@@ -847,107 +829,104 @@ export function Payments() {
                     const isPending = payment.status?.toUpperCase() === 'PENDING' || payment.status?.toUpperCase() === 'OVERDUE';
                     const isOverdue = payment.status?.toUpperCase() === 'OVERDUE';
                     return (
-                    <Card 
-                      key={payment.id} 
-                      className={`transition-all hover:shadow-md overflow-hidden ${
-                        isOverdue ? 'border-red-300 bg-red-50/30' : 
-                        isPending ? 'border-orange-300 bg-orange-50/30' : 
-                        ''
-                      }`}
-                    >
-                      <CardContent className="p-0">
-                        <div className="flex">
-                          { }
-                          <div className="w-20 sm:w-28 min-w-[5rem] sm:min-w-[7rem] h-32 sm:h-36 bg-primary/10 flex items-center justify-center rounded-l-md">
-                            <DollarSign className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
-                          </div>
-                          { }
-                          <div className="flex-1 flex flex-col justify-between p-3 sm:p-4 min-w-0">
-                            <div>
-                              <h3 className="text-base sm:text-lg font-bold truncate">
-                                {formatCurrency(Number(payment.amount || payment.valorPago))}
-                              </h3>
-                              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                                <Building2 className="w-3 h-3 inline mr-1" />
-                                {payment.property?.name || payment.property?.address || 'Imóvel'}
-                              </p>
-                              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                                <User className="w-3 h-3 inline mr-1" />
-                                {payment.user?.name || payment.tenantUser?.name || 'Inquilino'}
-                              </p>
-                              <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2">
-                                <Calendar className={`w-3 h-3 shrink-0 ${
-                                  isPending ? 'text-orange-600' : 
-                                  isOverdue ? 'text-red-600' : 
-                                  'text-muted-foreground'
-                                }`} />
-                                <span className={`text-[10px] sm:text-xs ${
-                                  isPending ? 'text-orange-600 font-medium' : 
-                                  isOverdue ? 'text-red-600 font-medium' : 
-                                  'text-muted-foreground'
-                                }`}>
-                                  {isPending && payment.dueDate 
-                                    ? `Vencimento: ${formatDate(payment.dueDate)}` 
-                                    : formatDate(payment.paymentDate || payment.dataPagamento)}
-                                </span>
+                      <Card
+                        key={payment.id}
+                        className={`transition-all hover:shadow-md overflow-hidden ${isOverdue ? 'border-red-300 bg-red-50/30' :
+                            isPending ? 'border-orange-300 bg-orange-50/30' :
+                              ''
+                          }`}
+                      >
+                        <CardContent className="p-0">
+                          <div className="flex">
+                            { }
+                            <div className="w-20 sm:w-28 min-w-[5rem] sm:min-w-[7rem] h-32 sm:h-36 bg-primary/10 flex items-center justify-center rounded-l-md">
+                              <DollarSign className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
+                            </div>
+                            { }
+                            <div className="flex-1 flex flex-col justify-between p-3 sm:p-4 min-w-0">
+                              <div>
+                                <h3 className="text-base sm:text-lg font-bold truncate">
+                                  {formatCurrency(Number(payment.amount || payment.valorPago))}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                  <Building2 className="w-3 h-3 inline mr-1" />
+                                  {payment.property?.name || payment.property?.address || 'Imóvel'}
+                                </p>
+                                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                                  <User className="w-3 h-3 inline mr-1" />
+                                  {payment.user?.name || payment.tenantUser?.name || 'Inquilino'}
+                                </p>
+                                <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2">
+                                  <Calendar className={`w-3 h-3 shrink-0 ${isPending ? 'text-orange-600' :
+                                      isOverdue ? 'text-red-600' :
+                                        'text-muted-foreground'
+                                    }`} />
+                                  <span className={`text-[10px] sm:text-xs ${isPending ? 'text-orange-600 font-medium' :
+                                      isOverdue ? 'text-red-600 font-medium' :
+                                        'text-muted-foreground'
+                                    }`}>
+                                    {isPending && payment.dueDate
+                                      ? `Vencimento: ${formatDate(payment.dueDate)}`
+                                      : formatDate(payment.paymentDate || payment.dataPagamento)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between mt-2 gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {payment.isInvoice && (
+                                    <Badge className="bg-indigo-500 text-white text-xs">Fatura</Badge>
+                                  )}
+                                  {/* Display payment method if available */}
+                                  {(payment.paymentMethod || payment.payment_method) &&
+                                    getPaymentMethodBadge(payment.paymentMethod || payment.payment_method)}
+                                  {/* Display payment type if method not available or if type is different */}
+                                  {(!payment.paymentMethod && !payment.payment_method) &&
+                                    getPaymentTypeBadge(payment.paymentType || payment.tipo)}
+                                  {payment.status && (
+                                    <Badge className={
+                                      payment.status === 'PAID' ? 'bg-green-500 text-white' :
+                                        payment.status === 'PENDING' ? 'bg-yellow-500 text-white' :
+                                          payment.status === 'OVERDUE' ? 'bg-red-500 text-white' :
+                                            'bg-gray-500 text-white'
+                                    }>
+                                      {payment.status === 'PAID' ? 'Pago' :
+                                        payment.status === 'PENDING' ? 'Pendente' :
+                                          payment.status === 'OVERDUE' ? 'Vencido' :
+                                            payment.status}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="outline" className="h-8 w-8 sm:h-10 sm:w-10">
+                                      <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleViewPayment(payment)}>
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      Visualizar
+                                    </DropdownMenuItem>
+                                    {!payment.isInvoice && canUpdatePayments && (
+                                      <DropdownMenuItem onClick={() => handleEditPayment(payment)}>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Editar pagamento
+                                      </DropdownMenuItem>
+                                    )}
+                                    {!payment.isInvoice && canDeletePayments && (
+                                      <DropdownMenuItem onClick={() => handleDeletePayment(payment)} className="text-red-600 focus:text-red-700">
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Excluir pagamento
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between mt-2 gap-2">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {payment.isInvoice && (
-                                  <Badge className="bg-indigo-500 text-white text-xs">Fatura</Badge>
-                                )}
-                                {/* Display payment method if available */}
-                                {(payment.paymentMethod || payment.payment_method) && 
-                                 getPaymentMethodBadge(payment.paymentMethod || payment.payment_method)}
-                                {/* Display payment type if method not available or if type is different */}
-                                {(!payment.paymentMethod && !payment.payment_method) && 
-                                 getPaymentTypeBadge(payment.paymentType || payment.tipo)}
-                                {payment.status && (
-                                  <Badge className={
-                                    payment.status === 'PAID' ? 'bg-green-500 text-white' :
-                                    payment.status === 'PENDING' ? 'bg-yellow-500 text-white' :
-                                    payment.status === 'OVERDUE' ? 'bg-red-500 text-white' :
-                                    'bg-gray-500 text-white'
-                                  }>
-                                    {payment.status === 'PAID' ? 'Pago' :
-                                     payment.status === 'PENDING' ? 'Pendente' :
-                                     payment.status === 'OVERDUE' ? 'Vencido' :
-                                     payment.status}
-                                  </Badge>
-                                )}
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="outline" className="h-8 w-8 sm:h-10 sm:w-10">
-                                    <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewPayment(payment)}>
-                                    <Eye className="w-4 h-4 mr-2" />
-                                    Visualizar
-                                  </DropdownMenuItem>
-                                  {!payment.isInvoice && canUpdatePayments && (
-                                    <DropdownMenuItem onClick={() => handleEditPayment(payment)}>
-                                      <Edit className="w-4 h-4 mr-2" />
-                                      Editar pagamento
-                                    </DropdownMenuItem>
-                                  )}
-                                  {!payment.isInvoice && canDeletePayments && (
-                                    <DropdownMenuItem onClick={() => handleDeletePayment(payment)} className="text-red-600 focus:text-red-700">
-                                      <Trash2 className="w-4 h-4 mr-2" />
-                                      Excluir pagamento
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
+                        </CardContent>
+                      </Card>
+                    );
                   })
                 ) : (
                   <div className="text-center py-12 sm:py-16 bg-card border border-border rounded-lg px-4 col-span-full">

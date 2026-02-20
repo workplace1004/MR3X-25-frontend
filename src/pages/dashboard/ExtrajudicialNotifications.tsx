@@ -426,7 +426,7 @@ export default function ExtrajudicialNotifications() {
         const ownerRoles = ['PROPRIETARIO', 'INDEPENDENT_OWNER'];
         const filteredOwners = (usersRes.items || []).filter((u: any) => ownerRoles.includes(u.role));
         setOwners(filteredOwners);
-        
+
         // If modal is open and user is INDEPENDENT_OWNER, update form data with profile API
         if (showCreateModal && isIndependentOwner && user?.id) {
           profileAPI.getProfile()
@@ -507,14 +507,14 @@ export default function ExtrajudicialNotifications() {
         deadlineDays: parseInt(formData.deadlineDays) || 15,
         gracePeriodDays: formData.gracePeriodDays ? parseInt(formData.gracePeriodDays) : undefined,
       };
-      
+
       if (formData.attorneyName) {
         notificationData.attorneyName = formData.attorneyName;
       }
       if (formData.attorneyOAB) {
         notificationData.attorneyOAB = formData.attorneyOAB;
       }
-      
+
       await extrajudicialNotificationsAPI.createNotification(notificationData);
       toast.success('Notificacao criada com sucesso!');
       setShowCreateModal(false);
@@ -540,17 +540,17 @@ export default function ExtrajudicialNotifications() {
     if (isIndependentOwner) {
       const notification = notifications.find(n => n.id === id);
       if (notification) {
-        const hasAnySignature = 
-          notification.creditorSignedAt || 
+        const hasAnySignature =
+          notification.creditorSignedAt ||
           notification.debtorSignedAt;
-        
+
         if (!hasAnySignature) {
           setShowSendErrorModal(true);
           return;
         }
       }
     }
-    
+
     try {
       await extrajudicialNotificationsAPI.sendNotification(id, 'EMAIL');
       toast.success('Notificacao enviada com sucesso!');
@@ -775,13 +775,13 @@ export default function ExtrajudicialNotifications() {
   const filteredNotifications = notifications.filter(n => {
     if (searchQuery && searchQuery.trim()) {
       const search = searchQuery.toLowerCase().trim();
-      
+
       // Convert all values to strings and handle null/undefined
       const safeString = (val: any): string => {
         if (val === null || val === undefined) return '';
         return String(val).toLowerCase();
       };
-      
+
       // Search in all relevant fields
       return (
         safeString(n.notificationNumber).includes(search) ||
@@ -806,20 +806,13 @@ export default function ExtrajudicialNotifications() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <PageHeader 
-        title="Notificações Extrajudiciais" 
+      <PageHeader
+        title="Notificações Extrajudiciais"
         subtitle="Gerencie notificações extrajudiciais com valor jurídico"
         icon={<Gavel className="w-6 h-6 text-amber-700" />}
         iconBgClass="bg-amber-100"
       />
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        {(!isInquilino && !isProprietario) || isIndependentOwner ? (
-          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Notificacao
-          </Button>
-        ) : null}
-      </div>
+
 
       {statistics && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
@@ -857,35 +850,45 @@ export default function ExtrajudicialNotifications() {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex w-full sm:max-w-lg gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSearch();
-                }
-              }}
-              placeholder="Pesquisar por número, credor ou devedor"
-              className="pl-10"
-            />
-          </div>
-          <Button onClick={handleSearch} className="self-stretch">
-            Buscar
-          </Button>
-          {(searchTerm || searchQuery) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearSearch}
-              className="self-stretch"
-            >
-              Limpar
+        <div className="flex w-full gap-2 items-center justify-between">
+          <div className="flex gap-2 w-1/2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por número, credor ou devedor"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
             </Button>
-          )}
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            {(!isInquilino && !isProprietario) || isIndependentOwner ? (
+              <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Notificacao
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -977,12 +980,12 @@ export default function ExtrajudicialNotifications() {
                           </>
                         )}
                         {(['ENVIADO', 'VISUALIZADO', 'RASCUNHO'].includes(n.status)) &&
-                         n.userRole && n.userRole !== 'VIEWER' &&
-                         !((n.userRole === 'CREDITOR' && n.creditorSignedAt) || (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSignatureModal(n)}>
-                            <PenTool className="h-4 w-4" />
-                          </Button>
-                        )}
+                          n.userRole && n.userRole !== 'VIEWER' &&
+                          !((n.userRole === 'CREDITOR' && n.creditorSignedAt) || (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openSignatureModal(n)}>
+                              <PenTool className="h-4 w-4" />
+                            </Button>
+                          )}
                         {n.status === 'PRAZO_EXPIRADO' && (
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedNotification(n); setShowJudicialModal(true); }}>
                             <Gavel className="h-4 w-4 text-red-500" />
@@ -1005,7 +1008,7 @@ export default function ExtrajudicialNotifications() {
                       <TableHead>Tipo</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Prioridade</TableHead>
-                  {showUserRoleColumn && <TableHead>Seu Papel</TableHead>}
+                      {showUserRoleColumn && <TableHead>Seu Papel</TableHead>}
                       <TableHead>Credor</TableHead>
                       <TableHead>Devedor</TableHead>
                       <TableHead>Valor Total</TableHead>
@@ -1096,19 +1099,19 @@ export default function ExtrajudicialNotifications() {
                             )}
 
                             {(['ENVIADO', 'VISUALIZADO', 'RASCUNHO'].includes(n.status)) &&
-                             n.userRole &&
-                             n.userRole !== 'VIEWER' &&
-                             !((n.userRole === 'CREDITOR' && n.creditorSignedAt) ||
-                               (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openSignatureModal(n)}
-                                title={`Assinar como ${n.userRole === 'CREDITOR' ? 'Credor' : 'Devedor'}`}
-                              >
-                                <PenTool className="h-4 w-4" />
-                              </Button>
-                            )}
+                              n.userRole &&
+                              n.userRole !== 'VIEWER' &&
+                              !((n.userRole === 'CREDITOR' && n.creditorSignedAt) ||
+                                (n.userRole === 'DEBTOR' && n.debtorSignedAt)) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openSignatureModal(n)}
+                                  title={`Assinar como ${n.userRole === 'CREDITOR' ? 'Credor' : 'Devedor'}`}
+                                >
+                                  <PenTool className="h-4 w-4" />
+                                </Button>
+                              )}
 
                             {n.status === 'PRAZO_EXPIRADO' && (
                               <Button
@@ -1347,10 +1350,9 @@ export default function ExtrajudicialNotifications() {
                     value={formData.propertyId}
                     onValueChange={(v) => setFormData({ ...formData, propertyId: v })}
                   >
-                    <SelectTrigger 
-                      className={`text-xs sm:text-sm ${
-                        !formData.propertyId ? 'border-red-500 focus:border-red-500' : ''
-                      }`}
+                    <SelectTrigger
+                      className={`text-xs sm:text-sm ${!formData.propertyId ? 'border-red-500 focus:border-red-500' : ''
+                        }`}
                     >
                       <SelectValue placeholder="Selecione o imóvel" />
                     </SelectTrigger>
@@ -1373,10 +1375,9 @@ export default function ExtrajudicialNotifications() {
                       value={formData.type}
                       onValueChange={(v) => setFormData({ ...formData, type: v })}
                     >
-                      <SelectTrigger 
-                        className={`text-xs sm:text-sm ${
-                          !formData.type ? 'border-red-500 focus:border-red-500' : ''
-                        }`}
+                      <SelectTrigger
+                        className={`text-xs sm:text-sm ${!formData.type ? 'border-red-500 focus:border-red-500' : ''
+                          }`}
                       >
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
@@ -1868,10 +1869,10 @@ export default function ExtrajudicialNotifications() {
                     <div className={`text-center border-t pt-3 ${selectedNotification.creditorSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
                       <div className="h-12 sm:h-16 flex items-end justify-center mb-2">
                         {selectedNotification.creditorSignature ? (
-                          <img 
-                            src={selectedNotification.creditorSignature} 
-                            alt="Assinatura Credor" 
-                            className="h-10 sm:h-12 mx-auto object-contain" 
+                          <img
+                            src={selectedNotification.creditorSignature}
+                            alt="Assinatura Credor"
+                            className="h-10 sm:h-12 mx-auto object-contain"
                           />
                         ) : (
                           <PenTool className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
@@ -1893,10 +1894,10 @@ export default function ExtrajudicialNotifications() {
                     <div className={`text-center border-t pt-3 ${selectedNotification.debtorSignedAt ? 'border-green-300 bg-green-50' : ''}`}>
                       <div className="h-12 sm:h-16 flex items-end justify-center mb-2">
                         {selectedNotification.debtorSignature ? (
-                          <img 
-                            src={selectedNotification.debtorSignature} 
-                            alt="Assinatura Devedor" 
-                            className="h-10 sm:h-12 mx-auto object-contain" 
+                          <img
+                            src={selectedNotification.debtorSignature}
+                            alt="Assinatura Devedor"
+                            className="h-10 sm:h-12 mx-auto object-contain"
                           />
                         ) : (
                           <PenTool className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />

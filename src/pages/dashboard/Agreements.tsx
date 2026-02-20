@@ -1120,7 +1120,40 @@ export function Agreements() {
           icon={<Handshake className="w-6 h-6 text-orange-700" />}
           iconBgClass="bg-orange-100"
         />
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                  }
+                }}
+                placeholder="Pesquisar por título, imóvel ou inquilino"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           {isMR3XRole && (
             <div className="flex items-center gap-2 mt-2 text-sm text-amber-600">
               <Lock className="w-4 h-4" />
@@ -1178,38 +1211,6 @@ export function Agreements() {
             )}
           </div>
         </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex w-full sm:max-w-lg gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch();
-                  }
-                }}
-                placeholder="Pesquisar por título, imóvel ou inquilino"
-                className="pl-10"
-              />
-            </div>
-            <Button onClick={handleSearch} className="self-stretch">
-              Buscar
-            </Button>
-            {(searchTerm || searchQuery) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSearch}
-                className="self-stretch"
-              >
-                Limpar
-              </Button>
-            )}
-          </div>
         </div>
 
         {}

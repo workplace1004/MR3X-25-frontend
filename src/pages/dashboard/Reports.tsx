@@ -1265,7 +1265,7 @@ export default function Reports() {
         icon={<BarChart3 className="w-6 h-6 text-purple-700" />}
         iconBgClass="bg-purple-100"
       />
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         {canAccessFinancialReports && (
           <div className="flex flex-col sm:flex-row gap-2">
             <Select value={financialReportType} onValueChange={(v: 'daily' | 'monthly' | 'annual') => setFinancialReportType(v)}>
@@ -1288,7 +1288,7 @@ export default function Reports() {
             </Button>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Financial Report Summary for Brazilian Federal Revenue */}
       {canAccessFinancialReports && financialReport && (

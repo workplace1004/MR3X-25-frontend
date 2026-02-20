@@ -386,10 +386,10 @@ export function Inspections() {
               );
             } catch (uploadError: any) {
               console.error(`Error uploading media for item ${itemIndex}:`, uploadError);
-              const errorMessage = uploadError?.response?.data?.message || 
-                                   uploadError?.response?.data?.error || 
-                                   uploadError?.message || 
-                                   'Erro desconhecido ao enviar mídia';
+              const errorMessage = uploadError?.response?.data?.message ||
+                uploadError?.response?.data?.error ||
+                uploadError?.message ||
+                'Erro desconhecido ao enviar mídia';
               toast.error(`Erro ao enviar mídia do item ${itemIndex + 1}: ${errorMessage}`);
             }
           }
@@ -453,10 +453,10 @@ export function Inspections() {
             );
           } catch (uploadError: any) {
             console.error(`Error uploading media for item ${itemIndex}:`, uploadError);
-            const errorMessage = uploadError?.response?.data?.message || 
-                                 uploadError?.response?.data?.error || 
-                                 uploadError?.message || 
-                                 'Erro desconhecido ao enviar mídia';
+            const errorMessage = uploadError?.response?.data?.message ||
+              uploadError?.response?.data?.error ||
+              uploadError?.message ||
+              'Erro desconhecido ao enviar mídia';
             toast.error(`Erro ao enviar mídia do item ${itemIndex + 1}: ${errorMessage}`);
           }
         }
@@ -574,18 +574,18 @@ export function Inspections() {
 
   const handleSend = (inspection: Inspection) => {
     // Check if inspection has at least one signature before sending
-    const hasAnySignature = 
-      inspection.tenantSignature || 
-      inspection.ownerSignature || 
-      inspection.agencySignature || 
+    const hasAnySignature =
+      inspection.tenantSignature ||
+      inspection.ownerSignature ||
+      inspection.agencySignature ||
       inspection.inspectorSignature ||
       inspection.hasSignatures;
-    
+
     if (!hasAnySignature) {
       setShowSendErrorModal(true);
       return;
     }
-    
+
     sendInspectionMutation.mutate(inspection.id);
   };
 
@@ -683,7 +683,7 @@ export function Inspections() {
         const newMap = new Map(prev);
         const existing = newMap.get(index) || [];
         const updated = [...existing, ...newPreviews];
-        
+
         // Double-check limit after adding
         if (updated.length > maxFilesPerItem) {
           toast.error(`Limite de ${maxFilesPerItem} arquivos por item excedido. Apenas os primeiros ${maxFilesPerItem} arquivos foram adicionados.`);
@@ -693,10 +693,10 @@ export function Inspections() {
         } else {
           newMap.set(index, updated);
         }
-        
+
         return newMap;
       });
-      
+
       if (newPreviews.length < files.length) {
         toast.warning(`${newPreviews.length} de ${files.length} arquivo(s) foram adicionados. Alguns arquivos foram rejeitados devido a validação.`);
       } else {
@@ -912,7 +912,7 @@ export function Inspections() {
         return ['AGENCY_ADMIN', 'AGENCY_MANAGER', 'CEO'].includes(role);
       case 'inspector':
         return ['AGENCY_ADMIN', 'AGENCY_MANAGER', 'BROKER', 'CEO'].includes(role) ||
-               inspectionDetail.inspectorId === user.id;
+          inspectionDetail.inspectorId === user.id;
       default:
         return false;
     }
@@ -1523,63 +1523,13 @@ export function Inspections() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <PageHeader 
-          title="Vistorias" 
+        <PageHeader
+          title="Vistorias"
           subtitle="Gerencie as vistorias de entrada, saída e periódicas"
           icon={<ClipboardCheck className="w-6 h-6 text-orange-700" />}
           iconBgClass="bg-orange-100"
         />
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            {}
-            <div className="flex border border-border rounded-lg p-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'table' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('table')}
-                    className={viewMode === 'table' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Visualização em Tabela</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('cards')}
-                    className={viewMode === 'cards' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Visualização em Cards</TooltipContent>
-              </Tooltip>
-            </div>
 
-            {canCreateInspections && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className="bg-orange-600 hover:bg-orange-700 text-white w-full"
-                    onClick={() => {
-                      closeAllModals();
-                      setShowCreateModal(true);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Criar Nova Vistoria</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex w-full sm:max-w-lg gap-2">
@@ -1612,12 +1562,63 @@ export function Inspections() {
               </Button>
             )}
           </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              { }
+              <div className="flex border border-border rounded-lg p-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={viewMode === 'table' ? 'default' : 'ghost'}
+                      onClick={() => setViewMode('table')}
+                      className={viewMode === 'table' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Visualização em Tabela</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                      onClick={() => setViewMode('cards')}
+                      className={viewMode === 'cards' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Visualização em Cards</TooltipContent>
+                </Tooltip>
+              </div>
+
+              {canCreateInspections && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className="bg-orange-600 hover:bg-orange-700 text-white w-full"
+                      onClick={() => {
+                        closeAllModals();
+                        setShowCreateModal(true);
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Criar Nova Vistoria</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          </div>
         </div>
 
-        {}
+        { }
         {inspections && inspections.length > 0 ? (
           viewMode === 'table' ? (
-            
+
             <div className="bg-card border border-border rounded-lg overflow-hidden">
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
@@ -1816,7 +1817,7 @@ export function Inspections() {
               </div>
             </div>
           ) : (
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {inspections.map((inspection: Inspection) => (
                 <Card key={inspection.id} className="hover:shadow-md transition-shadow">
@@ -1921,7 +1922,7 @@ export function Inspections() {
             </div>
           )
         ) : (
-          
+
           <div className="text-center py-12 bg-card border border-border rounded-lg">
             <ClipboardCheck className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhuma vistoria cadastrada</h3>
@@ -1943,7 +1944,7 @@ export function Inspections() {
           </div>
         )}
 
-        {}
+        { }
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1970,10 +1971,10 @@ export function Inspections() {
                           return status === 'ALUGADO' || status === 'RENTED';
                         })
                         .map((property) => (
-                        <SelectItem key={property.id} value={property.id?.toString()}>
-                          {property.name || property.address}
-                        </SelectItem>
-                      ))}
+                          <SelectItem key={property.id} value={property.id?.toString()}>
+                            {property.name || property.address}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -2019,7 +2020,7 @@ export function Inspections() {
                   <Label htmlFor="inspectionType">Classificação da Vistoria</Label>
                   <Select
                     value={newInspection.inspectionType || ''}
-                    onValueChange={(value: 'VISUAL' | 'TECHNICAL' | 'SELF_DECLARED' | '') => 
+                    onValueChange={(value: 'VISUAL' | 'TECHNICAL' | 'SELF_DECLARED' | '') =>
                       setNewInspection({ ...newInspection, inspectionType: value || undefined })
                     }
                   >
@@ -2071,7 +2072,7 @@ export function Inspections() {
                 />
               </div>
 
-              {}
+              { }
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label>Itens da Vistoria</Label>
@@ -2191,7 +2192,7 @@ export function Inspections() {
                       />
                     </div>
 
-                    {}
+                    { }
                     <div className="mt-3 pt-3 border-t border-border">
                       <Label className="text-xs flex items-center gap-2 mb-2">
                         <Image className="w-3 h-3" />
@@ -2199,7 +2200,7 @@ export function Inspections() {
                         Fotos e Vídeos
                       </Label>
 
-                      {}
+                      { }
                       <div className="flex items-center gap-2">
                         <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                           <Upload className="w-4 h-4 text-muted-foreground" />
@@ -2217,7 +2218,7 @@ export function Inspections() {
                         </span>
                       </div>
 
-                      {}
+                      { }
                       {getItemFilePreviews(index).length > 0 && (
                         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                           {getItemFilePreviews(index).map((filePreview, fileIndex) => (
@@ -2276,7 +2277,7 @@ export function Inspections() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -2331,7 +2332,7 @@ export function Inspections() {
                     <Label>Classificação da Vistoria</Label>
                     <Select
                       value={editForm.inspectionType || ''}
-                      onValueChange={(value: 'VISUAL' | 'TECHNICAL' | 'SELF_DECLARED' | '') => 
+                      onValueChange={(value: 'VISUAL' | 'TECHNICAL' | 'SELF_DECLARED' | '') =>
                         setEditForm({ ...editForm, inspectionType: value || undefined })
                       }
                     >
@@ -2428,7 +2429,7 @@ export function Inspections() {
                   </div>
                 )}
 
-                {}
+                { }
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>Itens da Vistoria</Label>
@@ -2513,7 +2514,7 @@ export function Inspections() {
                         />
                       </div>
 
-                      {}
+                      { }
                       <div className="mt-3 pt-3 border-t border-border">
                         <Label className="text-xs flex items-center gap-2 mb-2">
                           <Image className="w-3 h-3" />
@@ -2521,7 +2522,7 @@ export function Inspections() {
                           Fotos e Vídeos
                         </Label>
 
-                        {}
+                        { }
                         <div className="flex items-center gap-2">
                           <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                             <Upload className="w-4 h-4 text-muted-foreground" />
@@ -2650,7 +2651,7 @@ export function Inspections() {
             <DialogHeader className="print-avoid-break">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                <DialogTitle className="text-base sm:text-lg">Detalhes da Vistoria</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">Detalhes da Vistoria</DialogTitle>
                   <DialogDescription className="hidden">Visualize os detalhes completos da vistoria</DialogDescription>
                 </div>
                 <div className="flex items-center gap-2">
@@ -2912,145 +2913,141 @@ export function Inspections() {
                     // Show only Tenant and Inspector signatures for INQUILINO viewing INDEPENDENT_OWNER inspections
                     const showOnlyTenantAndInspector = user?.role === 'INQUILINO' && isFromIndependentOwner;
                     const shouldHideOwnerAndAgency = isIndependentOwner || showOnlyTenantAndInspector;
-                    
+
                     return (
                       <div className={`grid gap-2 sm:gap-4 ${shouldHideOwnerAndAgency ? 'grid-cols-2' : 'grid-cols-2'}`}>
-                    {/* Inquilino */}
-                    <div
-                      className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${
-                        inspectionDetail.tenantSignedAt
-                          ? 'border-green-300 bg-green-50'
-                          : canUserSign('tenant') && inspectionDetail.status !== 'APROVADA'
-                          ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (!inspectionDetail.tenantSignedAt && canUserSign('tenant') && inspectionDetail.status !== 'APROVADA') {
-                          openSignatureModal('tenant');
-                        }
-                      }}
-                    >
-                      {inspectionDetail.tenantSignature ? (
-                        <img src={inspectionDetail.tenantSignature} alt="Assinatura Inquilino" className="h-10 sm:h-12 mx-auto object-contain" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground">Inquilino</Label>
-                      {inspectionDetail.tenantSignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : canUserSign('tenant') && inspectionDetail.status !== 'APROVADA' ? (
-                        <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
+                        {/* Inquilino */}
+                        <div
+                          className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${inspectionDetail.tenantSignedAt
+                              ? 'border-green-300 bg-green-50'
+                              : canUserSign('tenant') && inspectionDetail.status !== 'APROVADA'
+                                ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
+                                : ''
+                            }`}
+                          onClick={() => {
+                            if (!inspectionDetail.tenantSignedAt && canUserSign('tenant') && inspectionDetail.status !== 'APROVADA') {
+                              openSignatureModal('tenant');
+                            }
+                          }}
+                        >
+                          {inspectionDetail.tenantSignature ? (
+                            <img src={inspectionDetail.tenantSignature} alt="Assinatura Inquilino" className="h-10 sm:h-12 mx-auto object-contain" />
+                          ) : (
+                            <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                          )}
+                          <Label className="text-[10px] sm:text-xs text-muted-foreground">Inquilino</Label>
+                          {inspectionDetail.tenantSignedAt ? (
+                            <p className="text-[10px] sm:text-xs text-green-600">
+                              <CheckCircle className="w-3 h-3 inline mr-1" />
+                              Assinado
+                            </p>
+                          ) : canUserSign('tenant') && inspectionDetail.status !== 'APROVADA' ? (
+                            <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
+                          ) : (
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                          )}
+                        </div>
 
-                    {/* Proprietário */}
+                        {/* Proprietário */}
                         {!shouldHideOwnerAndAgency && (
-                    <div
-                      className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${
-                        inspectionDetail.ownerSignedAt
-                          ? 'border-green-300 bg-green-50'
-                          : canUserSign('owner') && inspectionDetail.status !== 'APROVADA'
-                          ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (!inspectionDetail.ownerSignedAt && canUserSign('owner') && inspectionDetail.status !== 'APROVADA') {
-                          openSignatureModal('owner');
-                        }
-                      }}
-                    >
-                      {inspectionDetail.ownerSignature ? (
-                        <img src={inspectionDetail.ownerSignature} alt="Assinatura Proprietário" className="h-10 sm:h-12 mx-auto object-contain" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground">Proprietário</Label>
-                      {inspectionDetail.ownerSignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : canUserSign('owner') && inspectionDetail.status !== 'APROVADA' ? (
-                        <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
+                          <div
+                            className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${inspectionDetail.ownerSignedAt
+                                ? 'border-green-300 bg-green-50'
+                                : canUserSign('owner') && inspectionDetail.status !== 'APROVADA'
+                                  ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
+                                  : ''
+                              }`}
+                            onClick={() => {
+                              if (!inspectionDetail.ownerSignedAt && canUserSign('owner') && inspectionDetail.status !== 'APROVADA') {
+                                openSignatureModal('owner');
+                              }
+                            }}
+                          >
+                            {inspectionDetail.ownerSignature ? (
+                              <img src={inspectionDetail.ownerSignature} alt="Assinatura Proprietário" className="h-10 sm:h-12 mx-auto object-contain" />
+                            ) : (
+                              <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                            )}
+                            <Label className="text-[10px] sm:text-xs text-muted-foreground">Proprietário</Label>
+                            {inspectionDetail.ownerSignedAt ? (
+                              <p className="text-[10px] sm:text-xs text-green-600">
+                                <CheckCircle className="w-3 h-3 inline mr-1" />
+                                Assinado
+                              </p>
+                            ) : canUserSign('owner') && inspectionDetail.status !== 'APROVADA' ? (
+                              <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
+                            ) : (
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                            )}
+                          </div>
                         )}
 
-                    {/* Agência */}
+                        {/* Agência */}
                         {!shouldHideOwnerAndAgency && (
-                    <div
-                      className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${
-                        inspectionDetail.agencySignedAt
-                          ? 'border-green-300 bg-green-50'
-                          : canUserSign('agency') && inspectionDetail.status !== 'APROVADA'
-                          ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (!inspectionDetail.agencySignedAt && canUserSign('agency') && inspectionDetail.status !== 'APROVADA') {
-                          openSignatureModal('agency');
-                        }
-                      }}
-                    >
-                      {inspectionDetail.agencySignature ? (
-                        <img src={inspectionDetail.agencySignature} alt="Assinatura Agência" className="h-10 sm:h-12 mx-auto object-contain" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground">Agência</Label>
-                      {inspectionDetail.agencySignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : canUserSign('agency') && inspectionDetail.status !== 'APROVADA' ? (
-                        <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
+                          <div
+                            className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${inspectionDetail.agencySignedAt
+                                ? 'border-green-300 bg-green-50'
+                                : canUserSign('agency') && inspectionDetail.status !== 'APROVADA'
+                                  ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
+                                  : ''
+                              }`}
+                            onClick={() => {
+                              if (!inspectionDetail.agencySignedAt && canUserSign('agency') && inspectionDetail.status !== 'APROVADA') {
+                                openSignatureModal('agency');
+                              }
+                            }}
+                          >
+                            {inspectionDetail.agencySignature ? (
+                              <img src={inspectionDetail.agencySignature} alt="Assinatura Agência" className="h-10 sm:h-12 mx-auto object-contain" />
+                            ) : (
+                              <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                            )}
+                            <Label className="text-[10px] sm:text-xs text-muted-foreground">Agência</Label>
+                            {inspectionDetail.agencySignedAt ? (
+                              <p className="text-[10px] sm:text-xs text-green-600">
+                                <CheckCircle className="w-3 h-3 inline mr-1" />
+                                Assinado
+                              </p>
+                            ) : canUserSign('agency') && inspectionDetail.status !== 'APROVADA' ? (
+                              <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
+                            ) : (
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                            )}
+                          </div>
                         )}
 
-                    {/* Vistoriador */}
-                    <div
-                      className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${
-                        inspectionDetail.inspectorSignedAt
-                          ? 'border-green-300 bg-green-50'
-                          : canUserSign('inspector') && inspectionDetail.status !== 'APROVADA'
-                          ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (!inspectionDetail.inspectorSignedAt && canUserSign('inspector') && inspectionDetail.status !== 'APROVADA') {
-                          openSignatureModal('inspector');
-                        }
-                      }}
-                    >
-                      {inspectionDetail.inspectorSignature ? (
-                        <img src={inspectionDetail.inspectorSignature} alt="Assinatura Vistoriador" className="h-10 sm:h-12 mx-auto object-contain" />
-                      ) : (
-                        <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
-                      )}
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground">Vistoriador</Label>
-                      {inspectionDetail.inspectorSignedAt ? (
-                        <p className="text-[10px] sm:text-xs text-green-600">
-                          <CheckCircle className="w-3 h-3 inline mr-1" />
-                          Assinado
-                        </p>
-                      ) : canUserSign('inspector') && inspectionDetail.status !== 'APROVADA' ? (
-                        <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
-                      ) : (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                      )}
-                    </div>
-                  </div>
+                        {/* Vistoriador */}
+                        <div
+                          className={`p-2 sm:p-3 border rounded-lg text-center transition-all ${inspectionDetail.inspectorSignedAt
+                              ? 'border-green-300 bg-green-50'
+                              : canUserSign('inspector') && inspectionDetail.status !== 'APROVADA'
+                                ? 'border-orange-300 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm'
+                                : ''
+                            }`}
+                          onClick={() => {
+                            if (!inspectionDetail.inspectorSignedAt && canUserSign('inspector') && inspectionDetail.status !== 'APROVADA') {
+                              openSignatureModal('inspector');
+                            }
+                          }}
+                        >
+                          {inspectionDetail.inspectorSignature ? (
+                            <img src={inspectionDetail.inspectorSignature} alt="Assinatura Vistoriador" className="h-10 sm:h-12 mx-auto object-contain" />
+                          ) : (
+                            <PenTool className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-muted-foreground" />
+                          )}
+                          <Label className="text-[10px] sm:text-xs text-muted-foreground">Vistoriador</Label>
+                          {inspectionDetail.inspectorSignedAt ? (
+                            <p className="text-[10px] sm:text-xs text-green-600">
+                              <CheckCircle className="w-3 h-3 inline mr-1" />
+                              Assinado
+                            </p>
+                          ) : canUserSign('inspector') && inspectionDetail.status !== 'APROVADA' ? (
+                            <p className="text-[10px] sm:text-xs text-orange-600 font-medium">Clique para assinar</p>
+                          ) : (
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                          )}
+                        </div>
+                      </div>
                     );
                   })()}
                 </div>
@@ -3208,7 +3205,7 @@ export function Inspections() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
           <DialogContent>
             <DialogHeader>
@@ -3267,7 +3264,7 @@ export function Inspections() {
           </DialogContent>
         </Dialog>
 
-        {}
+        { }
         <Dialog open={!!inspectionToDelete} onOpenChange={() => setInspectionToDelete(null)}>
           <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg rounded-xl">
             <DialogHeader>
@@ -3454,9 +3451,8 @@ export function Inspections() {
                         setPreviewImage({ ...previewImage, url: img.url, name: img.name, currentIndex: idx });
                         setPreviewZoom(1);
                       }}
-                      className={`flex-shrink-0 w-12 h-12 rounded border-2 overflow-hidden transition-all ${
-                        idx === previewImage.currentIndex ? 'border-orange-500' : 'border-transparent opacity-60 hover:opacity-100'
-                      }`}
+                      className={`flex-shrink-0 w-12 h-12 rounded border-2 overflow-hidden transition-all ${idx === previewImage.currentIndex ? 'border-orange-500' : 'border-transparent opacity-60 hover:opacity-100'
+                        }`}
                     >
                       <img
                         src={img.url}

@@ -69,7 +69,7 @@ export function PageHeader({ title, subtitle, showWallet, actions, icon, iconBgC
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           {icon && (
             <div className={`rounded-lg p-3 flex-shrink-0 ${iconBgClass}`}>
