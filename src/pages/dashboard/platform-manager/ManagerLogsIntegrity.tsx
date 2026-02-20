@@ -4,6 +4,7 @@ import {
   Activity, Search, AlertTriangle, CheckCircle, XCircle,
   Clock, Shield, Code, RefreshCw
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
@@ -209,19 +210,18 @@ export function ManagerLogsIntegrity() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Logs e Integridade</h1>
-          <p className="text-muted-foreground">Visualize logs e monitore a integridade da plataforma (somente leitura)</p>
-        </div>
+      <PageHeader
+        title="Logs e Integridade"
+        subtitle="Visualize logs e monitore a integridade da plataforma (somente leitura)"
+        icon={<Activity className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
+      />
+      <div className="flex justify-end">
         <Button variant="outline" size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
           Atualizar
         </Button>
       </div>
-
-      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

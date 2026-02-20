@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users, Search, Eye, Shield, UserCog, Award, Code,
   Scale, Mail, Phone, Calendar, Clock, CheckCircle
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
@@ -63,10 +64,13 @@ const getRoleLabel = (role: string) => {
   }
 };
 
+const PAGE_SIZE = 10;
+
 export function ManagerInternalUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -88,6 +92,16 @@ export function ManagerInternalUsers() {
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE)), [filteredUsers.length]);
+  const paginatedUsers = useMemo(
+    () => filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredUsers, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, roleFilter, statusFilter]);
 
   const openDetails = (user: any) => {
     setSelectedUser(user);
@@ -190,13 +204,12 @@ export function ManagerInternalUsers() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Usuários Internos MR3X</h1>
-        <p className="text-muted-foreground">Visualize a equipe interna da plataforma (somente leitura)</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Usuários Internos MR3X"
+        subtitle="Visualize a equipe interna da plataforma (somente leitura)"
+        icon={<Users className="w-6 h-6 text-purple-700" />}
+        iconBgClass="bg-purple-100"
+      />
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -320,6 +333,7 @@ export function ManagerInternalUsers() {
             {filteredUsers.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">Nenhum usuário encontrado</p>
             ) : (
+              <>
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
@@ -332,7 +346,7 @@ export function ManagerInternalUsers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user: any) => (
+                  {paginatedUsers.map((user: any) => (
                     <tr key={user.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
@@ -370,12 +384,26 @@ export function ManagerInternalUsers() {
                   ))}
                 </tbody>
               </table>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <span className="text-sm text-muted-foreground">Total: {filteredUsers.length}</span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                    Anterior
+                  </Button>
+                  <span className="text-sm px-2">
+                    {page} / {totalPages}
+                  </span>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+              </>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>

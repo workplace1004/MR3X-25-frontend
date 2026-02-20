@@ -4,6 +4,7 @@ import {
   Search, FileText, ChevronRight,
   Clock, User, Tag, ExternalLink, BookOpen, CheckSquare
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Input } from '../../../components/ui/input';
@@ -131,13 +132,12 @@ export function ManagerKnowledgeBase() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Base de Conhecimento</h1>
-        <p className="text-muted-foreground">Documentação interna, procedimentos e checklists</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Base de Conhecimento"
+        subtitle="Documentação interna, procedimentos e checklists"
+        icon={<BookOpen className="w-6 h-6 text-amber-700" />}
+        iconBgClass="bg-amber-100"
+      />
       <Card>
         <CardContent className="p-4">
           <div className="relative">

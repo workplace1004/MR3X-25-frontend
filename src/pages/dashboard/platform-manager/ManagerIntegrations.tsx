@@ -4,6 +4,7 @@ import {
   Webhook, CheckCircle, XCircle, AlertTriangle,
   Code, RefreshCw, Zap
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
@@ -186,19 +187,18 @@ export function ManagerIntegrations() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Monitoramento de Integrações</h1>
-          <p className="text-muted-foreground">Acompanhe webhooks, requisições API e logs de erro</p>
-        </div>
+      <PageHeader
+        title="Monitoramento de Integrações"
+        subtitle="Acompanhe webhooks, requisições API e logs de erro"
+        icon={<Webhook className="w-6 h-6 text-green-700" />}
+        iconBgClass="bg-green-100"
+      />
+      <div className="flex justify-end">
         <Button variant="outline" size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
           Atualizar
         </Button>
       </div>
-
-      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

@@ -4,6 +4,7 @@ import {
   Package, Search, Eye, Calendar, CheckCircle,
   Clock, AlertTriangle, DollarSign
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
@@ -187,13 +188,12 @@ export function ManagerPlansBilling() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Planos e Cobrança</h1>
-        <p className="text-muted-foreground">Visualize planos e status de cobrança das agências (somente leitura)</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Planos e Cobrança"
+        subtitle="Visualize planos e status de cobrança das agências (somente leitura)"
+        icon={<DollarSign className="w-6 h-6 text-green-700" />}
+        iconBgClass="bg-green-100"
+      />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
   Search, Clock, CheckCircle, AlertCircle,
-  User, ChevronRight, Send, Users
+  User, ChevronRight, Send, Users, Headphones
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -212,13 +213,12 @@ export function ManagerSupportCenter() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Central de Suporte</h1>
-        <p className="text-muted-foreground">Gerencie tickets e atendimento ao cliente</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Central de Suporte"
+        subtitle="Gerencie tickets e atendimento ao cliente"
+        icon={<Headphones className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
+      />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

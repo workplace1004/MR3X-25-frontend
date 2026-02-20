@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Building2, Users, Ticket, Activity, TrendingUp, TrendingDown,
-  CheckCircle, AlertTriangle, Server, AlertCircle
+  CheckCircle, AlertTriangle, Server, AlertCircle, LayoutDashboard
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Badge } from '../../../components/ui/badge';
@@ -199,13 +200,12 @@ export function ManagerDashboard() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard do Gerente</h1>
-        <p className="text-muted-foreground">Visão geral da plataforma MR3X</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Dashboard do Gerente"
+        subtitle="Visão geral da plataforma MR3X"
+        icon={<LayoutDashboard className="w-6 h-6 text-cyan-700" />}
+        iconBgClass="bg-cyan-100"
+      />
       {hasError && (
         <Card>
           <CardContent className="p-6">

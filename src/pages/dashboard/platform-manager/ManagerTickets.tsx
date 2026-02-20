@@ -4,6 +4,7 @@ import {
   MessageSquare, Search, Send, StickyNote, BarChart3,
   Clock, CheckCircle, TrendingUp
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
@@ -203,13 +204,12 @@ export function ManagerTickets() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Tickets e Comunicação</h1>
-        <p className="text-muted-foreground">Notas internas, mensagens de agências e analytics de suporte</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Tickets e Comunicação"
+        subtitle="Notas internas, mensagens de agências e analytics de suporte"
+        icon={<MessageSquare className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
+      />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

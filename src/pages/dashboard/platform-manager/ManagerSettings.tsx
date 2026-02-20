@@ -4,6 +4,7 @@ import {
   Settings, User, Bell, Shield, Lock,
   Mail, Phone, Calendar, Clock, Save, Loader2
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -156,13 +157,12 @@ export function ManagerSettings() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground">Gerencie suas preferências pessoais (acesso limitado)</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Configurações"
+        subtitle="Gerencie suas preferências pessoais (acesso limitado)"
+        icon={<Settings className="w-6 h-6 text-slate-700" />}
+        iconBgClass="bg-slate-100"
+      />
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="profile">

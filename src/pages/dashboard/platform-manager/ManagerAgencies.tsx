@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Building2, Search, Eye,
   Calendar, CreditCard, Activity, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
+import { PageHeader } from '../../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { Button } from '../../../components/ui/button';
@@ -26,10 +27,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { platformManagerAPI } from '../../../api';
 
+const PAGE_SIZE = 10;
+
 export function ManagerAgencies() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [selectedAgency, setSelectedAgency] = useState<any | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -52,6 +56,16 @@ export function ManagerAgencies() {
     const matchesPlan = planFilter === 'all' || agency.plan === planFilter;
     return matchesSearch && matchesStatus && matchesPlan;
   }) : [];
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredAgencies.length / PAGE_SIZE)), [filteredAgencies.length]);
+  const paginatedAgencies = useMemo(
+    () => filteredAgencies.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredAgencies, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, planFilter]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -169,13 +183,12 @@ export function ManagerAgencies() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div>
-        <h1 className="text-2xl font-bold">Agências</h1>
-        <p className="text-muted-foreground">Visualize e gerencie as agências da plataforma</p>
-      </div>
-
-      {}
+      <PageHeader
+        title="Agências"
+        subtitle="Visualize e gerencie as agências da plataforma"
+        icon={<Building2 className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
+      />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -283,6 +296,7 @@ export function ManagerAgencies() {
             {filteredAgencies.length === 0 ? (
               <p className="text-muted-foreground text-center py-4">Nenhuma agência encontrada</p>
             ) : (
+              <>
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
@@ -296,7 +310,7 @@ export function ManagerAgencies() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAgencies.map((agency: any) => (
+                  {paginatedAgencies.map((agency: any) => (
                     <tr key={agency.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div>
@@ -321,12 +335,26 @@ export function ManagerAgencies() {
                   ))}
                 </tbody>
               </table>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <span className="text-sm text-muted-foreground">Total: {filteredAgencies.length}</span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                    Anterior
+                  </Button>
+                  <span className="text-sm px-2">
+                    {page} / {totalPages}
+                  </span>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+              </>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

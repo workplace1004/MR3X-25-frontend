@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { PageHeader } from '../../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { dashboardAPI } from '../../api';
@@ -212,18 +213,12 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-blue-100 rounded-lg">
-          <Home className="w-6 h-6 text-blue-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Administrativo</h1>
-          <p className="text-muted-foreground">Visão geral completa do sistema</p>
-        </div>
-      </div>
-
-      {}
+      <PageHeader
+        title="Dashboard Administrativo"
+        subtitle="Visão geral completa do sistema"
+        icon={<Home className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
+      />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <KPICard
           title="Agências Ativas"

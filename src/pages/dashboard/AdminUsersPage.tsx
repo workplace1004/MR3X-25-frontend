@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { usersAPI } from '../../api';
 import { Plus, Search, Eye, UserCheck, UserX, Users, Loader2, Trash2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { PageHeader } from '../../components/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
@@ -195,25 +196,12 @@ export function AdminUsersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-100 rounded-lg">
-            <Users className="w-6 h-6 text-purple-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Usuários (Administrador)</h1>
-            <p className="text-sm text-muted-foreground">Usuários cadastrados por você</p>
-          </div>
-        </div>
-        {canCreateUsers && (
-          <Link to="/dashboard/users/new">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Usuário
-            </Button>
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title="Usuários"
+        subtitle="Usuários cadastrados por você"
+        icon={<Users className="w-6 h-6 text-purple-700" />}
+        iconBgClass="bg-purple-100"
+      />
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex w-full sm:max-w-lg gap-2">
@@ -241,6 +229,16 @@ export function AdminUsersPage() {
             </Button>
           )}
         </div>
+        {canCreateUsers && (
+          <div className="flex justify-end">
+            <Link to="/dashboard/users/new">
+              <Button className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Novo Usuário
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {loading ? (
