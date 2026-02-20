@@ -8,9 +8,10 @@ import apiClient from '../../api/client'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext'
-import { Download, DollarSign, Building2, Users, Calendar, BarChart3, FileDown } from 'lucide-react'
+import { Download, DollarSign, Building2, Users, Calendar, BarChart3 } from 'lucide-react'
 import { formatCurrency } from '../../lib/utils'
 import { useQuery } from '@tanstack/react-query'
+import { PageHeader } from '../../components/PageHeader'
 
 export default function Reports() {
   const { hasPermission, user } = useAuth()
@@ -1258,7 +1259,10 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      { }
+      <PageHeader 
+        title="Relatórios" 
+        subtitle="Visualize relatórios e análises financeiras"
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-purple-100 rounded-lg">

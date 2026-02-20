@@ -12,6 +12,7 @@ import { Textarea } from '../../components/ui/textarea'
 import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext'
 import { plansAPI } from '../../api'
+import { PageHeader } from '../../components/PageHeader'
 
 interface ModificationRequest {
   id: string
@@ -319,18 +320,10 @@ export default function PlansPage() {
 
   return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Package className="w-6 h-6 text-purple-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Planos e Upsells</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Gerencie os planos de assinatura da plataforma
-              </p>
-            </div>
-          </div>
+        <PageHeader 
+          title="Planos e Upsells" 
+          subtitle="Gerencie os planos de assinatura da plataforma"
+        />
         <div className="flex gap-2">
           {isCEO && pendingRequests.length > 0 && (
             <Button
@@ -354,11 +347,9 @@ export default function PlansPage() {
             </Button>
           )}
         </div>
-      </div>
 
-      {}
-      {isAdmin && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        {isAdmin && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-black mt-0.5" />
             <div>
@@ -368,8 +359,8 @@ export default function PlansPage() {
               </p>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
 
       {plans.length === 0 ? (
         <div className="flex items-center justify-center h-64">

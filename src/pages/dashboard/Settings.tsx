@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext'
 import { settingsAPI } from '../../api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { PageHeader } from '../../components/PageHeader'
 import {
   Save,
   Mail,
@@ -76,17 +77,10 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Configurações</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Configure as configurações e preferências do sistema
-          </p>
-        </div>
-      </div>
-
-      {}
+      <PageHeader 
+        title="Configurações" 
+        subtitle="Configure as configurações e preferências do sistema"
+      />
       <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-6">
         <TabsList className="justify-start flex flex-row md:flex-col items-start h-auto w-full md:w-48 overflow-x-auto md:overflow-x-visible no-scrollbar bg-transparent md:bg-muted/30 p-1 md:p-2 rounded-lg md:border">
           <TabsTrigger value="general" className="flex-shrink-0 md:w-full justify-start text-sm md:text-lg px-3 py-2">Geral</TabsTrigger>

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
+import { PageHeader } from '../../components/PageHeader';
 
 interface Payment {
   id?: string;
@@ -412,16 +413,11 @@ export function TenantPayments() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-green-100 rounded-lg">
-          <DollarSign className="w-6 h-6 text-green-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Meus Pagamentos</h1>
-          <p className="text-muted-foreground">Acompanhe seus pagamentos e faturas</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Meus Pagamentos" 
+        subtitle="Acompanhe seus pagamentos e faturas"
+        showWallet={false}
+      />
 
       {}
       {property && (

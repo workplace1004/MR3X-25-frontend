@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
 import { FrozenUserBadge } from '../../components/ui/FrozenBadge';
 import { getRoleLabel } from '../../lib/role-utils';
+import { PageHeader } from '../../components/PageHeader';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
@@ -366,16 +367,11 @@ export function UsersPage() {
 
   return (
     <div className="space-y-4">
+      <PageHeader 
+        title="Usuários" 
+        subtitle="Gerencie usuários e permissões"
+      />
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-100 rounded-lg">
-            <Users className="w-6 h-6 text-purple-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Usuários</h1>
-            <p className="text-sm text-muted-foreground">Gerencie usuários e permissões</p>
-          </div>
-        </div>
         {canCreateUsers && (
           <Link to="/dashboard/users/new">
             <Button className="flex items-center gap-2">

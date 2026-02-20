@@ -28,6 +28,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
+import { PageHeader } from '../../components/PageHeader';
 
 function KPICard({
   title,
@@ -351,11 +352,10 @@ export function AgencyManagerDashboard() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard do Diretor</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">Visão geral da sua agência imobiliária</p>
-      </div>
+      <PageHeader 
+        title="Dashboard do Diretor" 
+        subtitle="Visão geral da sua agência imobiliária"
+      />
 
       {/* KPI Cards - First Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">

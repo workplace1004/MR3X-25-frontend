@@ -3,6 +3,7 @@ import { paymentsAPI, propertiesAPI, contractsAPI, invoicesAPI } from '../../api
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageHeader } from '../../components/PageHeader';
 import { useOwnerPermissions } from '../../hooks/useOwnerPermissions';
 import {
   DollarSign,
@@ -539,9 +540,10 @@ export function Payments() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        { }
-
-
+        <PageHeader 
+          title="Pagamentos" 
+          subtitle="Gerencie todos os seus pagamentos"
+        />
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-green-100 rounded-lg">

@@ -5,7 +5,8 @@ import { Label } from '../../components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { documentsAPI } from '../../api'
 import { toast } from 'sonner'
-import { FileText, Download, Receipt, ReceiptText, Building2, User, DollarSign, Calendar, MapPin, Calculator, Loader2, FileDown } from 'lucide-react'
+import { FileText, Download, Receipt, ReceiptText, Building2, User, DollarSign, Calendar, MapPin, Calculator, Loader2 } from 'lucide-react'
+import { PageHeader } from '../../components/PageHeader'
 
 export default function DocumentsPage() {
   const [generating, setGenerating] = useState(false)
@@ -161,17 +162,10 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-orange-100 rounded-lg">
-          <FileDown className="w-6 h-6 text-orange-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Geração de Documentos</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Gere automaticamente recibos e faturas em PDF
-          </p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Geração de Documentos" 
+        subtitle="Gere automaticamente recibos e faturas em PDF"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {}

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Skeleton } from '../../components/ui/skeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader';
 import {
   ResponsiveContainer,
   BarChart,
@@ -466,6 +467,11 @@ export function TenantDashboard() {
 
   return (
     <div className="space-y-6">
+      <PageHeader 
+        title={`Olá, ${user?.name || 'Inquilino'}!`}
+        subtitle={contract?.status === 'ACTIVE' ? 'Contrato Ativo' : 'Portal do Inquilino'}
+        showWallet={false}
+      />
       {/* Mandatory Banner - Must be first, cannot be dismissed without acknowledgment */}
       <MandatoryTenantBanner 
         upcomingDueDate={dashboard?.upcomingDueDate ? new Date(dashboard.upcomingDueDate) : null}

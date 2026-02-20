@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageHeader } from '../../components/PageHeader';
 import {
   Building2,
   Plus,
@@ -602,7 +603,7 @@ export function Properties() {
 
   const [settingPayment, setSettingPayment] = useState(false);
   const setPaymentMethodMutation = useMutation({
-    mutationFn: ({ propertyId, paymentMethod }: { propertyId: string; paymentMethod: string }) => 
+    mutationFn: ({ propertyId, paymentMethod }: { propertyId: string; paymentMethod: string }) =>
       propertiesAPI.updateProperty(propertyId, { paymentMethod }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
@@ -639,7 +640,7 @@ export function Properties() {
       }
       // For INDEPENDENT_OWNER, new properties should start as INCOMPLETO since they don't have tenant or nextDueDate
       const initialStatus: 'INCOMPLETO' | 'DISPONIVEL' = isIndependentOwner ? 'INCOMPLETO' : 'DISPONIVEL';
-      
+
       const propertyToSend = {
         name: newProperty.name,
         address: newProperty.address,
@@ -701,10 +702,10 @@ export function Properties() {
         return;
       }
       // Validate monthlyRent
-      const monthlyRentValue = editForm.monthlyRent 
-        ? Number(editForm.monthlyRent.replace(/\D/g, '')) / 100 
+      const monthlyRentValue = editForm.monthlyRent
+        ? Number(editForm.monthlyRent.replace(/\D/g, '')) / 100
         : undefined;
-      
+
       if (monthlyRentValue !== undefined && (isNaN(monthlyRentValue) || monthlyRentValue <= 0)) {
         toast.error('Valor do aluguel mensal inválido');
         setUpdating(false);
@@ -994,10 +995,10 @@ export function Properties() {
     try {
       // Fetch all documents linked to this property
       const [contracts, inspections, notificationsResponse] = await Promise.all([
-        contractsAPI.getContracts().then(contracts => 
+        contractsAPI.getContracts().then(contracts =>
           Array.isArray(contracts) ? contracts.filter((c: any) => c.propertyId === property.id || c.property?.id === property.id) : []
         ).catch(() => []),
-        inspectionsAPI.getInspections({ propertyId: property.id }).then(result => 
+        inspectionsAPI.getInspections({ propertyId: property.id }).then(result =>
           Array.isArray(result) ? result : (result?.data || result?.items || [])
         ).catch(() => []),
         extrajudicialNotificationsAPI.getNotifications({ propertyId: property.id }).then(result => {
@@ -1545,18 +1546,11 @@ export function Properties() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
+        <PageHeader 
+          title="Imóveis" 
+          subtitle="Gerencie seus imóveis e propriedades"
+        />
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Building2 className="w-6 h-6 text-orange-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Imóveis</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Gerencie todos os seus imóveis em um só lugar
-              </p>
-            </div>
-          </div>
           <div className="flex gap-2">
             {canCreateProperties && !(user?.role === 'BROKER') && (
               <Tooltip>
@@ -1580,7 +1574,7 @@ export function Properties() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <form 
+          <form
             className="flex w-full sm:max-w-lg gap-2"
             onSubmit={(e) => {
               e.preventDefault();
@@ -1602,7 +1596,7 @@ export function Properties() {
                 className="pl-10"
               />
             </div>
-            <Button 
+            <Button
               type="submit"
               className="self-stretch"
             >
@@ -1623,7 +1617,7 @@ export function Properties() {
         </div>
 
         <div className="flex justify-center w-full">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 w-full max-w-7xl px-2 items-stretch justify-center">
+          <div className="grid  grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 w-full max-w-8xl items-stretch justify-center">
             {properties && properties.length > 0 ? (
               properties.map((property: any) => (
                 <Card key={property.id} className="transition-all hover:shadow-md flex flex-col w-[400px] mx-auto overflow-hidden">
@@ -1711,9 +1705,9 @@ export function Properties() {
                               'CREDIT_CARD': 'Cartão de Crédito',
                               'CARD': 'Cartão de Crédito'
                             };
-                            
+
                             // Get last paid payment for display
-                            const propertyPayments = (allPayments || []).filter((p: any) => 
+                            const propertyPayments = (allPayments || []).filter((p: any) =>
                               p.propertyId === property.id || String(p.propertyId) === String(property.id)
                             );
                             const lastPaidPayment = propertyPayments
@@ -1726,7 +1720,7 @@ export function Properties() {
                                 const dateB = new Date(b.dataPagamento || b.paymentDate || 0).getTime();
                                 return dateB - dateA;
                               })[0];
-                            
+
                             return (
                               <>
                                 <p className="text-xs text-gray-600 truncate">
@@ -3183,8 +3177,8 @@ export function Properties() {
                               </div>
                             </div>
                           </div>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={async () => {
                               try {

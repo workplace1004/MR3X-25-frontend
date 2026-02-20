@@ -4,8 +4,8 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
+import { PageHeader } from '@/components/PageHeader'
 import {
-  UserCog,
   Home,
   Plus,
   Edit,
@@ -528,18 +528,11 @@ export function Owners() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
+        <PageHeader 
+          title="Proprietários" 
+          subtitle="Gerencie todos os seus proprietários"
+        />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <UserCog className="w-6 h-6 text-green-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Proprietários</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Gerencie todos os proprietários cadastrados
-              </p>
-            </div>
-          </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex border border-border rounded-lg p-1">
               <Tooltip>

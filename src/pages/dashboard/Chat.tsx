@@ -3,6 +3,7 @@ import { chatAPI } from '../../api'
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '../../contexts/AuthContext'
+import { PageHeader } from '../../components/PageHeader'
 import { MessageSquare, Send, Menu, Trash2, Users, Loader2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog'
 import { Button } from '../../components/ui/button'
@@ -205,22 +206,15 @@ export function Chat() {
 
   return (
     <div className="space-y-6">
+      <PageHeader 
+        title="Chat" 
+        subtitle={user?.role === 'REPRESENTATIVE' 
+          ? 'Converse com administradores da plataforma'
+          : user?.role === 'CEO'
+          ? 'Converse com administradores da plataforma'
+          : 'Converse com inquilinos e gerencie comunicações'}
+      />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <MessageSquare className="w-6 h-6 text-blue-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Chat</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              {user?.role === 'REPRESENTATIVE' 
-                ? 'Converse com administradores da plataforma'
-                : user?.role === 'CEO'
-                ? 'Converse com administradores da plataforma'
-                : 'Converse com inquilinos e gerencie comunicações'}
-            </p>
-          </div>
-        </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1">
             <Users className="w-3 h-3" />

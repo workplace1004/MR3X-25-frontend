@@ -11,6 +11,7 @@ import { Skeleton } from '../../components/ui/skeleton'
 import { formatCurrency, formatDate } from '../../lib/utils'
 import { useAuth } from '../../contexts/AuthContext'
 import { dashboardAPI } from '../../api'
+import { PageHeader } from '../../components/PageHeader'
 
 interface Invoice {
   id: string;
@@ -179,19 +180,10 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-orange-100 rounded-lg">
-            <Receipt className="w-6 h-6 text-orange-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Faturamento e Invoices</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie faturas e receitas da plataforma
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader 
+        title="Faturamento e Invoices" 
+        subtitle="Gerencie faturas e receitas da plataforma"
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>

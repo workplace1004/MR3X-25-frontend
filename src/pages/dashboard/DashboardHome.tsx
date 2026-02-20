@@ -8,6 +8,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 import { useAuth } from '../../contexts/AuthContext';
 import { PlanUsageWidget } from '../../components/dashboard/PlanUsageWidget';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader';
 import { TenantDashboard } from './TenantDashboard';
 import { BrokerDashboard } from './BrokerDashboard';
 import { ApiClientDashboard } from './ApiClientDashboard';
@@ -211,14 +212,10 @@ export function DashboardHome() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">
-          {isCEO ? 'Dashboard Geral' : 'Dashboard'}
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          {isCEO ? 'Visão geral da plataforma MR3X' : 'Visão geral do sistema'}
-        </p>
-      </div>
+      <PageHeader 
+        title={isCEO ? 'Dashboard Geral' : 'Dashboard'}
+        subtitle={isCEO ? 'Visão geral da plataforma MR3X' : 'Visão geral do sistema'}
+      />
 
       {}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

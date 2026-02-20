@@ -1,48 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { dashboardAPI, notificationsAPI, withdrawAPI } from '../../api';
+import { dashboardAPI } from '../../api';
 import { formatCurrency } from '../../lib/utils';
 import { ApiConsumptionWidget } from '../../components/dashboard/ApiConsumptionWidget';
-import { WithdrawModal } from '../../components/withdraw/WithdrawModal';
+import { PageHeader } from '../../components/PageHeader';
 import {
   Building2, FileText, DollarSign,
-  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User, Bell, Wallet, History, Loader2
+  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User
 } from 'lucide-react';
 
 export function CEODashboard() {
-  const navigate = useNavigate();
-  const [showWithdrawButton, setShowWithdrawButton] = useState(false);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const withdrawRef = useRef<HTMLDivElement>(null);
-  
-  // Get available balance for withdrawal
-  const { data: balanceData, isLoading: isBalanceLoading } = useQuery({
-    queryKey: ['withdraw-balance'],
-    queryFn: () => withdrawAPI.getAvailableBalance(),
-  });
-  
-  // Close withdraw button when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (withdrawRef.current && !withdrawRef.current.contains(event.target as Node)) {
-        setShowWithdrawButton(false);
-      }
-    };
-
-    if (showWithdrawButton) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showWithdrawButton]);
-  
   const { data: dashboard, isLoading } = useQuery({
     queryKey: ['ceo-dashboard'],
     queryFn: () => dashboardAPI.getDashboard(),
@@ -53,13 +22,8 @@ export function CEODashboard() {
     queryFn: () => dashboardAPI.getDueDates(),
   });
 
-  const { data: notificationsUnreadData } = useQuery({
-    queryKey: ['notifications-unread'],
-    queryFn: () => notificationsAPI.getUnreadCount(),
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
-
-  const unreadNotificationsCount = notificationsUnreadData?.count || 0;
+  // Note: Balance is now handled by PageHeader component
+  // We use dashboard data for the card display instead
 
   if (isLoading) {
     return (
@@ -137,84 +101,10 @@ export function CEODashboard() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Executivo</h1>
-          <p className="text-muted-foreground">Visão geral da plataforma MR3X</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div 
-            className="relative bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow"
-            ref={withdrawRef}
-          >
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-green-600" />
-              <div className="flex flex-col">
-                {/* <span className="text-xs text-green-700 font-medium">Valor Disponível para Saque</span> */}
-                <button
-                  onClick={() => setShowWithdrawButton(!showWithdrawButton)}
-                  className="text-xl font-bold text-green-600 hover:text-green-700 transition-colors cursor-pointer text-left flex items-center gap-2"
-                  title="Clique para ver opções de saque"
-                  disabled={isBalanceLoading}
-                >
-                  {isBalanceLoading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin text-green-500" />
-                      <span className="text-sm text-green-500">Calculando...</span>
-                    </>
-                  ) : (
-                    formatCurrency(balanceData?.availableBalance ?? 0)
-                  )}
-                </button>
-              </div>
-            </div>
-            {showWithdrawButton && (
-              <div className="absolute top-full mt-2 right-0 z-10 bg-white border border-green-200 rounded-lg shadow-xl p-3 min-w-[180px] space-y-2">
-                <Button
-                  onClick={() => {
-                    setShowWithdrawModal(true);
-                    setShowWithdrawButton(false);
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white w-full shadow-sm"
-                  size="sm"
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Sacar
-                </Button>
-                <Button
-                  onClick={() => {
-                    navigate('/dashboard/payment-history');
-                    setShowWithdrawButton(false);
-                  }}
-                  variant="outline"
-                  className="w-full"
-                  size="sm"
-                >
-                  <History className="h-4 w-4 mr-2" />
-                  Histórico de pagamentos
-                </Button>
-              </div>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="relative"
-            onClick={() => navigate('/dashboard/notifications')}
-            title="Notificações"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadNotificationsCount > 0 && (
-              <Badge 
-                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs rounded-full"
-              >
-                {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
-              </Badge>
-            )}
-          </Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="Dashboard Executivo" 
+        subtitle="Visão geral da plataforma MR3X" 
+      />
 
       {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
@@ -255,12 +145,7 @@ export function CEODashboard() {
         />
         <KPICard
           title="Sua Receita"
-          value={isBalanceLoading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-yellow-500" />
-              <span className="text-sm text-gray-500">Calculando...</span>
-            </div>
-          ) : formatCurrency(balanceData?.availableBalance ?? (overview.roleSpecificIncome ?? (overview.platformFee ?? 0) + (overview.planPaymentsRevenue ?? 0)))}
+          value={formatCurrency(overview.roleSpecificIncome ?? (overview.platformFee ?? 0) + (overview.planPaymentsRevenue ?? 0))}
           icon={Award}
           color="yellow"
           subtitle={overview.planPaymentsRevenue ? `2% aluguéis + R$ ${formatCurrency(overview.planPaymentsRevenue)} planos` : "Receita da plataforma"}
@@ -463,11 +348,6 @@ export function CEODashboard() {
         </Card>
       )}
 
-      <WithdrawModal
-        open={showWithdrawModal}
-        onOpenChange={setShowWithdrawModal}
-        availableBalance={balanceData?.availableBalance ?? 0}
-      />
     </div>
   );
 }

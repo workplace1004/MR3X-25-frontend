@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { extrajudicialNotificationsAPI, propertiesAPI, usersAPI, profileAPI } from '@/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { PageHeader } from '@/components/PageHeader';
 import { safeGetCurrentPosition, isSecureOrigin } from '@/hooks/use-geolocation';
 import { SignatureCapture } from '@/components/contracts/SignatureCapture';
 import { maskDocument } from '@/lib/utils';
@@ -805,20 +806,11 @@ export default function ExtrajudicialNotifications() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <PageHeader 
+        title="Notificações Extrajudiciais" 
+        subtitle="Gerencie notificações extrajudiciais com valor jurídico"
+      />
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-amber-100 rounded-lg">
-            <Gavel className="w-6 h-6 text-amber-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-              Notificacoes Extrajudiciais
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie notificacoes extrajudiciais com valor juridico
-            </p>
-          </div>
-        </div>
         {(!isInquilino && !isProprietario) || isIndependentOwner ? (
           <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />

@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader';
 import {
   ResponsiveContainer,
   BarChart,
@@ -196,7 +197,10 @@ export function BrokerDashboard() {
 
   return (
     <div className="space-y-6">
-      {}
+      <PageHeader 
+        title={`Olá, ${user?.name || 'Corretor'}!`}
+        subtitle="Gerencie seus imóveis, contratos e acompanhe o desempenho dos imóveis sob sua responsabilidade"
+      />
       <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <Briefcase className="w-8 h-8" />

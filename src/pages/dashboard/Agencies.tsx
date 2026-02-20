@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
 import { usersAPI, agenciesAPI } from '@/api'
+import { PageHeader } from '@/components/PageHeader'
 import {
   Eye,
   MoreHorizontal,
@@ -285,15 +286,10 @@ export function Agencies() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Building className="w-6 h-6 text-blue-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Agências / Proprietários Independentes</h1>
-            <p className="text-muted-foreground">Visualize e gerencie agências imobiliárias e proprietários independentes</p>
-          </div>
-        </div>
+        <PageHeader 
+          title="Agências / Proprietários Independentes" 
+          subtitle="Visualize e gerencie agências imobiliárias e proprietários independentes"
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

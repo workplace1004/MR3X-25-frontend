@@ -28,6 +28,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
+import { PageHeader } from '../../components/PageHeader';
 import { SignatureCapture } from '../../components/contracts/SignatureCapture';
 import { safeGetCurrentPosition, isSecureOrigin } from '../../hooks/use-geolocation';
 import { QRCodeSVG } from 'qrcode.react';
@@ -951,18 +952,12 @@ export function TenantContract() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
+        <PageHeader 
+          title="Contratos" 
+          subtitle="Gerencie todos os seus contratos"
+          showWallet={false}
+        />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-emerald-100 rounded-lg">
-              <FileText className="w-6 h-6 text-emerald-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Contratos</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Gerencie todos os seus contratos
-              </p>
-            </div>
-          </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex border border-border rounded-lg p-1">
               <Tooltip>

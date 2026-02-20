@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { paymentsAPI, withdrawAPI, dashboardAPI } from '../../api';
 import { formatCurrency } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageHeader } from '../../components/PageHeader';
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -252,16 +253,10 @@ export function PaymentHistory() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-          <History className="h-6 w-6 sm:h-8 sm:w-8" />
-          Histórico de Pagamentos
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Visualize todas as entradas e saídas de dinheiro da sua conta
-        </p>
-      </div>
+      <PageHeader 
+        title="Histórico de Pagamentos" 
+        subtitle="Visualize todas as entradas e saídas de dinheiro da sua conta"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
