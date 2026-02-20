@@ -8,7 +8,7 @@ import { ApiConsumptionWidget } from '../../components/dashboard/ApiConsumptionW
 import { PageHeader } from '../../components/PageHeader';
 import {
   Building2, FileText, DollarSign,
-  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User
+  AlertCircle, CheckCircle, Clock, Briefcase, Award, Inbox, User, LayoutDashboard
 } from 'lucide-react';
 
 export function CEODashboard() {
@@ -103,7 +103,9 @@ export function CEODashboard() {
     <div className="space-y-6">
       <PageHeader 
         title="Dashboard Executivo" 
-        subtitle="Visão geral da plataforma MR3X" 
+        subtitle="Visão geral da plataforma MR3X"
+        icon={<LayoutDashboard className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
 
       {}

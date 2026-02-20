@@ -502,6 +502,8 @@ export function TenantProperties() {
           title="Meus Imóveis"
           subtitle="Gerencie todos os seus imóveis em um só lugar"
           showWallet={false}
+          icon={<Building2 className="w-6 h-6 text-blue-700" />}
+          iconBgClass="bg-blue-100"
         />
         <div className="flex justify-center w-full">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6 w-full max-w-7xl px-2">
@@ -532,6 +534,8 @@ export function TenantProperties() {
           title="Meus Imóveis"
           subtitle="Visualize os imóveis vinculados aos seus contratos"
           showWallet={false}
+          icon={<Building2 className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
         />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <form 

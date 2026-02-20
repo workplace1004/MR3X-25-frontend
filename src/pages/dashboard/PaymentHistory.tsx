@@ -256,6 +256,8 @@ export function PaymentHistory() {
       <PageHeader 
         title="Histórico de Pagamentos" 
         subtitle="Visualize todas as entradas e saídas de dinheiro da sua conta"
+        icon={<History className="w-6 h-6 text-green-700" />}
+        iconBgClass="bg-green-100"
       />
 
       {/* Summary Cards */}

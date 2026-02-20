@@ -13,7 +13,8 @@ import {
   Home,
   PieChart as PieChartIcon,
   Clock,
-  CheckCircle
+  CheckCircle,
+  LayoutDashboard
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -355,6 +356,8 @@ export function AgencyManagerDashboard() {
       <PageHeader 
         title="Dashboard do Diretor" 
         subtitle="Visão geral da sua agência imobiliária"
+        icon={<LayoutDashboard className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
 
       {/* KPI Cards - First Row */}

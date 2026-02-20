@@ -70,7 +70,7 @@ import {
 } from '../../components/ui/tooltip';
 import { Calendar } from '../../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Handshake } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 
@@ -1117,6 +1117,8 @@ export function Agreements() {
         <PageHeader 
           title="Acordos" 
           subtitle="Gerencie acordos e termos negociados"
+          icon={<Handshake className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
         />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           {isMR3XRole && (

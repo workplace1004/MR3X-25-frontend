@@ -165,6 +165,8 @@ export default function DocumentsPage() {
       <PageHeader 
         title="Geração de Documentos" 
         subtitle="Gere automaticamente recibos e faturas em PDF"
+        icon={<FileText className="w-6 h-6 text-slate-700" />}
+        iconBgClass="bg-slate-100"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">

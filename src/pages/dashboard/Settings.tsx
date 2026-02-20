@@ -12,7 +12,8 @@ import {
   Bell,
   CreditCard,
   Key,
-  AlertCircle
+  AlertCircle,
+  Settings as SettingsIcon
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card'
 import { Input } from '../../components/ui/input'
@@ -80,6 +81,8 @@ export function Settings() {
       <PageHeader 
         title="Configurações" 
         subtitle="Configure as configurações e preferências do sistema"
+        icon={<SettingsIcon className="w-6 h-6 text-slate-700" />}
+        iconBgClass="bg-slate-100"
       />
       <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-6">
         <TabsList className="justify-start flex flex-row md:flex-col items-start h-auto w-full md:w-48 overflow-x-auto md:overflow-x-visible no-scrollbar bg-transparent md:bg-muted/30 p-1 md:p-2 rounded-lg md:border">

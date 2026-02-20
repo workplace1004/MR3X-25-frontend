@@ -445,6 +445,8 @@ export default function MyAccount() {
       <PageHeader 
         title="Minha Conta" 
         subtitle="Gerencie suas informações pessoais e configurações"
+        icon={<User className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

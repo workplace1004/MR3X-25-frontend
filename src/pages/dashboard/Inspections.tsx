@@ -1526,6 +1526,8 @@ export function Inspections() {
         <PageHeader 
           title="Vistorias" 
           subtitle="Gerencie as vistorias de entrada, saída e periódicas"
+          icon={<ClipboardCheck className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
         />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-2 w-full sm:w-auto">

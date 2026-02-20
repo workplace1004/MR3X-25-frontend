@@ -7,7 +7,7 @@ import { formatCurrency } from '../../lib/utils';
 import {
   Building2, FileText, DollarSign,
   AlertCircle, CheckCircle, Clock, Home,
-  PieChart as PieChartIcon, Inbox
+  PieChart as PieChartIcon, Inbox, LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
@@ -164,7 +164,9 @@ export function IndependentOwnerDashboard() {
     <div className="space-y-6">
       <PageHeader 
         title="Meu Painel" 
-        subtitle="Visão geral dos seus imóveis" 
+        subtitle="Visão geral dos seus imóveis"
+        icon={<LayoutDashboard className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
 
       {}

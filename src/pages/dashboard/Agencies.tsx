@@ -289,6 +289,8 @@ export function Agencies() {
         <PageHeader 
           title="Agências / Proprietários Independentes" 
           subtitle="Visualize e gerencie agências imobiliárias e proprietários independentes"
+          icon={<Building className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
         />
 
         {isLoading ? (

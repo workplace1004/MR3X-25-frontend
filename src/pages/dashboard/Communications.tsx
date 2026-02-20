@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Mail, MessageSquare, Send, Building } from 'lucide-react'
+import { Mail, MessageSquare, Send, Building, MessageCircle } from 'lucide-react'
 import { PageHeader } from '../../components/PageHeader'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
@@ -65,6 +65,8 @@ export default function CommunicationsPage() {
       <PageHeader
         title="Comunicação Global"
         subtitle="Envie mensagens em massa por Email e WhatsApp"
+        icon={<MessageCircle className="w-6 h-6 text-green-700" />}
+        iconBgClass="bg-green-100"
         actions={
           <div className="flex gap-2">
             <Button onClick={() => setShowEmailModal(true)} variant="outline">

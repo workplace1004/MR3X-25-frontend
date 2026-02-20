@@ -323,6 +323,8 @@ export default function PlansPage() {
         <PageHeader 
           title="Planos e Upsells" 
           subtitle="Gerencie os planos de assinatura da plataforma"
+          icon={<Package className="w-6 h-6 text-purple-700" />}
+          iconBgClass="bg-purple-100"
         />
         <div className="flex gap-2">
           {isCEO && pendingRequests.length > 0 && (

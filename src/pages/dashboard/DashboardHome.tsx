@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardAPI } from '../../api';
 import { formatCurrency } from '../../lib/utils';
-import { Building2, Users, FileText, DollarSign, AlertCircle, TrendingUp, PieChart as PieChartIcon, Calendar, BarChart3 } from 'lucide-react';
+import { Building2, Users, FileText, DollarSign, AlertCircle, TrendingUp, PieChart as PieChartIcon, Calendar, BarChart3, LayoutDashboard } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
@@ -215,6 +215,8 @@ export function DashboardHome() {
       <PageHeader 
         title={isCEO ? 'Dashboard Geral' : 'Dashboard'}
         subtitle={isCEO ? 'Visão geral da plataforma MR3X' : 'Visão geral do sistema'}
+        icon={<LayoutDashboard className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
 
       {}

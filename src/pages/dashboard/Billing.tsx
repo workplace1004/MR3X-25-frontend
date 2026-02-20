@@ -183,6 +183,8 @@ export default function BillingPage() {
       <PageHeader 
         title="Faturamento e Invoices" 
         subtitle="Gerencie faturas e receitas da plataforma"
+        icon={<Receipt className="w-6 h-6 text-slate-700" />}
+        iconBgClass="bg-slate-100"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

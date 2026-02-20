@@ -956,6 +956,8 @@ export function TenantContract() {
           title="Contratos" 
           subtitle="Gerencie todos os seus contratos"
           showWallet={false}
+          icon={<FileText className="w-6 h-6 text-blue-700" />}
+          iconBgClass="bg-blue-100"
         />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-2 w-full sm:w-auto">

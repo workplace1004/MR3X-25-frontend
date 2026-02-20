@@ -5,7 +5,7 @@ import {
   FileText, DollarSign, Clock,
   CheckCircle, AlertTriangle, User, Phone, Mail,
   CreditCard, Receipt, TrendingUp, Building2,
-  Scale, Handshake, AlertOctagon, Shield, MapPin, ArrowDown
+  Scale, Handshake, AlertOctagon, Shield, MapPin, ArrowDown, LayoutDashboard
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -471,6 +471,8 @@ export function TenantDashboard() {
         title={`Olá, ${user?.name || 'Inquilino'}!`}
         subtitle={contract?.status === 'ACTIVE' ? 'Contrato Ativo' : 'Portal do Inquilino'}
         showWallet={false}
+        icon={<LayoutDashboard className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
       />
       {/* Mandatory Banner - Must be first, cannot be dismissed without acknowledgment */}
       <MandatoryTenantBanner 

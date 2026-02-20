@@ -417,6 +417,8 @@ export function TenantPayments() {
         title="Meus Pagamentos" 
         subtitle="Acompanhe seus pagamentos e faturas"
         showWallet={false}
+        icon={<Wallet className="w-6 h-6 text-green-700" />}
+        iconBgClass="bg-green-100"
       />
 
       {}

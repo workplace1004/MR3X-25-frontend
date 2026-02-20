@@ -222,6 +222,8 @@ export function Audit() {
       <PageHeader
         title="Logs de Auditoria"
         subtitle="Visualize atividades e alterações do sistema"
+        icon={<ShieldCheck className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
         actions={
           <div className="flex gap-2">
             <Button

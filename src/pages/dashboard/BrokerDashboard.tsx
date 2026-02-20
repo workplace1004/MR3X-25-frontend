@@ -200,6 +200,8 @@ export function BrokerDashboard() {
       <PageHeader 
         title={`Olá, ${user?.name || 'Corretor'}!`}
         subtitle="Gerencie seus imóveis, contratos e acompanhe o desempenho dos imóveis sob sua responsabilidade"
+        icon={<Briefcase className="w-6 h-6 text-amber-700" />}
+        iconBgClass="bg-amber-100"
       />
       <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-6 text-white">
         <div className="flex items-center gap-3 mb-2">

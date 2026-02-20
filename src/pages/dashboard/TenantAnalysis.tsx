@@ -1017,7 +1017,8 @@ export function TenantAnalysis() {
       <PageHeader
         title="Análise de Clientes"
         subtitle="Análise de risco para agências e proprietários independentes - Informação apenas, sem bloqueio automático"
-        showWallet={false}
+        icon={<UserSearch className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
       />
 
       {stats && (

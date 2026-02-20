@@ -256,6 +256,8 @@ export function SubscriptionPage() {
       <PageHeader
         title="Gerenciar Assinatura"
         subtitle="Gerencie seu plano, visualize consumo e histórico de cobranças."
+        icon={<CreditCard className="w-6 h-6 text-purple-700" />}
+        iconBgClass="bg-purple-100"
       />
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>

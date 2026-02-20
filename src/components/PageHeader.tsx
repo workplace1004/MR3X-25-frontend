@@ -15,9 +15,13 @@ interface PageHeaderProps {
   showWallet?: boolean; // Optional prop to override default wallet visibility
   /** Optional custom actions (e.g. Export CSV, Send Email) rendered to the right of title, before wallet/notifications */
   actions?: React.ReactNode;
+  /** Icon shown beside the title (e.g. <UserSearch className="w-6 h-6 text-blue-700" />) */
+  icon?: React.ReactNode;
+  /** Tailwind class for the icon container background (e.g. "bg-blue-100"). Default "bg-muted" */
+  iconBgClass?: string;
 }
 
-export function PageHeader({ title, subtitle, showWallet, actions }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, showWallet, actions, icon, iconBgClass = 'bg-muted' }: PageHeaderProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showWithdrawButton, setShowWithdrawButton] = useState(false);
@@ -66,9 +70,16 @@ export function PageHeader({ title, subtitle, showWallet, actions }: PageHeaderP
   return (
     <>
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-          {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
+        <div className="flex items-center gap-3">
+          {icon && (
+            <div className={`rounded-lg p-3 flex-shrink-0 ${iconBgClass}`}>
+              {icon}
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+            {subtitle && <p className="text-muted-foreground mt-0.5">{subtitle}</p>}
+          </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
           {actions}

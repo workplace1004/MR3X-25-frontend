@@ -543,6 +543,8 @@ export function Payments() {
         <PageHeader 
           title="Pagamentos" 
           subtitle="Gerencie todos os seus pagamentos"
+          icon={<DollarSign className="w-6 h-6 text-green-700" />}
+          iconBgClass="bg-green-100"
         />
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">

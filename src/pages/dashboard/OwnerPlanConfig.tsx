@@ -525,6 +525,8 @@ export function OwnerPlanConfig() {
       <PageHeader
         title="Meu Plano"
         subtitle="Gerencie o seu plano e limites de uso"
+        icon={<Package className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
       {/* Current Plan and Usage Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

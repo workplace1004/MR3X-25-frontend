@@ -547,6 +547,8 @@ export function Brokers() {
         <PageHeader 
           title="Corretores" 
           subtitle="Gerencie todos os corretores da sua agência"
+          icon={<BadgeCheck className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
         />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-2 w-full sm:w-auto">

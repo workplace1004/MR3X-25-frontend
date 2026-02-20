@@ -370,6 +370,8 @@ export function UsersPage() {
       <PageHeader 
         title="Usuários" 
         subtitle="Gerencie usuários e permissões"
+        icon={<Users className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
       />
       <div className="flex items-center justify-between">
         {canCreateUsers && (

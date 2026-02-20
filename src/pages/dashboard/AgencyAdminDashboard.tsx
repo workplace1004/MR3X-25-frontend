@@ -11,7 +11,8 @@ import {
   TrendingDown,
   CalendarDays,
   Home,
-  Inbox
+  Inbox,
+  LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageHeader } from '../../components/PageHeader';
@@ -532,7 +533,9 @@ export function AgencyAdminDashboard() {
     <div className="space-y-6 sm:space-y-8">
       <PageHeader 
         title="Dashboard Administrativo" 
-        subtitle="Visão geral da sua agência" 
+        subtitle="Visão geral da sua agência"
+        icon={<LayoutDashboard className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
 
       {}

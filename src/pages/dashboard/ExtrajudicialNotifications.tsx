@@ -809,6 +809,8 @@ export default function ExtrajudicialNotifications() {
       <PageHeader 
         title="Notificações Extrajudiciais" 
         subtitle="Gerencie notificações extrajudiciais com valor jurídico"
+        icon={<Gavel className="w-6 h-6 text-amber-700" />}
+        iconBgClass="bg-amber-100"
       />
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         {(!isInquilino && !isProprietario) || isIndependentOwner ? (

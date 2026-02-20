@@ -360,6 +360,8 @@ export function SplitConfiguration() {
       <PageHeader
         title="Configuração de Divisão de Pagamentos"
         subtitle="Configure as porcentagens de divisão de pagamentos entre plataforma, agência e proprietários"
+        icon={<Handshake className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
       />
       {/* Entity Selector for CEO/ADMIN */}
       {isCeoOrAdmin && (

@@ -208,6 +208,8 @@ export function Chat() {
     <div className="space-y-6">
       <PageHeader 
         title="Chat" 
+        icon={<MessageSquare className="w-6 h-6 text-blue-700" />}
+        iconBgClass="bg-blue-100"
         subtitle={user?.role === 'REPRESENTATIVE' 
           ? 'Converse com administradores da plataforma'
           : user?.role === 'CEO'

@@ -375,6 +375,8 @@ export function Notifications() {
       <PageHeader 
         title="Notificações Centralizadas" 
         subtitle={unreadCount > 0 ? `Você tem ${unreadCount} notificações não lidas` : 'Todas as notificações foram lidas'}
+        icon={<Bell className="w-6 h-6 text-amber-700" />}
+        iconBgClass="bg-amber-100"
       />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">

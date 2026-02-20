@@ -1549,6 +1549,8 @@ export function Properties() {
         <PageHeader 
           title="Imóveis" 
           subtitle="Gerencie seus imóveis e propriedades"
+          icon={<Building2 className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
         />
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
