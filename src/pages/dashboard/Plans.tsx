@@ -326,7 +326,7 @@ export default function PlansPage() {
           icon={<Package className="w-6 h-6 text-purple-700" />}
           iconBgClass="bg-purple-100"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full justify-end">
           {isCEO && pendingRequests.length > 0 && (
             <Button
               onClick={() => setShowRequestsModal(true)}

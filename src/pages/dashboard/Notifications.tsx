@@ -378,7 +378,7 @@ export function Notifications() {
         icon={<Bell className="w-6 h-6 text-amber-700" />}
         iconBgClass="bg-amber-100"
       />
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button

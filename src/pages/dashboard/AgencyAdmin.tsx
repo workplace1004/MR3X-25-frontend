@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { PageHeader } from '@/components/PageHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -270,16 +271,12 @@ export function AgencyAdmin() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-orange-100 rounded-lg">
-            <Crown className="w-6 h-6 text-orange-700" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Diretor Agencia</h1>
-            <p className="text-muted-foreground">Visualize e gerencie os diretores de agencias imobiliarias</p>
-          </div>
-        </div>
-
+        <PageHeader
+          title="Diretor Agência"
+          subtitle="Visualize e gerencie os diretores de agências imobiliárias"
+          icon={<Crown className="w-6 h-6 text-orange-700" />}
+          iconBgClass="bg-orange-100"
+        />
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (

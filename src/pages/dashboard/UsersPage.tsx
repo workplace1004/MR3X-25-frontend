@@ -373,16 +373,6 @@ export function UsersPage() {
         icon={<Users className="w-6 h-6 text-blue-700" />}
         iconBgClass="bg-blue-100"
       />
-      <div className="flex items-center justify-between">
-        {canCreateUsers && (
-          <Link to="/dashboard/users/new">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Usuário
-            </Button>
-          </Link>
-        )}
-      </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex w-full sm:max-w-lg gap-2">
@@ -415,6 +405,16 @@ export function UsersPage() {
             </Button>
           )}
         </div>
+        <div className="flex items-center justify-between">
+        {canCreateUsers && (
+          <Link to="/dashboard/users/new">
+            <Button className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Usuário
+            </Button>
+          </Link>
+        )}
+      </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">

@@ -224,28 +224,26 @@ export function Audit() {
         subtitle="Visualize atividades e alterações do sistema"
         icon={<ShieldCheck className="w-6 h-6 text-orange-700" />}
         iconBgClass="bg-orange-100"
-        actions={
-          <div className="flex gap-2">
-            <Button
-              onClick={exportToCSV}
-              variant="outline"
-              className="border-orange-600 text-orange-600 hover:bg-orange-50"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Exportar CSV
-            </Button>
-            <Button
-              onClick={exportToPDF}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              <FileDown className="w-4 h-4 mr-2" />
-              Exportar PDF
-            </Button>
-          </div>
-        }
       />
 
-      {}
+      <div className="flex justify-end gap-2">
+        <Button
+          onClick={exportToCSV}
+          variant="outline"
+          className="border-orange-600 text-orange-600 hover:bg-orange-50"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Exportar CSV
+        </Button>
+        <Button
+          onClick={exportToPDF}
+          className="bg-orange-600 hover:bg-orange-700 text-white"
+        >
+          <FileDown className="w-4 h-4 mr-2" />
+          Exportar PDF
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

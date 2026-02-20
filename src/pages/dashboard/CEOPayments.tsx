@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { PageHeader } from '../../components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Input } from '../../components/ui/input';
@@ -253,18 +254,12 @@ export function CEOPayments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-            <DollarSign className="w-7 h-7 text-primary" />
-            Receita da Plataforma
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Acompanhe os pagamentos de Agências e Proprietários Independentes
-          </p>
-        </div>
-      </div>
-
+      <PageHeader
+        title="Receita da Plataforma"
+        subtitle="Acompanhe os pagamentos de Agências e Proprietários Independentes"
+        icon={<DollarSign className="w-6 h-6 text-primary" />}
+        iconBgClass="bg-primary/10"
+      />
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-3 sm:p-4">
