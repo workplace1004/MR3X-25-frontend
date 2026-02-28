@@ -62,7 +62,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { BadgeCheck } from 'lucide-react'
+import { BadgeCheck, Briefcase } from 'lucide-react'
 import { formatCRECIInput } from '@/lib/validation'
 
 export function Brokers() {
@@ -544,13 +544,46 @@ export function Brokers() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <PageHeader 
-          title="Corretores" 
+        <PageHeader
+          title="Corretores"
           subtitle="Gerencie todos os corretores da sua agência"
-          icon={<BadgeCheck className="w-6 h-6 text-orange-700" />}
+          icon={<Briefcase className="w-6 h-6 text-orange-700" />}
           iconBgClass="bg-orange-100"
         />
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex w-full sm:max-w-lg gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSearch()
+                  }
+                }}
+                placeholder="Pesquisar por nome, email ou documento"
+                className="pl-10"
+              />
+            </div>
+            <Button onClick={handleSearch} className="self-stretch">
+              Buscar
+            </Button>
+            {(searchTerm || searchQuery) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="self-stretch"
+              >
+                Limpar
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex border border-border rounded-lg p-1">
               <Tooltip>
@@ -598,38 +631,6 @@ export function Brokers() {
             )}
           </div>
         </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex w-full sm:max-w-lg gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleSearch()
-                  }
-                }}
-                placeholder="Pesquisar por nome, email ou documento"
-                className="pl-10"
-              />
-            </div>
-            <Button onClick={handleSearch} className="self-stretch">
-              Buscar
-            </Button>
-            {(searchTerm || searchQuery) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSearch}
-                className="self-stretch"
-              >
-                Limpar
-              </Button>
-            )}
-          </div>
         </div>
 
         {brokers && brokers.length > 0 ? (

@@ -531,14 +531,12 @@ export function AgencyAdminDashboard() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <PageHeader 
-        title="Dashboard Administrativo" 
+      <PageHeader
+        title="Dashboard do Diretor de Agência"
         subtitle="Visão geral da sua agência"
         icon={<LayoutDashboard className="w-6 h-6 text-orange-700" />}
         iconBgClass="bg-orange-100"
       />
-
-      {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         <KPICard
           title="Total de Imóveis"

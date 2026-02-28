@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersAPI } from '@/api'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -34,6 +34,7 @@ const getPhotoUrl = (photoUrl: string | null | undefined) => {
   if (photoUrl.startsWith('http')) return photoUrl;
   return `${getStaticBaseUrl()}${photoUrl}`;
 };
+import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -103,6 +104,7 @@ export function AgencyUsers() {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [searchTerm, setSearchTerm] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
 
   const handleSearch = useCallback(() => {
     setSearchQuery(searchTerm.trim())
@@ -220,6 +222,17 @@ export function AgencyUsers() {
     )
   })
 
+  const PAGE_SIZE = 10
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE)), [filteredUsers.length])
+  const paginatedUsers = useMemo(
+    () => filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredUsers, page]
+  )
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchQuery])
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -294,49 +307,14 @@ export function AgencyUsers() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <UsersRound className="w-6 h-6 text-purple-700" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Meus Usuários</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Visualize os usuários que você cadastrou ({myUsers?.length || 0} total)
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="flex border border-border rounded-lg p-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'table' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('table')}
-                    className={viewMode === 'table' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Visualização em Tabela</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                    onClick={() => setViewMode('cards')}
-                    className={viewMode === 'cards' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Visualização em Cards</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Meus Usuários"
+          subtitle="Visualize os usuários que você cadastrou"
+          icon={<UsersRound className="w-6 h-6 text-purple-700" />}
+          iconBgClass="bg-purple-100"
+        />
+
+        
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex w-full sm:max-w-lg gap-2">
@@ -369,10 +347,41 @@ export function AgencyUsers() {
               </Button>
             )}
           </div>
+          <div className="flex justify-end">
+          <div className="flex border border-border rounded-lg p-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  onClick={() => setViewMode('table')}
+                  className={viewMode === 'table' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Visualização em Tabela</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                  onClick={() => setViewMode('cards')}
+                  className={viewMode === 'cards' ? 'bg-orange-600 hover:bg-orange-700 text-white' : ''}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Visualização em Cards</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
         </div>
 
         {filteredUsers.length > 0 ? (
-          viewMode === 'table' ? (
+          <>
+          {viewMode === 'table' ? (
             <div className="bg-card border border-border rounded-lg overflow-hidden">
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
@@ -387,7 +396,7 @@ export function AgencyUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((userData: any) => {
+                    {paginatedUsers.map((userData: any) => {
                       return (
                         <tr key={userData.id} className="border-t border-border hover:bg-muted/30 transition-colors">
                           <td className="p-4">
@@ -487,7 +496,7 @@ export function AgencyUsers() {
               </div>
 
               <div className="md:hidden">
-                {filteredUsers.map((userData: any) => {
+                {paginatedUsers.map((userData: any) => {
                   return (
                     <div key={userData.id} className="border-b border-border last:border-b-0 p-4">
                       <div className="flex items-start justify-between mb-3 min-w-0 gap-2">
@@ -536,7 +545,7 @@ export function AgencyUsers() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredUsers.map((userData: any) => {
+              {paginatedUsers.map((userData: any) => {
                 return (
                   <Card key={userData.id} className="transition-all hover:shadow-md">
                     <CardContent className="p-4">
@@ -619,7 +628,22 @@ export function AgencyUsers() {
                 )
               })}
             </div>
-          )
+          )}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <span className="text-sm text-muted-foreground">Total: {filteredUsers.length}</span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                Anterior
+              </Button>
+              <span className="text-sm px-2">
+                {page} / {totalPages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                Próxima
+              </Button>
+            </div>
+          </div>
+          </>
         ) : (
           <div className="text-center py-12 sm:py-16 bg-card border border-border rounded-lg px-4">
             <Users className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />

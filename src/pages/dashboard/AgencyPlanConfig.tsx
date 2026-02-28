@@ -28,6 +28,7 @@ import {
   FileCheck,
   Wallet,
 } from 'lucide-react';
+import { PageHeader } from '../../components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -547,22 +548,13 @@ export function AgencyPlanConfig() {
 
   return (
     <div className="space-y-6">
-      {}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-orange-100 rounded-lg">
-          <Package className="w-6 h-6 text-orange-700" />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Plano da Agência</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Gerencie o plano e os limites da sua agência
-          </p>
-        </div>
-      </div>
-
-      {}
+      <PageHeader
+        title="Plano da Agência"
+        subtitle="Gerencie o plano e os limites da sua agência"
+        icon={<Package className="w-6 h-6 text-orange-700" />}
+        iconBgClass="bg-orange-100"
+      />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {}
         <Card className="relative overflow-visible lg:col-span-2">
           <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-lg ${currentPlanColor}`} />
           <CardHeader>

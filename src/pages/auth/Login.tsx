@@ -75,7 +75,7 @@ export function Login() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <Input
                     id="email"
                     type="email"
@@ -100,7 +100,7 @@ export function Login() {
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
