@@ -69,8 +69,9 @@ import {
   ClipboardList,
   Info,
 } from 'lucide-react';
-import { tenantAnalysisAPI } from '../../api';
+import { tenantAnalysisAPI, agenciesAPI } from '../../api';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface BasicDataCPF {
   type: 'CPF';
@@ -937,6 +938,7 @@ export function TenantAnalysis() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [forceRefresh, setForceRefresh] = useState(false);
+  const [showBuyAnalysisModal, setShowBuyAnalysisModal] = useState(false);
 
   const handleSearch = useCallback(() => {
     setSearchQuery(searchTerm.trim());
@@ -951,6 +953,16 @@ export function TenantAnalysis() {
 
   const { user } = useAuthStore();
   const permissions = getOwnerPermissions(user?.role, 'tenant_analysis');
+
+  const { data: planUsage } = useQuery({
+    queryKey: ['agency-plan-usage', user?.agencyId],
+    queryFn: () => agenciesAPI.getPlanUsage(user!.agencyId!),
+    enabled: !!user?.agencyId,
+  });
+
+  const analysesLimit = planUsage?.freeUsage?.analyses?.limit ?? -1;
+  const analysesCurrent = planUsage?.freeUsage?.analyses?.current ?? 0;
+  const isOverAnalysisLimit = analysesLimit !== -1 && analysesCurrent >= analysesLimit;
 
   const { data: history, isLoading: isLoadingHistory } = useQuery({
     queryKey: ['tenant-analysis-history', filters, searchQuery],
@@ -981,6 +993,9 @@ export function TenantAnalysis() {
       setForceRefresh(false);
       queryClient.invalidateQueries({ queryKey: ['tenant-analysis-history'] });
       queryClient.invalidateQueries({ queryKey: ['tenant-analysis-stats'] });
+      if (user?.agencyId) {
+        queryClient.invalidateQueries({ queryKey: ['agency-plan-usage', user.agencyId] });
+      }
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Erro ao realizar análise');
@@ -992,6 +1007,10 @@ export function TenantAnalysis() {
     const cleanDocument = document.replace(/\D/g, '');
     if (cleanDocument.length !== 11 && cleanDocument.length !== 14) {
       toast.error('CPF deve ter 11 dígitos ou CNPJ deve ter 14 dígitos');
+      return;
+    }
+    if (user?.agencyId && isOverAnalysisLimit) {
+      setShowBuyAnalysisModal(true);
       return;
     }
     setShowLGPDModal(true);
@@ -1379,6 +1398,31 @@ export function TenantAnalysis() {
         onCancel={() => setShowLGPDModal(false)}
         isLoading={analyzeMutation.isPending}
       />
+
+      <Dialog open={showBuyAnalysisModal} onOpenChange={setShowBuyAnalysisModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+              Limite de análises atingido
+            </DialogTitle>
+            <DialogDescription>
+              Você atingiu o número máximo de análises incluídas no seu plano ({analysesCurrent} / {analysesLimit}). Compre mais análises para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowBuyAnalysisModal(false)} className="w-full sm:w-auto">
+              Fechar
+            </Button>
+            <Button asChild className="w-full sm:w-auto">
+              <Link to="/dashboard/agency-plan-config" onClick={() => setShowBuyAnalysisModal(false)}>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Comprar análises
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

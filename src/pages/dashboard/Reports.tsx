@@ -21,8 +21,9 @@ export default function Reports() {
   const canViewUsers = hasPermission('users:read')
   const canViewPayments = hasPermission('payments:read')
 
-  // INQUILINO cannot access financial reports
+  // INQUILINO cannot access financial reports (no revenue/profit concepts)
   const canAccessFinancialReports = canViewReports && user?.role !== 'INQUILINO'
+  const isTenant = user?.role === 'INQUILINO'
 
   const currentYear = new Date().getFullYear()
   const initialMonth = new Date().getMonth() + 1
@@ -1261,7 +1262,7 @@ export default function Reports() {
     <div className="space-y-6">
       <PageHeader 
         title="Relatórios" 
-        subtitle="Visualize relatórios e análises financeiras"
+        subtitle={isTenant ? 'Visualize seus pagamentos e resumo por período' : 'Visualize relatórios e análises financeiras'}
         icon={<BarChart3 className="w-6 h-6 text-purple-700" />}
         iconBgClass="bg-purple-100"
       />
@@ -1348,8 +1349,8 @@ export default function Reports() {
                     {financialReportType === 'annual' && `Recebimentos Anuais - ${year}`}
                   </>
                 )}
-                {reportType === 'monthly' && !canAccessFinancialReports && `Recebimentos por Mês - ${year}`}
-                {reportType === 'property' && 'Performance por Imóvel'}
+                {reportType === 'monthly' && !canAccessFinancialReports && (isTenant ? `Pagamentos por Mês - ${year}` : `Recebimentos por Mês - ${year}`)}
+                {reportType === 'property' && (isTenant ? 'Valor pago por imóvel' : 'Performance por Imóvel')}
                 {reportType === 'tenant' && 'Performance por Inquilino'}
               </CardTitle>
               <CardDescription className="text-sm sm:text-base">
@@ -1360,8 +1361,8 @@ export default function Reports() {
                     {financialReportType === 'annual' && 'Somatório de valores pagos no ano'}
                   </>
                 )}
-                {reportType === 'monthly' && !canAccessFinancialReports && 'Somatório de valores pagos em cada mês'}
-                {reportType === 'property' && 'Receita gerada por cada imóvel'}
+                {reportType === 'monthly' && !canAccessFinancialReports && (isTenant ? 'Somatório do que você pagou em cada mês' : 'Somatório de valores pagos em cada mês')}
+                {reportType === 'property' && (isTenant ? 'Valor pago por cada imóvel que você aluga' : 'Receita gerada por cada imóvel')}
                 {reportType === 'tenant' && 'Valores pagos por cada inquilino'}
               </CardDescription>
             </div>
@@ -1516,11 +1517,11 @@ export default function Reports() {
                           tick={{ fontSize: 12 }}
                         />
                         <Tooltip
-                          formatter={(v: number) => [`R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
+                          formatter={(v: number) => [`R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, isTenant ? 'Total pago' : 'Receita']}
                           labelStyle={{ fontSize: 12 }}
                           contentStyle={{ fontSize: 12 }}
                         />
-                        <Bar dataKey="revenue" name="Receita" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="revenue" name={isTenant ? 'Total pago' : 'Receita'} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     ) : (
                       <BarChart data={tenantPerformance.slice(0, 10)} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -1558,7 +1559,7 @@ export default function Reports() {
                 <div className="text-sm sm:text-base font-semibold text-primary">
                   {reportType === 'monthly' && (
                     <div className="flex items-center justify-center gap-4 flex-wrap">
-                      <span>Total no ano: R$ {totalAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      <span>{isTenant ? 'Total pago no ano' : 'Total no ano'}: R$ {totalAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                       {financialReportType === 'annual' && (
                         <div className="flex items-center gap-3 text-xs">
                           <div className="flex items-center gap-1.5">
@@ -1591,7 +1592,7 @@ export default function Reports() {
               Total Anual
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              Receita total do ano
+              {isTenant ? 'Total pago no ano' : 'Receita total do ano'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1619,7 +1620,7 @@ export default function Reports() {
               {formatCurrency(currentMonthTotal)}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Recebimentos do mês
+              {isTenant ? 'Pagamentos do mês' : 'Recebimentos do mês'}
             </p>
           </CardContent>
         </Card>
@@ -1628,10 +1629,10 @@ export default function Reports() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg flex items-center gap-2">
               <Building2 className="w-4 h-4" />
-              Imóveis
+              {isTenant ? 'Meus Imóveis' : 'Imóveis'}
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              Total de imóveis
+              {isTenant ? 'Imóveis que você aluga' : 'Total de imóveis'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1639,7 +1640,7 @@ export default function Reports() {
               {properties.length}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Imóveis cadastrados
+              {isTenant ? 'Contratos ativos' : 'Imóveis cadastrados'}
             </p>
           </CardContent>
         </Card>
@@ -1765,9 +1766,9 @@ export default function Reports() {
         { }
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Top Imóveis</CardTitle>
+            <CardTitle className="text-lg">{isTenant ? 'Meus Imóveis' : 'Top Imóveis'}</CardTitle>
             <CardDescription>
-              Imóveis com maior receita
+              {isTenant ? 'Valor pago por imóvel' : 'Imóveis com maior receita'}
             </CardDescription>
           </CardHeader>
           <CardContent>
